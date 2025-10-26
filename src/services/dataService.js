@@ -1,38 +1,11 @@
 // Data service for handling all application data
-// Using inline data to avoid JSON import issues
+// Using environment variables for user credentials
 
 class DataService {
   constructor() {
+    this.storageKey = 'homeAdminData';
     this.data = {
-      users: [
-        {
-          id: 1,
-          email: "admin@homeadmin.com",
-          password: "password",
-          name: "Admin User",
-          role: "admin",
-          createdAt: "2024-01-01T00:00:00Z",
-          lastLogin: "2024-12-15T10:30:00Z"
-        },
-        {
-          id: 2,
-          email: "manager@homeadmin.com",
-          password: "manager123",
-          name: "Property Manager",
-          role: "manager",
-          createdAt: "2024-01-15T00:00:00Z",
-          lastLogin: "2024-12-14T15:45:00Z"
-        },
-        {
-          id: 3,
-          email: "demo@homeadmin.com",
-          password: "demo123",
-          name: "Demo User",
-          role: "user",
-          createdAt: "2024-02-01T00:00:00Z",
-          lastLogin: "2024-12-15T09:15:00Z"
-        }
-      ],
+      users: [], // SECURITY: No user data in client-side code
       properties: [
         {
           id: 1,
@@ -338,6 +311,53 @@ class DataService {
     };
   }
 
+  // localStorage persistence methods
+  saveToStorage() {
+    try {
+      const dataToSave = {
+        properties: this.data.properties,
+        tenants: this.data.tenants,
+        transactions: this.data.transactions,
+        expenses: this.data.expenses,
+        lastSaved: new Date().toISOString()
+      };
+      localStorage.setItem(this.storageKey, JSON.stringify(dataToSave));
+    } catch (error) {
+      console.warn('Failed to save data to localStorage:', error);
+    }
+  }
+
+  loadFromStorage() {
+    try {
+      const saved = localStorage.getItem(this.storageKey);
+      if (saved) {
+        const parsedData = JSON.parse(saved);
+        this.data.properties = parsedData.properties || this.data.properties;
+        this.data.tenants = parsedData.tenants || this.data.tenants;
+        this.data.transactions = parsedData.transactions || this.data.transactions;
+        this.data.expenses = parsedData.expenses || this.data.expenses;
+      }
+    } catch (error) {
+      console.warn('Failed to load data from localStorage:', error);
+    }
+  }
+
+  clearStorage() {
+    try {
+      localStorage.removeItem(this.storageKey);
+    } catch (error) {
+      console.warn('Failed to clear localStorage:', error);
+    }
+  }
+
+  // Initialize data from localStorage
+  initialize() {
+    this.loadFromStorage();
+  }
+
+  // SECURITY: No user credentials in client-side code
+  // Authentication is now handled via API routes only
+
   // User operations
   getUsers() {
     return this.data.users;
@@ -351,9 +371,11 @@ class DataService {
     return this.data.users.find(user => user.email === email);
   }
 
+  // SECURITY: Credential validation moved to API routes
+  // This method is deprecated and should not be used
   validateCredentials(email, password) {
-    const user = this.getUserByEmail(email);
-    return user && user.password === password ? user : null;
+    // Method deprecated - use API routes for authentication
+    return null;
   }
 
   // Property operations
@@ -373,6 +395,7 @@ class DataService {
       updatedAt: new Date().toISOString()
     };
     this.data.properties.push(newProperty);
+    this.saveToStorage();
     return newProperty;
   }
 
@@ -384,6 +407,7 @@ class DataService {
         ...updates,
         updatedAt: new Date().toISOString()
       };
+      this.saveToStorage();
       return this.data.properties[index];
     }
     return null;
@@ -392,7 +416,9 @@ class DataService {
   deleteProperty(id) {
     const index = this.data.properties.findIndex(p => p.id === parseInt(id));
     if (index !== -1) {
-      return this.data.properties.splice(index, 1)[0];
+      const deleted = this.data.properties.splice(index, 1)[0];
+      this.saveToStorage();
+      return deleted;
     }
     return null;
   }
@@ -414,6 +440,7 @@ class DataService {
       updatedAt: new Date().toISOString()
     };
     this.data.tenants.push(newTenant);
+    this.saveToStorage();
     return newTenant;
   }
 
@@ -425,6 +452,7 @@ class DataService {
         ...updates,
         updatedAt: new Date().toISOString()
       };
+      this.saveToStorage();
       return this.data.tenants[index];
     }
     return null;
@@ -433,7 +461,9 @@ class DataService {
   deleteTenant(id) {
     const index = this.data.tenants.findIndex(t => t.id === parseInt(id));
     if (index !== -1) {
-      return this.data.tenants.splice(index, 1)[0];
+      const deleted = this.data.tenants.splice(index, 1)[0];
+      this.saveToStorage();
+      return deleted;
     }
     return null;
   }
@@ -454,6 +484,7 @@ class DataService {
       createdAt: new Date().toISOString()
     };
     this.data.transactions.push(newTransaction);
+    this.saveToStorage();
     return newTransaction;
   }
 
@@ -473,6 +504,7 @@ class DataService {
       createdAt: new Date().toISOString()
     };
     this.data.expenses.push(newExpense);
+    this.saveToStorage();
     return newExpense;
   }
 
@@ -484,6 +516,7 @@ class DataService {
         ...updates,
         updatedAt: new Date().toISOString()
       };
+      this.saveToStorage();
       return this.data.expenses[index];
     }
     return null;
@@ -492,7 +525,9 @@ class DataService {
   deleteExpense(id) {
     const index = this.data.expenses.findIndex(e => e.id === parseInt(id));
     if (index !== -1) {
-      return this.data.expenses.splice(index, 1)[0];
+      const deleted = this.data.expenses.splice(index, 1)[0];
+      this.saveToStorage();
+      return deleted;
     }
     return null;
   }

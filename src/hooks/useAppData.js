@@ -76,6 +76,8 @@ export const useAppData = (dataType) => {
   }, [dataType, fetchData]);
 
   useEffect(() => {
+    // Initialize dataService with localStorage data
+    dataService.initialize();
     fetchData();
   }, [fetchData]);
 

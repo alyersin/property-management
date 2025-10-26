@@ -1,15 +1,41 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import logger from '../utils/logger';
 
-export const useForm = (initialValues = {}) => {
+export const useForm = (initialValues = {}, storageKey = null) => {
   const [values, setValues] = useState(initialValues);
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Load form data from localStorage if storageKey is provided
+  useEffect(() => {
+    if (storageKey) {
+      try {
+        const savedData = localStorage.getItem(storageKey);
+        if (savedData) {
+          const parsedData = JSON.parse(savedData);
+          setValues(parsedData);
+        }
+      } catch (error) {
+        logger.error('Failed to load form data from localStorage', error);
+      }
+    }
+  }, [storageKey]);
+
   const handleChange = (field, value) => {
-    setValues(prev => ({
-      ...prev,
+    const newValues = {
+      ...values,
       [field]: value
-    }));
+    };
+    setValues(newValues);
+    
+    // Save to localStorage if storageKey is provided
+    if (storageKey) {
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(newValues));
+      } catch (error) {
+        logger.error('Failed to save form data to localStorage', error);
+      }
+    }
     
     // Clear error when user starts typing
     if (errors[field]) {
@@ -27,7 +53,7 @@ export const useForm = (initialValues = {}) => {
       setValues(initialValues);
       setErrors({});
     } catch (error) {
-      console.error('Form submission error:', error);
+      logger.error('Form submission error', error);
     } finally {
       setIsSubmitting(false);
     }
@@ -36,6 +62,15 @@ export const useForm = (initialValues = {}) => {
   const reset = () => {
     setValues(initialValues);
     setErrors({});
+    
+    // Clear localStorage if storageKey is provided
+    if (storageKey) {
+      try {
+        localStorage.removeItem(storageKey);
+      } catch (error) {
+        logger.error('Failed to clear form data from localStorage', error);
+      }
+    }
   };
 
   const setError = (field, message) => {

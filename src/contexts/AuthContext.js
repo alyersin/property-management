@@ -1,7 +1,8 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect } from 'react';
-import dataService from '../services/dataService';
+import { STORAGE_KEYS, API_ENDPOINTS } from '../constants/app';
+import logger from '../utils/logger';
 
 const AuthContext = createContext();
 
@@ -19,7 +20,7 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     // Check for existing session on app load
-    const savedUser = localStorage.getItem('homeAdminUser');
+    const savedUser = localStorage.getItem(STORAGE_KEYS.user);
     if (savedUser) {
       setUser(JSON.parse(savedUser));
     }
@@ -27,57 +28,65 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (email, password) => {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Check against demo credentials
-        const demoUser = dataService.validateCredentials(email, password);
-    
-    if (demoUser) {
-      const userData = {
-        id: demoUser.email,
-        email: demoUser.email,
-        name: demoUser.name,
-        role: demoUser.role,
-        loginTime: new Date().toISOString()
-      };
+    try {
+      logger.auth('Login attempt', { email });
+      const response = await fetch(API_ENDPOINTS.login, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setUser(data.user);
+        localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(data.user));
+        logger.auth('Login successful', data.user);
+        return { success: true };
+      }
       
-      setUser(userData);
-      localStorage.setItem('homeAdminUser', JSON.stringify(userData));
-      return { success: true };
+      logger.warn('Login failed', { email, error: data.error });
+      return { success: false, error: data.error || 'Login failed' };
+    } catch (error) {
+      logger.error('Login error', error);
+      return { success: false, error: 'Network error. Please try again.' };
     }
-    
-    return { success: false, error: 'Invalid credentials' };
   };
 
   const register = async (name, email, password, confirmPassword) => {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    if (password !== confirmPassword) {
-      return { success: false, error: 'Passwords do not match' };
-    }
-    
-    if (email && password) {
-      const userData = {
-        id: Date.now(),
-        email,
-        name,
-        role: 'admin',
-        loginTime: new Date().toISOString()
-      };
+    try {
+      logger.auth('Registration attempt', { email });
+      const response = await fetch(API_ENDPOINTS.register, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name, email, password, confirmPassword }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setUser(data.user);
+        localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(data.user));
+        logger.auth('Registration successful', data.user);
+        return { success: true };
+      }
       
-      setUser(userData);
-      localStorage.setItem('homeAdminUser', JSON.stringify(userData));
-      return { success: true };
+      logger.warn('Registration failed', { email, error: data.error });
+      return { success: false, error: data.error || 'Registration failed' };
+    } catch (error) {
+      logger.error('Registration error', error);
+      return { success: false, error: 'Network error. Please try again.' };
     }
-    
-    return { success: false, error: 'Registration failed' };
   };
 
   const logout = () => {
+    logger.auth('User logout');
     setUser(null);
-    localStorage.removeItem('homeAdminUser');
+    localStorage.removeItem(STORAGE_KEYS.user);
   };
 
   const value = {

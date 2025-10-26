@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useAuth } from "../../contexts/AuthContext";
 import { useRouter } from "next/navigation";
-import { getDemoUsers } from "../../utils/demo-credentials";
+import { ROUTES, DEMO_CREDENTIALS } from "../../constants/app";
 
 // Dynamically import styled-components to prevent SSR issues
 const StyledWrapper = dynamic(() => import('./StyledWrapper'), { ssr: false });
@@ -25,7 +25,7 @@ const LoginPage = () => {
     try {
       const result = await login(email, password);
       if (result.success) {
-        router.push("/dashboard");
+        router.push(ROUTES.dashboard);
       } else {
         setError(result.error || "Login failed");
       }
@@ -86,11 +86,9 @@ const LoginPage = () => {
             <p style={{ color: '#0ef', fontSize: '0.8em', textAlign: 'center', marginBottom: '10px', fontWeight: '600' }}>
               Demo Credentials:
             </p>
-            {getDemoUsers().slice(2).map((user, index) => (
-              <p key={index} style={{ color: '#fff', fontSize: '0.75em', textAlign: 'center', margin: '2px 0' }}>
-                {user.email} / {user.password} ({user.name})
-              </p>
-            ))}
+            <p style={{ color: '#fff', fontSize: '0.75em', textAlign: 'center', margin: '2px 0' }}>
+              {DEMO_CREDENTIALS.email} / {DEMO_CREDENTIALS.password} ({DEMO_CREDENTIALS.name})
+            </p>
           </div>
         </div>
         <span style={{'--i': 0}} />

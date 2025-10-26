@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useAuth } from "../../contexts/AuthContext";
 import { useRouter } from "next/navigation";
+import { ROUTES } from "../../constants/app";
 
 // Dynamically import styled-components to prevent SSR issues
 const StyledWrapper = dynamic(() => import('./StyledWrapper'), { ssr: false });
@@ -31,7 +32,7 @@ const RegisterPage = () => {
     try {
       const result = await register(email, email, password);
       if (result.success) {
-        router.push("/dashboard");
+        router.push(ROUTES.dashboard);
       } else {
         setError(result.error || "Registration failed");
       }

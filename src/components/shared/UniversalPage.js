@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useDisclosure } from "@chakra-ui/react";
 import { Add as AddIcon } from "@chakra-ui/icons";
 
@@ -14,6 +14,8 @@ import { getFieldsByType } from "../../config/formFields";
 import { FILTER_OPTIONS } from "../../utils/constants";
 import { filterBySearch, filterByStatus } from "../../utils/helpers";
 import ProtectedRoute from "../auth/ProtectedRoute";
+import logger from "../../utils/logger";
+import { STORAGE_KEYS } from "../../constants/app";
 
 const UniversalPage = ({ 
   dataType, 
@@ -29,6 +31,37 @@ const UniversalPage = ({
   const [searchTerm, setSearchTerm] = useState("");
   const [filterValue, setFilterValue] = useState("all");
   const [editingItem, setEditingItem] = useState(null);
+
+  // Load page preferences from localStorage
+  useEffect(() => {
+    const storageKey = `${STORAGE_KEYS.preferences}_${dataType}`;
+    const savedPreferences = localStorage.getItem(storageKey);
+    if (savedPreferences) {
+      try {
+        const parsed = JSON.parse(savedPreferences);
+        setSearchTerm(parsed.searchTerm || "");
+        setFilterValue(parsed.filterValue || "all");
+      } catch (error) {
+        logger.error('Failed to load page preferences', error);
+      }
+    }
+  }, [dataType]);
+
+  // Save page preferences to localStorage
+  useEffect(() => {
+    const storageKey = `${STORAGE_KEYS.preferences}_${dataType}`;
+    const preferences = {
+      searchTerm,
+      filterValue,
+      lastUpdated: new Date().toISOString()
+    };
+    
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(preferences));
+    } catch (error) {
+      logger.error('Failed to save page preferences', error);
+    }
+  }, [searchTerm, filterValue, dataType]);
   
   const { data, loading, error, create, update, remove } = useAppData(dataType);
   const fields = getFieldsByType(dataType);
@@ -51,8 +84,9 @@ const UniversalPage = ({
   const handleDelete = async (item) => {
     try {
       await remove(item.id);
+      logger.data('delete', dataType, item.id);
     } catch (error) {
-      console.error(`Error deleting ${dataType}:`, error);
+      logger.error(`Error deleting ${dataType}`, error);
     }
   };
 
@@ -66,7 +100,7 @@ const UniversalPage = ({
       onClose();
       setEditingItem(null);
     } catch (error) {
-      console.error(`Error saving ${dataType}:`, error);
+      logger.error(`Error saving ${dataType}`, error);
     }
   };
 
