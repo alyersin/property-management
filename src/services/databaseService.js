@@ -48,14 +48,71 @@ class DatabaseService {
     return dataService.validateCredentials(email, password);
   }
 
+  // User Profile operations (One-to-One relationship)
+  async getUserProfile(userId) {
+    if (this.useDatabase) {
+      // TODO: Implement PostgreSQL query
+      // const result = await this.query('SELECT * FROM user_profiles WHERE user_id = $1', [userId]);
+      // return result.rows[0];
+      throw new Error('Database integration not yet implemented');
+    }
+    // For JSON fallback, create a mock profile
+    return {
+      id: 1,
+      user_id: userId,
+      bio: 'User profile not available in JSON mode',
+      phone: null,
+      address: null,
+      date_of_birth: null,
+      emergency_contact: null,
+      emergency_phone: null
+    };
+  }
+
+  async createUserProfile(userId, profileData) {
+    if (this.useDatabase) {
+      // TODO: Implement PostgreSQL insert
+      // const result = await this.query(`
+      //   INSERT INTO user_profiles (user_id, bio, phone, address, date_of_birth, emergency_contact, emergency_phone)
+      //   VALUES ($1, $2, $3, $4, $5, $6, $7)
+      //   RETURNING *
+      // `, [userId, profileData.bio, profileData.phone, profileData.address, 
+      //     profileData.date_of_birth, profileData.emergency_contact, profileData.emergency_phone]);
+      // return result.rows[0];
+      throw new Error('Database integration not yet implemented');
+    }
+    return { id: Date.now(), user_id: userId, ...profileData };
+  }
+
+  async updateUserProfile(userId, updates) {
+    if (this.useDatabase) {
+      // TODO: Implement PostgreSQL update
+      // const setClause = Object.keys(updates).map((key, index) => `${key} = $${index + 2}`).join(', ');
+      // const values = [userId, ...Object.values(updates)];
+      // const result = await this.query(`
+      //   UPDATE user_profiles SET ${setClause}, updated_at = CURRENT_TIMESTAMP
+      //   WHERE user_id = $1 RETURNING *
+      // `, values);
+      // return result.rows[0];
+      throw new Error('Database integration not yet implemented');
+    }
+    return { user_id: userId, ...updates };
+  }
+
   // Property operations
   async getProperties() {
     if (this.useDatabase) {
-      // TODO: Implement PostgreSQL query
+      // TODO: Implement PostgreSQL query with amenities
       // const result = await this.query(`
-      //   SELECT p.*, t.name as tenant_name, t.email as tenant_email, t.phone as tenant_phone
+      //   SELECT p.*, 
+      //     STRING_AGG(DISTINCT a.name, ', ') as amenities,
+      //     STRING_AGG(DISTINCT CONCAT(t.name, ' (', pt.lease_start, ' - ', pt.lease_end, ')'), '; ') as current_tenants
       //   FROM properties p
-      //   LEFT JOIN tenants t ON p.tenant_id = t.id
+      //   LEFT JOIN property_amenities pa ON p.id = pa.property_id
+      //   LEFT JOIN amenities a ON pa.amenity_id = a.id
+      //   LEFT JOIN property_tenants pt ON p.id = pt.property_id AND pt.status = 'Active'
+      //   LEFT JOIN tenants t ON pt.tenant_id = t.id
+      //   GROUP BY p.id
       // `);
       // return result.rows;
       throw new Error('Database integration not yet implemented');
@@ -112,6 +169,144 @@ class DatabaseService {
       throw new Error('Database integration not yet implemented');
     }
     return dataService.deleteProperty(id);
+  }
+
+  // Property-Tenant Many-to-Many operations
+  async getPropertyTenants(propertyId) {
+    if (this.useDatabase) {
+      // TODO: Implement PostgreSQL query
+      // const result = await this.query(`
+      //   SELECT pt.*, t.name, t.email, t.phone
+      //   FROM property_tenants pt
+      //   JOIN tenants t ON pt.tenant_id = t.id
+      //   WHERE pt.property_id = $1
+      //   ORDER BY pt.lease_start DESC
+      // `, [propertyId]);
+      // return result.rows;
+      throw new Error('Database integration not yet implemented');
+    }
+    return [];
+  }
+
+  async getTenantProperties(tenantId) {
+    if (this.useDatabase) {
+      // TODO: Implement PostgreSQL query
+      // const result = await this.query(`
+      //   SELECT pt.*, p.address, p.city, p.state, p.zip
+      //   FROM property_tenants pt
+      //   JOIN properties p ON pt.property_id = p.id
+      //   WHERE pt.tenant_id = $1
+      //   ORDER BY pt.lease_start DESC
+      // `, [tenantId]);
+      // return result.rows;
+      throw new Error('Database integration not yet implemented');
+    }
+    return [];
+  }
+
+  async assignTenantToProperty(propertyId, tenantId, leaseData) {
+    if (this.useDatabase) {
+      // TODO: Implement PostgreSQL insert
+      // const result = await this.query(`
+      //   INSERT INTO property_tenants (property_id, tenant_id, lease_start, lease_end, rent_amount, status)
+      //   VALUES ($1, $2, $3, $4, $5, $6)
+      //   RETURNING *
+      // `, [propertyId, tenantId, leaseData.lease_start, leaseData.lease_end, 
+      //     leaseData.rent_amount, leaseData.status || 'Active']);
+      // return result.rows[0];
+      throw new Error('Database integration not yet implemented');
+    }
+    return { id: Date.now(), property_id: propertyId, tenant_id: tenantId, ...leaseData };
+  }
+
+  async updatePropertyTenant(propertyId, tenantId, updates) {
+    if (this.useDatabase) {
+      // TODO: Implement PostgreSQL update
+      // const setClause = Object.keys(updates).map((key, index) => `${key} = $${index + 3}`).join(', ');
+      // const values = [propertyId, tenantId, ...Object.values(updates)];
+      // const result = await this.query(`
+      //   UPDATE property_tenants SET ${setClause}, updated_at = CURRENT_TIMESTAMP
+      //   WHERE property_id = $1 AND tenant_id = $2 RETURNING *
+      // `, values);
+      // return result.rows[0];
+      throw new Error('Database integration not yet implemented');
+    }
+    return { property_id: propertyId, tenant_id: tenantId, ...updates };
+  }
+
+  async removeTenantFromProperty(propertyId, tenantId) {
+    if (this.useDatabase) {
+      // TODO: Implement PostgreSQL delete
+      // const result = await this.query(`
+      //   DELETE FROM property_tenants 
+      //   WHERE property_id = $1 AND tenant_id = $2 
+      //   RETURNING *
+      // `, [propertyId, tenantId]);
+      // return result.rows[0];
+      throw new Error('Database integration not yet implemented');
+    }
+    return { property_id: propertyId, tenant_id: tenantId };
+  }
+
+  // Amenities operations
+  async getAmenities() {
+    if (this.useDatabase) {
+      // TODO: Implement PostgreSQL query
+      // const result = await this.query('SELECT * FROM amenities ORDER BY category, name');
+      // return result.rows;
+      throw new Error('Database integration not yet implemented');
+    }
+    return [
+      { id: 1, name: 'Swimming Pool', description: 'Outdoor swimming pool with deck area', category: 'outdoor' },
+      { id: 2, name: 'Fitness Center', description: '24/7 fitness center with modern equipment', category: 'building' },
+      { id: 3, name: 'Parking Garage', description: 'Covered parking garage with security', category: 'building' },
+      { id: 4, name: 'Balcony', description: 'Private balcony with city views', category: 'unit' },
+      { id: 5, name: 'Dishwasher', description: 'Built-in dishwasher in kitchen', category: 'indoor' }
+    ];
+  }
+
+  async getPropertyAmenities(propertyId) {
+    if (this.useDatabase) {
+      // TODO: Implement PostgreSQL query
+      // const result = await this.query(`
+      //   SELECT a.* FROM amenities a
+      //   JOIN property_amenities pa ON a.id = pa.amenity_id
+      //   WHERE pa.property_id = $1
+      //   ORDER BY a.category, a.name
+      // `, [propertyId]);
+      // return result.rows;
+      throw new Error('Database integration not yet implemented');
+    }
+    return [];
+  }
+
+  async addAmenityToProperty(propertyId, amenityId) {
+    if (this.useDatabase) {
+      // TODO: Implement PostgreSQL insert
+      // const result = await this.query(`
+      //   INSERT INTO property_amenities (property_id, amenity_id)
+      //   VALUES ($1, $2)
+      //   ON CONFLICT (property_id, amenity_id) DO NOTHING
+      //   RETURNING *
+      // `, [propertyId, amenityId]);
+      // return result.rows[0];
+      throw new Error('Database integration not yet implemented');
+    }
+    return { property_id: propertyId, amenity_id: amenityId };
+  }
+
+  async removeAmenityFromProperty(propertyId, amenityId) {
+    if (this.useDatabase) {
+      // TODO: Implement PostgreSQL delete
+      // const result = await this.query(`
+      //   DELETE FROM property_amenities 
+      //   WHERE property_id = $1 AND amenity_id = $2 
+      //   RETURNING *
+      // `, [propertyId, amenityId]);
+      // return result.rows[0];
+      throw new Error('Database integration not yet implemented');
+    }
+    return { property_id: propertyId, amenity_id: amenityId };
   }
 
   // Tenant operations

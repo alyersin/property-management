@@ -290,7 +290,10 @@ components/shared/
 ├── PageLayout.js             # Page wrapper
 │   ├── PageHeader.js         # Header with user menu
 │   └── Sidebar.js            # Navigation sidebar
-└── StatCard.js               # Statistics card
+├── StatCard.js               # Statistics card
+├── UserProfile.js            # User profile management (1:1 relationship)
+├── PropertyAmenities.js      # Property amenities management (M:N relationship)
+└── PropertyTenantManagement.js # Property-tenant management (M:N relationship)
 ```
 
 ### **Configuration System (Data-Driven)**
@@ -431,6 +434,93 @@ User stored in localStorage
         │
         ▼
 Redirect to /dashboard
+```
+
+### **6. User Profile Management (1:1 Relationship)**
+```
+User clicks "Manage Profile" in Settings
+        │
+        ▼
+UserProfile component opens
+        │
+        ▼
+databaseService.getUserProfile(userId)
+        │
+        ▼
+API: GET /api/user-profiles/[userId]
+        │
+        ▼
+User profile data displayed
+        │
+        ▼
+User edits profile information
+        │
+        ▼
+databaseService.updateUserProfile(userId, updates)
+        │
+        ▼
+API: PUT /api/user-profiles/[userId]
+        │
+        ▼
+Profile updated in database
+```
+
+### **7. Property Amenities Management (M:N Relationship)**
+```
+User clicks "Manage Amenities" on property
+        │
+        ▼
+PropertyAmenities component opens
+        │
+        ▼
+databaseService.getAmenities() + getPropertyAmenities(propertyId)
+        │
+        ▼
+API: GET /api/amenities + GET /api/properties/[propertyId]/amenities
+        │
+        ▼
+All amenities displayed with current selections
+        │
+        ▼
+User toggles amenity checkbox
+        │
+        ▼
+databaseService.addAmenityToProperty() or removeAmenityFromProperty()
+        │
+        ▼
+API: POST/DELETE /api/properties/[propertyId]/amenities
+        │
+        ▼
+Property-amenity relationship updated
+```
+
+### **8. Property-Tenant Management (M:N Relationship)**
+```
+User clicks "Manage Tenants" on property
+        │
+        ▼
+PropertyTenantManagement component opens
+        │
+        ▼
+databaseService.getTenants() + getPropertyTenants(propertyId)
+        │
+        ▼
+API: GET /api/tenants + GET /api/properties/[propertyId]/tenants
+        │
+        ▼
+Current tenants and available tenants displayed
+        │
+        ▼
+User assigns new tenant with lease details
+        │
+        ▼
+databaseService.assignTenantToProperty(propertyId, tenantId, leaseData)
+        │
+        ▼
+API: POST /api/properties/[propertyId]/tenants
+        │
+        ▼
+Property-tenant relationship created with lease information
 ```
 
 ## 🛡️ Security Flow

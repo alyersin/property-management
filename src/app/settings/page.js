@@ -21,6 +21,7 @@ import {
 import { useState, useEffect } from "react";
 import PageLayout from "../../components/shared/PageLayout";
 import ProtectedRoute from "../../components/auth/ProtectedRoute";
+import UserProfile from "../../components/shared/UserProfile";
 import { COMPANY_DEFAULTS, NOTIFICATION_DEFAULTS, STORAGE_KEYS } from "../../constants/app";
 import logger from "../../utils/logger";
 
@@ -32,6 +33,8 @@ export default function Settings() {
     address: COMPANY_DEFAULTS.address,
     notifications: NOTIFICATION_DEFAULTS
   });
+  const [showUserProfile, setShowUserProfile] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState(1); // This would come from auth context
 
   // Load settings from localStorage on component mount
   useEffect(() => {
@@ -70,6 +73,27 @@ export default function Settings() {
     <ProtectedRoute>
       <PageLayout title="Settings" currentPage="/settings">
         <VStack spacing={6} align="stretch">
+          {/* User Profile Section */}
+          <Card>
+            <CardHeader>
+              <HStack justify="space-between">
+                <Heading size="md">User Profile</Heading>
+                <Button 
+                  colorScheme="blue" 
+                  variant="outline"
+                  onClick={() => setShowUserProfile(true)}
+                >
+                  Manage Profile
+                </Button>
+              </HStack>
+            </CardHeader>
+            <CardBody>
+              <Text color="gray.600">
+                Manage your personal information, emergency contacts, and profile details.
+              </Text>
+            </CardBody>
+          </Card>
+
           {/* Company Information */}
           <Card>
             <CardHeader>
@@ -163,6 +187,14 @@ export default function Settings() {
           </Box>
         </VStack>
       </PageLayout>
+      
+      {/* User Profile Modal */}
+      {showUserProfile && (
+        <UserProfile
+          userId={currentUserId}
+          onClose={() => setShowUserProfile(false)}
+        />
+      )}
     </ProtectedRoute>
   );
 }

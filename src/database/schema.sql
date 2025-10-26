@@ -13,6 +13,21 @@ CREATE TABLE users (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- User Profiles table (One-to-One with users)
+CREATE TABLE user_profiles (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+    bio TEXT,
+    avatar_url VARCHAR(255),
+    phone VARCHAR(50),
+    address TEXT,
+    date_of_birth DATE,
+    emergency_contact VARCHAR(255),
+    emergency_phone VARCHAR(50),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Properties table
 CREATE TABLE properties (
     id SERIAL PRIMARY KEY,
@@ -25,10 +40,6 @@ CREATE TABLE properties (
     sqft INTEGER NOT NULL,
     rent DECIMAL(10,2) NOT NULL,
     status VARCHAR(50) DEFAULT 'Available',
-    tenant_id INTEGER REFERENCES tenants(id),
-    tenant_email VARCHAR(255),
-    tenant_phone VARCHAR(50),
-    lease_end DATE,
     notes TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -40,16 +51,42 @@ CREATE TABLE tenants (
     name VARCHAR(255) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
     phone VARCHAR(50),
-    property_id INTEGER REFERENCES properties(id),
-    lease_start DATE,
-    lease_end DATE,
-    rent_amount DECIMAL(10,2),
     status VARCHAR(50) DEFAULT 'Active',
     emergency_contact VARCHAR(255),
     emergency_phone VARCHAR(50),
     notes TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Property-Tenants junction table (Many-to-Many)
+CREATE TABLE property_tenants (
+    id SERIAL PRIMARY KEY,
+    property_id INTEGER REFERENCES properties(id) ON DELETE CASCADE,
+    tenant_id INTEGER REFERENCES tenants(id) ON DELETE CASCADE,
+    lease_start DATE NOT NULL,
+    lease_end DATE,
+    rent_amount DECIMAL(10,2),
+    status VARCHAR(50) DEFAULT 'Active',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(property_id, tenant_id, lease_start)
+);
+
+-- Amenities table
+CREATE TABLE amenities (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    description TEXT,
+    category VARCHAR(50), -- 'indoor', 'outdoor', 'building', 'unit'
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Property-Amenities junction table (Many-to-Many)
+CREATE TABLE property_amenities (
+    property_id INTEGER REFERENCES properties(id) ON DELETE CASCADE,
+    amenity_id INTEGER REFERENCES amenities(id) ON DELETE CASCADE,
+    PRIMARY KEY (property_id, amenity_id)
 );
 
 -- Transactions table (for finances)
@@ -84,19 +121,41 @@ CREATE TABLE expenses (
 
 -- Indexes for better performance
 CREATE INDEX idx_properties_status ON properties(status);
-CREATE INDEX idx_properties_tenant ON properties(tenant_id);
-CREATE INDEX idx_tenants_property ON tenants(property_id);
 CREATE INDEX idx_tenants_status ON tenants(status);
+CREATE INDEX idx_property_tenants_property ON property_tenants(property_id);
+CREATE INDEX idx_property_tenants_tenant ON property_tenants(tenant_id);
+CREATE INDEX idx_property_tenants_status ON property_tenants(status);
+CREATE INDEX idx_user_profiles_user ON user_profiles(user_id);
 CREATE INDEX idx_transactions_date ON transactions(date);
 CREATE INDEX idx_transactions_type ON transactions(type);
 CREATE INDEX idx_expenses_date ON expenses(date);
 CREATE INDEX idx_expenses_category ON expenses(category);
+CREATE INDEX idx_amenities_category ON amenities(category);
 
 -- Insert sample data (matching JSON structure)
 INSERT INTO users (email, password, name, role) VALUES
 ('admin@homeadmin.com', 'password', 'Admin User', 'admin'),
 ('manager@homeadmin.com', 'manager123', 'Property Manager', 'manager'),
 ('demo@homeadmin.com', 'demo123', 'Demo User', 'user');
+
+-- Insert sample user profiles (One-to-One relationship)
+INSERT INTO user_profiles (user_id, bio, phone, address, emergency_contact, emergency_phone) VALUES
+(1, 'Experienced property administrator with 10+ years in real estate management.', '(555) 100-0001', '123 Admin St, San Francisco, CA 94102', 'Emergency Admin Contact', '(555) 100-0002'),
+(2, 'Property manager specializing in residential properties and tenant relations.', '(555) 200-0001', '456 Manager Ave, San Francisco, CA 94103', 'Emergency Manager Contact', '(555) 200-0002'),
+(3, 'Demo user for testing and demonstration purposes.', '(555) 300-0001', '789 Demo Rd, San Francisco, CA 94107', 'Emergency Demo Contact', '(555) 300-0002');
+
+-- Insert sample amenities
+INSERT INTO amenities (name, description, category) VALUES
+('Swimming Pool', 'Outdoor swimming pool with deck area', 'outdoor'),
+('Fitness Center', '24/7 fitness center with modern equipment', 'building'),
+('Parking Garage', 'Covered parking garage with security', 'building'),
+('Balcony', 'Private balcony with city views', 'unit'),
+('Dishwasher', 'Built-in dishwasher in kitchen', 'indoor'),
+('Air Conditioning', 'Central air conditioning system', 'indoor'),
+('Hardwood Floors', 'Hardwood flooring throughout', 'indoor'),
+('Garden', 'Private garden space', 'outdoor'),
+('Laundry Room', 'In-unit washer and dryer', 'indoor'),
+('Security System', '24/7 security monitoring', 'building');
 
 -- Insert sample properties
 INSERT INTO properties (address, city, state, zip, bedrooms, bathrooms, sqft, rent, status, notes) VALUES
@@ -106,16 +165,28 @@ INSERT INTO properties (address, city, state, zip, bedrooms, bathrooms, sqft, re
 ('321 Elm Street', 'San Francisco', 'CA', '94105', 4, 3, 2200, 5500.00, 'Occupied', 'Luxury property with modern amenities.');
 
 -- Insert sample tenants
-INSERT INTO tenants (name, email, phone, property_id, lease_start, lease_end, rent_amount, status, emergency_contact, emergency_phone, notes) VALUES
-('John Smith', 'john@email.com', '(555) 123-4567', 1, '2024-01-01', '2024-12-31', 3500.00, 'Active', 'Jane Smith', '(555) 123-4568', 'Reliable tenant, always pays on time.'),
-('Mike Davis', 'mike@email.com', '(555) 456-7890', 3, '2024-02-01', '2024-08-15', 4500.00, 'Active', 'Lisa Davis', '(555) 456-7891', 'Property under renovation, temporary arrangement.'),
-('Sarah Johnson', 'sarah@email.com', '(555) 789-0123', 4, '2024-03-01', '2025-06-30', 5500.00, 'Active', 'Tom Johnson', '(555) 789-0124', 'Long-term tenant, excellent payment history.'),
-('Alex Wilson', 'alex@email.com', '(555) 321-6547', NULL, NULL, NULL, NULL, 'Prospective', 'Maria Wilson', '(555) 321-6548', 'Looking for 2-bedroom apartment, budget $3000/month.');
+INSERT INTO tenants (name, email, phone, status, emergency_contact, emergency_phone, notes) VALUES
+('John Smith', 'john@email.com', '(555) 123-4567', 'Active', 'Jane Smith', '(555) 123-4568', 'Reliable tenant, always pays on time.'),
+('Mike Davis', 'mike@email.com', '(555) 456-7890', 'Active', 'Lisa Davis', '(555) 456-7891', 'Property under renovation, temporary arrangement.'),
+('Sarah Johnson', 'sarah@email.com', '(555) 789-0123', 'Active', 'Tom Johnson', '(555) 789-0124', 'Long-term tenant, excellent payment history.'),
+('Alex Wilson', 'alex@email.com', '(555) 321-6547', 'Prospective', 'Maria Wilson', '(555) 321-6548', 'Looking for 2-bedroom apartment, budget $3000/month.');
 
--- Update properties with tenant information
-UPDATE properties SET tenant_email = 'john@email.com', tenant_phone = '(555) 123-4567', lease_end = '2024-12-31' WHERE id = 1;
-UPDATE properties SET tenant_email = 'mike@email.com', tenant_phone = '(555) 456-7890', lease_end = '2024-08-15' WHERE id = 3;
-UPDATE properties SET tenant_email = 'sarah@email.com', tenant_phone = '(555) 789-0123', lease_end = '2025-06-30' WHERE id = 4;
+-- Insert property-tenant relationships (Many-to-Many)
+INSERT INTO property_tenants (property_id, tenant_id, lease_start, lease_end, rent_amount, status) VALUES
+(1, 1, '2024-01-01', '2024-12-31', 3500.00, 'Active'),
+(3, 2, '2024-02-01', '2024-08-15', 4500.00, 'Active'),
+(4, 3, '2024-03-01', '2025-06-30', 5500.00, 'Active');
+
+-- Insert property-amenities relationships (Many-to-Many)
+INSERT INTO property_amenities (property_id, amenity_id) VALUES
+-- Property 1 amenities
+(1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (1, 6), (1, 7),
+-- Property 2 amenities
+(2, 3), (2, 5), (2, 6), (2, 7), (2, 9),
+-- Property 3 amenities
+(3, 1), (3, 2), (3, 3), (3, 4), (3, 5), (3, 6), (3, 7), (3, 8), (3, 9), (3, 10),
+-- Property 4 amenities
+(4, 1), (4, 2), (4, 3), (4, 4), (4, 5), (4, 6), (4, 7), (4, 8), (4, 9), (4, 10);
 
 -- Insert sample transactions
 INSERT INTO transactions (type, description, amount, date, property_id, tenant_id, category, status) VALUES
