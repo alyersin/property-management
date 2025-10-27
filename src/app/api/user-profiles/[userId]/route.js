@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import databaseService from '../../../services/databaseService';
+import databaseService from '../../../../services/databaseService';
 
 // GET /api/user-profiles/[userId] - Get user profile
 export async function GET(request, { params }) {

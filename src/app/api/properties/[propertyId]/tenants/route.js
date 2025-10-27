@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import databaseService from '../../../services/databaseService';
+import databaseService from '../../../../../services/databaseService';
 
 // GET /api/properties/[propertyId]/tenants - Get property tenants
 export async function GET(request, { params }) {

@@ -260,6 +260,13 @@ src/app/api/
         └── properties/route.js  # GET /api/tenants/[tenantId]/properties
 ```
 
+**Import Path Structure:**
+- All API routes use relative imports to `databaseService`:
+  - `src/app/api/amenities/route.js` → `../../services/databaseService`
+  - `src/app/api/auth/login/route.js` → `../../../services/databaseService`
+  - `src/app/api/properties/[propertyId]/amenities/route.js` → `../../../../../services/databaseService`
+  - `src/app/api/user-profiles/[userId]/route.js` → `../../../../services/databaseService`
+
 ### **2. Login API Route**
 ```javascript
 // src/app/api/auth/login/route.js
@@ -834,6 +841,12 @@ volumes:
 - **Easy Testing**: Test one component, all features work
 - **Clear Structure**: Logical file organization
 - **Documentation**: Comprehensive architecture docs
+
+### **6. Recent Build Fixes (Latest Updates)**
+- **Import Path Corrections**: Fixed all API route import paths to correctly reference `databaseService`
+- **DELETE Route Fix**: Corrected amenities DELETE route to get `amenityId` from request body instead of params
+- **Vercel Deployment Ready**: All build errors resolved, application compiles successfully
+- **Module Resolution**: All API routes now properly import database service with correct relative paths
 
 ---
 

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import databaseService from '../../../services/databaseService';
+import databaseService from '../../../../../services/databaseService';
 
 // GET /api/properties/[propertyId]/amenities - Get property amenities
 export async function GET(request, { params }) {
@@ -48,10 +48,11 @@ export async function POST(request, { params }) {
   }
 }
 
-// DELETE /api/properties/[propertyId]/amenities/[amenityId] - Remove amenity from property
+// DELETE /api/properties/[propertyId]/amenities - Remove amenity from property
 export async function DELETE(request, { params }) {
   try {
-    const { propertyId, amenityId } = params;
+    const { propertyId } = params;
+    const { amenityId } = await request.json();
     
     if (!propertyId || !amenityId) {
       return NextResponse.json(

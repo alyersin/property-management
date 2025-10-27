@@ -201,10 +201,26 @@ app/
 ### **Backend API Routes**
 ```
 app/api/
-└── auth/
-    ├── login/route.js     # Server-side login validation
-    └── register/route.js  # Server-side registration
+├── auth/
+│   ├── login/route.js         # Server-side login validation
+│   └── register/route.js      # Server-side registration
+├── user-profiles/
+│   └── [userId]/route.js      # User profile management (1:1 relationship)
+├── amenities/
+│   └── route.js               # Amenities management
+├── properties/
+│   └── [propertyId]/
+│       ├── amenities/route.js    # Property amenities (M:N relationship)
+│       └── tenants/route.js      # Property tenants (M:N relationship)
+└── tenants/
+    └── [tenantId]/
+        └── properties/route.js   # Tenant properties (M:N relationship)
 ```
+
+**Import Path Structure:**
+- All API routes use correct relative imports to `databaseService`
+- Import paths vary based on route nesting depth
+- All routes properly reference the database service for data operations
 
 ### **Universal Components**
 ```

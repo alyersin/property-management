@@ -273,10 +273,26 @@ app/
 ### **Backend API Components**
 ```
 app/api/
-└── auth/
-    ├── login/route.js         # 48 lines - Server-side login validation
-    └── register/route.js      # 51 lines - Server-side registration
+├── auth/
+│   ├── login/route.js         # 48 lines - Server-side login validation
+│   └── register/route.js      # 51 lines - Server-side registration
+├── user-profiles/
+│   └── [userId]/route.js      # User profile management (1:1 relationship)
+├── amenities/
+│   └── route.js               # Amenities management
+├── properties/
+│   └── [propertyId]/
+│       ├── amenities/route.js    # Property amenities (M:N relationship)
+│       └── tenants/route.js      # Property tenants (M:N relationship)
+└── tenants/
+    └── [tenantId]/
+        └── properties/route.js   # Tenant properties (M:N relationship)
 ```
+
+**Recent Fixes Applied:**
+- ✅ **Import Path Corrections**: All API routes now use correct relative imports to `databaseService`
+- ✅ **DELETE Route Fix**: Amenities DELETE route corrected to get `amenityId` from request body
+- ✅ **Build Success**: All module resolution issues resolved, Vercel deployment ready
 
 ### **Universal Components (Reusable)**
 ```
