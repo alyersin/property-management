@@ -23,6 +23,10 @@ import {
   AlertDialogContent,
   AlertDialogOverlay,
   Button,
+  useBreakpointValue,
+  VStack,
+  HStack,
+  Divider,
 } from "@chakra-ui/react";
 import { useRef, useState } from "react";
 import { HamburgerIcon } from "@chakra-ui/icons";
@@ -41,6 +45,7 @@ const DataTable = ({
   const [selectedItem, setSelectedItem] = useState(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const cancelRef = useRef();
+  const isMobile = useBreakpointValue({ base: true, md: false });
 
   const handleDelete = (item) => {
     setSelectedItem(item);
@@ -90,6 +95,101 @@ const DataTable = ({
       <Box p={4} textAlign="center">
         <Text color="gray.500">{emptyMessage}</Text>
       </Box>
+    );
+  }
+
+  // Mobile Card View
+  if (isMobile) {
+    return (
+      <VStack spacing={4} align="stretch">
+        {data.map((item, index) => (
+          <Box key={index} bg="white" p={4} borderRadius="md" shadow="sm" border="1px" borderColor="gray.200">
+            <VStack align="stretch" spacing={3}>
+              {columns.slice(0, 3).map((column) => (
+                <Box key={column.key}>
+                  <Text fontSize="sm" fontWeight="bold" color="gray.600" mb={1}>
+                    {column.label}:
+                  </Text>
+                  <Box>
+                    {column.key === 'status' ? (
+                      <Badge colorScheme={getStatusColor(item[column.key])}>
+                        {item[column.key]}
+                      </Badge>
+                    ) : column.key === 'amount' ? (
+                      <Text
+                        color={item[column.key] >= 0 ? 'green.500' : 'red.500'}
+                        fontWeight="bold"
+                      >
+                        ${Math.abs(item[column.key]).toLocaleString()}
+                      </Text>
+                    ) : (
+                      getCellValue(item, column)
+                    )}
+                  </Box>
+                </Box>
+              ))}
+              
+              {(onEdit || onDelete || onView || actions.length > 0) && (
+                <>
+                  <Divider />
+                  <HStack justify="space-between">
+                    <HStack spacing={2}>
+                      {onView && (
+                        <Button size="xs" variant="outline" onClick={() => onView(item)}>
+                          View
+                        </Button>
+                      )}
+                      {onEdit && (
+                        <Button size="xs" colorScheme="blue" onClick={() => onEdit(item)}>
+                          Edit
+                        </Button>
+                      )}
+                    </HStack>
+                    
+                    <Menu>
+                      <MenuButton as={IconButton} icon={<HamburgerIcon />} size="xs" variant="ghost" />
+                      <MenuList>
+                        {actions.map((action, actionIndex) => (
+                          <MenuItem key={actionIndex} onClick={() => action.onClick(item)}>
+                            {action.label}
+                          </MenuItem>
+                        ))}
+                        {onDelete && (
+                          <MenuItem color="red.500" onClick={() => handleDelete(item)}>
+                            Delete
+                          </MenuItem>
+                        )}
+                      </MenuList>
+                    </Menu>
+                  </HStack>
+                </>
+              )}
+            </VStack>
+          </Box>
+        ))}
+        
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog isOpen={isOpen} leastDestructiveRef={cancelRef} onClose={onClose}>
+          <AlertDialogOverlay>
+            <AlertDialogContent>
+              <AlertDialogHeader fontSize="lg" fontWeight="bold">
+                Delete Item
+              </AlertDialogHeader>
+              <AlertDialogBody>
+                Are you sure you want to delete this item? This action cannot be undone.
+              </AlertDialogBody>
+              <AlertDialogFooter>
+                <Button ref={cancelRef} onClick={onClose}>
+                  Cancel
+                </Button>
+                <Button colorScheme="red" onClick={confirmDelete} ml={3}>
+                  Delete
+                </Button>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialogOverlay>
+        </AlertDialog>
+      </VStack>
     );
   }
 

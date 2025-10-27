@@ -2,11 +2,14 @@ import styled from 'styled-components';
 
 const StyledWrapper = styled.div`
   min-height: 100vh;
+  height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
   background: linear-gradient(135deg, #1f293a 0%, #0f1419 100%);
   font-family: 'Arial', sans-serif;
+  padding: 20px;
+  overflow: hidden;
 
   .container {
     position: relative;
@@ -17,6 +20,46 @@ const StyledWrapper = styled.div`
     align-items: center;
     border-radius: 50%;
     overflow: visible;
+  }
+
+  /* Mobile responsiveness */
+  @media (max-width: 768px) {
+    padding: 10px;
+    height: 100vh;
+    min-height: 100vh;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    
+    .container {
+      width: 100%;
+      height: auto;
+      min-height: auto;
+      border-radius: 20px;
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+  }
+
+  @media (max-width: 480px) {
+    padding: 5px;
+    height: 100vh;
+    min-height: 100vh;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    
+    .container {
+      width: 100%;
+      height: auto;
+      min-height: auto;
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
   }
 
   .container span {
@@ -32,6 +75,19 @@ const StyledWrapper = styled.div`
     animation: blink 3s linear infinite;
     animation-delay: calc(var(--i) * (3s / 50));
     opacity: 0.8;
+  }
+
+  /* Mobile responsiveness for background pattern */
+  @media (max-width: 768px) {
+    .container span {
+      transform: translate(-10%, -50%) rotate(calc(var(--i) * (360deg / 50))) translateX(200px) translateX(20px);
+    }
+  }
+
+  @media (max-width: 480px) {
+    .container span {
+      transform: translate(-10%, -50%) rotate(calc(var(--i) * (360deg / 50))) translateX(150px) translateX(15px);
+    }
   }
 
   @keyframes blink {
@@ -69,6 +125,29 @@ const StyledWrapper = styled.div`
     border: 1px solid rgba(0, 239, 255, 0.2);
   }
 
+  /* Mobile responsiveness for login box */
+  @media (max-width: 768px) {
+    .login-box {
+      width: 90%;
+      max-width: 350px;
+      padding: 25px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 2;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .login-box {
+      width: 95%;
+      max-width: 320px;
+      padding: 20px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 2;
+    }
+  }
+
   form {
     width: 100%;
     padding: 0 10px;
@@ -98,6 +177,15 @@ const StyledWrapper = styled.div`
     padding: 0 15px;
     transition: 0.5s ease;
     box-sizing: border-box;
+  }
+
+  /* Mobile responsiveness for inputs */
+  @media (max-width: 480px) {
+    input {
+      height: 50px;
+      font-size: 16px; /* Prevents zoom on iOS */
+      padding: 0 20px;
+    }
   }
 
   input:focus {
@@ -152,6 +240,14 @@ const StyledWrapper = styled.div`
     color: #1f293a;
     font-weight: 600;
     transition: all 0.3s ease;
+  }
+
+  /* Mobile responsiveness for button */
+  @media (max-width: 480px) {
+    .btn {
+      height: 50px;
+      font-size: 16px; /* Prevents zoom on iOS */
+    }
   }
 
   .btn:hover:not(:disabled) {
