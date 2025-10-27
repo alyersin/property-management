@@ -17,7 +17,7 @@ export default function PageLayout({
       <PageHeader title={title} actions={actions} />
       <Flex>
         {!isMobile && <Sidebar currentPage={currentPage} />}
-        <Box flex="1" p={isMobile ? 4 : 6} pt={isMobile ? 16 : 6}>
+        <Box flex="1" p={isMobile ? 4 : 6} pt={isMobile ? 4 : 6}>
           {children}
         </Box>
       </Flex>

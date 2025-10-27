@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useDisclosure } from "@chakra-ui/react";
-import { Add as AddIcon } from "@chakra-ui/icons";
+import { AddIcon } from "@chakra-ui/icons";
 
 import PageLayout from "./PageLayout";
 import SearchFilter from "./SearchFilter";
@@ -12,7 +12,7 @@ import DynamicForm from "./DynamicForm";
 import { useAppData } from "../../hooks/useAppData";
 import { getFieldsByType } from "../../config/formFields";
 import { FILTER_OPTIONS } from "../../utils/constants";
-import { filterBySearch, filterByStatus } from "../../utils/helpers";
+import { filterBySearch, filterByStatus, itemMatchesSearch, itemMatchesStatus } from "../../utils/helpers";
 import ProtectedRoute from "../auth/ProtectedRoute";
 import logger from "../../utils/logger";
 import { STORAGE_KEYS } from "../../constants/app";
@@ -66,10 +66,14 @@ const UniversalPage = ({
   const { data, loading, error, create, update, remove } = useAppData(dataType);
   const fields = getFieldsByType(dataType);
 
+  // Ensure data is always an array
+  const safeData = Array.isArray(data) ? data : [];
+
   // Filter data
-  const filteredData = data
-    .filter(item => filterBySearch(item, searchTerm, searchFields))
-    .filter(item => filterByStatus(item, filterValue));
+  const filteredData = safeData.filter(item => 
+    itemMatchesSearch(item, searchTerm, searchFields) && 
+    itemMatchesStatus(item, filterValue)
+  );
 
   const handleAdd = () => {
     setEditingItem(null);

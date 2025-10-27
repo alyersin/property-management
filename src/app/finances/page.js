@@ -2,7 +2,7 @@
 
 import UniversalPage from "../../components/shared/UniversalPage";
 import { getColumnsByType } from "../../config/tableColumns";
-import { Download as DownloadIcon } from "@chakra-ui/icons";
+import { DownloadIcon } from "@chakra-ui/icons";
 
 export default function Finances() {
   return (

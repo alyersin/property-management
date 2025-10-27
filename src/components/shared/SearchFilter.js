@@ -10,17 +10,29 @@ import {
   Select,
   Icon,
 } from "@chakra-ui/react";
-import { Search as SearchIcon } from "@chakra-ui/icons";
+import { SearchIcon } from "@chakra-ui/icons";
 
 export default function SearchFilter({
-  searchTerm,
+  searchTerm = "",
   onSearchChange,
   searchPlaceholder = "Search...",
-  filterValue,
+  filterValue = "all",
   onFilterChange,
   filterOptions = [],
   filterPlaceholder = "All",
 }) {
+  const handleSearchChange = (value) => {
+    if (typeof onSearchChange === 'function') {
+      onSearchChange(value);
+    }
+  };
+
+  const handleFilterChange = (value) => {
+    if (typeof onFilterChange === 'function') {
+      onFilterChange(value);
+    }
+  };
+
   return (
     <Card mb={6}>
       <CardBody>
@@ -31,15 +43,15 @@ export default function SearchFilter({
             </InputLeftElement>
             <Input
               placeholder={searchPlaceholder}
-              value={searchTerm}
-              onChange={(e) => onSearchChange(e.target.value)}
+              value={searchTerm || ""}
+              onChange={(e) => handleSearchChange(e.target.value)}
             />
           </InputGroup>
-          {filterOptions.length > 0 && (
+          {Array.isArray(filterOptions) && filterOptions.length > 0 && (
             <Select
               maxW="200px"
-              value={filterValue}
-              onChange={(e) => onFilterChange(e.target.value)}
+              value={filterValue || "all"}
+              onChange={(e) => handleFilterChange(e.target.value)}
             >
               <option value="all">{filterPlaceholder}</option>
               {filterOptions.map((option) => (
