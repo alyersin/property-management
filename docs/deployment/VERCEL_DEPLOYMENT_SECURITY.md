@@ -15,7 +15,7 @@ Go to your Vercel project dashboard → Settings → Environment Variables and a
 #### **Required Environment Variables:**
 ```env
 # Demo User Credentials - REQUIRED
-DEMO_USER_EMAIL=demo@homeadmin.com
+DEMO_USER_EMAIL=demo@homeadmin.ro
 DEMO_USER_PASSWORD=your-secure-demo-password
 DEMO_USER_NAME=Demo User
 DEMO_USER_ROLE=user

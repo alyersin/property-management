@@ -1,5 +1,5 @@
 -- PostgreSQL Database Schema for Home Admin Application
--- This schema is designed to support the current JSON data structure
+-- This schema supports multi-user data isolation where each user owns their properties, tenants, transactions, and expenses
 
 -- Users table
 CREATE TABLE users (
@@ -14,6 +14,7 @@ CREATE TABLE users (
 );
 
 -- User Profiles table (One-to-One with users)
+-- Note: emergency_contact and emergency_phone fields removed for simplified form presentation
 CREATE TABLE user_profiles (
     id SERIAL PRIMARY KEY,
     user_id INTEGER UNIQUE REFERENCES users(id) ON DELETE CASCADE,
@@ -22,22 +23,19 @@ CREATE TABLE user_profiles (
     phone VARCHAR(50),
     address TEXT,
     date_of_birth DATE,
-    emergency_contact VARCHAR(255),
-    emergency_phone VARCHAR(50),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Properties table
+-- Note: state, zip, and sqft fields removed for simplified form presentation
 CREATE TABLE properties (
     id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     address VARCHAR(255) NOT NULL,
     city VARCHAR(100) NOT NULL,
-    state VARCHAR(50) NOT NULL,
-    zip VARCHAR(20) NOT NULL,
     bedrooms INTEGER NOT NULL,
     bathrooms INTEGER NOT NULL,
-    sqft INTEGER NOT NULL,
     rent DECIMAL(10,2) NOT NULL,
     status VARCHAR(50) DEFAULT 'Available',
     notes TEXT,
@@ -46,17 +44,18 @@ CREATE TABLE properties (
 );
 
 -- Tenants table
+-- Note: emergency_contact and emergency_phone fields removed for simplified form presentation
 CREATE TABLE tenants (
     id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     name VARCHAR(255) NOT NULL,
-    email VARCHAR(255) UNIQUE NOT NULL,
+    email VARCHAR(255) NOT NULL,
     phone VARCHAR(50),
     status VARCHAR(50) DEFAULT 'Active',
-    emergency_contact VARCHAR(255),
-    emergency_phone VARCHAR(50),
     notes TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id, email)
 );
 
 -- Property-Tenants junction table (Many-to-Many)
@@ -73,25 +72,10 @@ CREATE TABLE property_tenants (
     UNIQUE(property_id, tenant_id, lease_start)
 );
 
--- Amenities table
-CREATE TABLE amenities (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    description TEXT,
-    category VARCHAR(50), -- 'indoor', 'outdoor', 'building', 'unit'
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Property-Amenities junction table (Many-to-Many)
-CREATE TABLE property_amenities (
-    property_id INTEGER REFERENCES properties(id) ON DELETE CASCADE,
-    amenity_id INTEGER REFERENCES amenities(id) ON DELETE CASCADE,
-    PRIMARY KEY (property_id, amenity_id)
-);
-
 -- Transactions table (for finances)
 CREATE TABLE transactions (
     id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     type VARCHAR(50) NOT NULL, -- 'Income' or 'Expense'
     description VARCHAR(255) NOT NULL,
     amount DECIMAL(10,2) NOT NULL,
@@ -106,6 +90,7 @@ CREATE TABLE transactions (
 -- Expenses table
 CREATE TABLE expenses (
     id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     description VARCHAR(255) NOT NULL,
     amount DECIMAL(10,2) NOT NULL,
     date DATE NOT NULL,
@@ -120,88 +105,34 @@ CREATE TABLE expenses (
 );
 
 -- Indexes for better performance
+CREATE INDEX idx_properties_user ON properties(user_id);
 CREATE INDEX idx_properties_status ON properties(status);
+CREATE INDEX idx_tenants_user ON tenants(user_id);
 CREATE INDEX idx_tenants_status ON tenants(status);
 CREATE INDEX idx_property_tenants_property ON property_tenants(property_id);
 CREATE INDEX idx_property_tenants_tenant ON property_tenants(tenant_id);
 CREATE INDEX idx_property_tenants_status ON property_tenants(status);
 CREATE INDEX idx_user_profiles_user ON user_profiles(user_id);
+CREATE INDEX idx_transactions_user ON transactions(user_id);
 CREATE INDEX idx_transactions_date ON transactions(date);
 CREATE INDEX idx_transactions_type ON transactions(type);
+CREATE INDEX idx_expenses_user ON expenses(user_id);
 CREATE INDEX idx_expenses_date ON expenses(date);
 CREATE INDEX idx_expenses_category ON expenses(category);
-CREATE INDEX idx_amenities_category ON amenities(category);
 
--- Insert sample data (matching JSON structure)
-INSERT INTO users (email, password, name, role) VALUES
-('admin@homeadmin.com', 'password', 'Admin User', 'admin'),
-('manager@homeadmin.com', 'manager123', 'Property Manager', 'manager'),
-('demo@homeadmin.com', 'demo123', 'Demo User', 'user');
 
--- Insert sample user profiles (One-to-One relationship)
-INSERT INTO user_profiles (user_id, bio, phone, address, emergency_contact, emergency_phone) VALUES
-(1, 'Experienced property administrator with 10+ years in real estate management.', '(555) 100-0001', '123 Admin St, San Francisco, CA 94102', 'Emergency Admin Contact', '(555) 100-0002'),
-(2, 'Property manager specializing in residential properties and tenant relations.', '(555) 200-0001', '456 Manager Ave, San Francisco, CA 94103', 'Emergency Manager Contact', '(555) 200-0002'),
-(3, 'Demo user for testing and demonstration purposes.', '(555) 300-0001', '789 Demo Rd, San Francisco, CA 94107', 'Emergency Demo Contact', '(555) 300-0002');
+-- No authentication users inserted - users are created via registration page
+-- Demo user accounts are configured via environment variables (.env) for mock authentication only
+-- Database serves only for proper accounts created via the register page
 
--- Insert sample amenities
-INSERT INTO amenities (name, description, category) VALUES
-('Swimming Pool', 'Outdoor swimming pool with deck area', 'outdoor'),
-('Fitness Center', '24/7 fitness center with modern equipment', 'building'),
-('Parking Garage', 'Covered parking garage with security', 'building'),
-('Balcony', 'Private balcony with city views', 'unit'),
-('Dishwasher', 'Built-in dishwasher in kitchen', 'indoor'),
-('Air Conditioning', 'Central air conditioning system', 'indoor'),
-('Hardwood Floors', 'Hardwood flooring throughout', 'indoor'),
-('Garden', 'Private garden space', 'outdoor'),
-('Laundry Room', 'In-unit washer and dryer', 'indoor'),
-('Security System', '24/7 security monitoring', 'building');
+-- No sample user profiles - users will create their own profiles
 
--- Insert sample properties
-INSERT INTO properties (address, city, state, zip, bedrooms, bathrooms, sqft, rent, status, notes) VALUES
-('123 Main Street', 'San Francisco', 'CA', '94102', 3, 2, 1200, 3500.00, 'Occupied', 'Well-maintained property with recent renovations.'),
-('456 Oak Avenue', 'San Francisco', 'CA', '94103', 2, 1, 900, 2800.00, 'Available', 'Recently renovated kitchen and bathroom.'),
-('789 Pine Road', 'San Francisco', 'CA', '94107', 3, 2, 1800, 4500.00, 'Renovating', 'Needs new flooring in living room.'),
-('321 Elm Street', 'San Francisco', 'CA', '94105', 4, 3, 2200, 5500.00, 'Occupied', 'Luxury property with modern amenities.');
+-- No sample properties - users will add their own properties
 
--- Insert sample tenants
-INSERT INTO tenants (name, email, phone, status, emergency_contact, emergency_phone, notes) VALUES
-('John Smith', 'john@email.com', '(555) 123-4567', 'Active', 'Jane Smith', '(555) 123-4568', 'Reliable tenant, always pays on time.'),
-('Mike Davis', 'mike@email.com', '(555) 456-7890', 'Active', 'Lisa Davis', '(555) 456-7891', 'Property under renovation, temporary arrangement.'),
-('Sarah Johnson', 'sarah@email.com', '(555) 789-0123', 'Active', 'Tom Johnson', '(555) 789-0124', 'Long-term tenant, excellent payment history.'),
-('Alex Wilson', 'alex@email.com', '(555) 321-6547', 'Prospective', 'Maria Wilson', '(555) 321-6548', 'Looking for 2-bedroom apartment, budget $3000/month.');
+-- No sample tenants - users will add their own tenants
 
--- Insert property-tenant relationships (Many-to-Many)
-INSERT INTO property_tenants (property_id, tenant_id, lease_start, lease_end, rent_amount, status) VALUES
-(1, 1, '2024-01-01', '2024-12-31', 3500.00, 'Active'),
-(3, 2, '2024-02-01', '2024-08-15', 4500.00, 'Active'),
-(4, 3, '2024-03-01', '2025-06-30', 5500.00, 'Active');
+-- No sample property-tenant relationships
 
--- Insert property-amenities relationships (Many-to-Many)
-INSERT INTO property_amenities (property_id, amenity_id) VALUES
--- Property 1 amenities
-(1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (1, 6), (1, 7),
--- Property 2 amenities
-(2, 3), (2, 5), (2, 6), (2, 7), (2, 9),
--- Property 3 amenities
-(3, 1), (3, 2), (3, 3), (3, 4), (3, 5), (3, 6), (3, 7), (3, 8), (3, 9), (3, 10),
--- Property 4 amenities
-(4, 1), (4, 2), (4, 3), (4, 4), (4, 5), (4, 6), (4, 7), (4, 8), (4, 9), (4, 10);
+-- No sample transactions - users will add their own transactions
 
--- Insert sample transactions
-INSERT INTO transactions (type, description, amount, date, property_id, tenant_id, category, status) VALUES
-('Income', 'Rent Payment - John Smith', 3500.00, '2024-12-01', 1, 1, 'Rent', 'Completed'),
-('Income', 'Rent Payment - Sarah Johnson', 5500.00, '2024-12-01', 4, 3, 'Rent', 'Completed'),
-('Expense', 'Property Tax - 123 Main Street', -800.00, '2024-12-05', 1, NULL, 'Taxes', 'Completed'),
-('Expense', 'Repair - AC Unit', -500.00, '2024-12-15', 2, NULL, 'Repair', 'Completed'),
-('Expense', 'Insurance Premium', -1200.00, '2024-12-10', NULL, NULL, 'Insurance', 'Completed'),
-('Income', 'Rent Payment - Mike Davis', 4500.00, '2024-12-01', 3, 2, 'Rent', 'Completed');
-
--- Insert sample expenses
-INSERT INTO expenses (description, amount, date, category, property_id, vendor, status, receipt, notes) VALUES
-('Property Tax - 123 Main Street', 800.00, '2024-12-05', 'Taxes', 1, 'City of San Francisco', 'Paid', 'receipt_001.pdf', 'Quarterly property tax payment'),
-('Water Bill - 456 Oak Avenue', 120.00, '2024-12-10', 'Utilities', 2, 'San Francisco Water', 'Paid', 'receipt_002.pdf', 'Monthly water bill'),
-('Repair - AC Unit', 500.00, '2024-12-15', 'Repair', 2, 'Cool Air Services', 'Paid', 'receipt_003.pdf', 'AC unit repair and maintenance'),
-('Insurance Premium', 1200.00, '2024-12-10', 'Insurance', NULL, 'Property Insurance Co.', 'Paid', 'receipt_004.pdf', 'Annual property insurance premium'),
-('Cleaning Services', 200.00, '2024-12-12', 'Cleaning', 3, 'Clean Pro Services', 'Paid', 'receipt_005.pdf', 'Deep cleaning after renovation'),
-('Landscaping', 150.00, '2024-12-08', 'Landscaping', 4, 'Green Thumb Landscaping', 'Paid', 'receipt_006.pdf', 'Monthly landscaping maintenance');
+-- No sample expenses - users will add their own expenses

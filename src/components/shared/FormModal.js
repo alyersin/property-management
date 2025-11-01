@@ -29,17 +29,7 @@ export default function FormModal({
         <ModalHeader>{title}</ModalHeader>
         <ModalCloseButton />
         <ModalBody pb={6}>
-          <VStack spacing={4}>
-            {children}
-            <Flex gap={2} w="full" justify="flex-end">
-              <Button variant="outline" onClick={onClose}>
-                {cancelLabel}
-              </Button>
-              <Button colorScheme="blue" onClick={onSubmit}>
-                {submitLabel}
-              </Button>
-            </Flex>
-          </VStack>
+          {children}
         </ModalBody>
       </ModalContent>
     </Modal>

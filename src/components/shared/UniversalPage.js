@@ -118,12 +118,20 @@ const UniversalPage = ({
     ? filterOptions 
     : FILTER_OPTIONS[dataType] || [];
 
+  // Map data types to their singular forms
+  const singularForm = {
+    properties: 'property',
+    tenants: 'tenant',
+    transactions: 'transaction',
+    expenses: 'expense'
+  }[dataType] || dataType.slice(0, -1);
+
   return (
     <ProtectedRoute>
       <PageLayout
         title={title}
         actions={[
-          { label: `Add ${dataType.slice(0, -1)}`, icon: AddIcon, onClick: handleAdd },
+          { label: `Add ${singularForm}`, icon: AddIcon, onClick: handleAdd },
           ...actions
         ]}
         currentPage={currentPage}
@@ -149,7 +157,7 @@ const UniversalPage = ({
         <FormModal
           isOpen={isOpen}
           onClose={handleClose}
-          title={editingItem ? `Edit ${dataType.slice(0, -1)}` : `Add ${dataType.slice(0, -1)}`}
+          title={editingItem ? `Edit ${singularForm}` : `Add ${singularForm}`}
           onSubmit={handleSubmit}
         >
           <DynamicForm

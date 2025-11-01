@@ -61,19 +61,21 @@ getUsersFromEnv() {
   // Check if we're in a browser environment (client-side)
   if (typeof window !== 'undefined') {
     // Client-side: Use hardcoded fallbacks (safe for demo)
+    // Client-side: Use single demo user (simplified December 2024)
     return [
-      { email: "admin@homeadmin.com", password: "password", ... },
-      { email: "manager@homeadmin.com", password: "manager123", ... },
-      { email: "demo@homeadmin.com", password: "demo123", ... }
+      { email: "demo@homeadmin.ro", password: "demo123", ... }
     ];
   }
 
   // Server-side: Try environment variables with fallbacks
   try {
     return [
-      { email: process.env.DEMO_ADMIN_EMAIL || "admin@homeadmin.com", ... },
-      { email: process.env.DEMO_MANAGER_EMAIL || "manager@homeadmin.com", ... },
-      { email: process.env.DEMO_USER_EMAIL || "demo@homeadmin.com", ... }
+      { 
+        email: process.env.DEMO_USER_EMAIL || "demo@homeadmin.ro", 
+        password: process.env.DEMO_USER_PASSWORD || "demo123",
+        name: process.env.DEMO_USER_NAME || "Demo User",
+        role: process.env.DEMO_USER_ROLE || "user"
+      }
     ];
   } catch (error) {
     // Fallback to defaults if environment variables fail

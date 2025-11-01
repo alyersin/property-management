@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import databaseService from '../../services/databaseService';
 
 const UserProfile = ({ userId, onClose }) => {
   const [profile, setProfile] = useState(null);
@@ -10,9 +9,7 @@ const UserProfile = ({ userId, onClose }) => {
     bio: '',
     phone: '',
     address: '',
-    date_of_birth: '',
-    emergency_contact: '',
-    emergency_phone: ''
+    date_of_birth: ''
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -24,16 +21,17 @@ const UserProfile = ({ userId, onClose }) => {
   const loadProfile = async () => {
     try {
       setLoading(true);
-      const profileData = await databaseService.getUserProfile(userId);
-      setProfile(profileData);
-      setFormData({
-        bio: profileData.bio || '',
-        phone: profileData.phone || '',
-        address: profileData.address || '',
-        date_of_birth: profileData.date_of_birth || '',
-        emergency_contact: profileData.emergency_contact || '',
-        emergency_phone: profileData.emergency_phone || ''
-      });
+      const res = await fetch(`/api/user-profiles/${userId}`);
+      if (res.ok) {
+        const profileData = await res.json();
+        setProfile(profileData);
+        setFormData({
+          bio: profileData.bio || '',
+          phone: profileData.phone || '',
+          address: profileData.address || '',
+          date_of_birth: profileData.date_of_birth || ''
+        });
+      }
     } catch (error) {
       console.error('Error loading profile:', error);
     } finally {
@@ -44,11 +42,12 @@ const UserProfile = ({ userId, onClose }) => {
   const handleSave = async () => {
     try {
       setSaving(true);
-      if (profile) {
-        await databaseService.updateUserProfile(userId, formData);
-      } else {
-        await databaseService.createUserProfile(userId, formData);
-      }
+      const method = profile ? 'PUT' : 'POST';
+      await fetch(`/api/user-profiles/${userId}`, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
       await loadProfile();
       setIsEditing(false);
     } catch (error) {
@@ -64,9 +63,7 @@ const UserProfile = ({ userId, onClose }) => {
       bio: profile?.bio || '',
       phone: profile?.phone || '',
       address: profile?.address || '',
-      date_of_birth: profile?.date_of_birth || '',
-      emergency_contact: profile?.emergency_contact || '',
-      emergency_phone: profile?.emergency_phone || ''
+      date_of_birth: profile?.date_of_birth || ''
     });
     setIsEditing(false);
   };
@@ -149,34 +146,6 @@ const UserProfile = ({ userId, onClose }) => {
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Emergency Contact
-                </label>
-                <input
-                  type="text"
-                  value={formData.emergency_contact}
-                  onChange={(e) => setFormData({ ...formData, emergency_contact: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Emergency contact name"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Emergency Phone
-                </label>
-                <input
-                  type="tel"
-                  value={formData.emergency_phone}
-                  onChange={(e) => setFormData({ ...formData, emergency_phone: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="(555) 123-4567"
-                />
-              </div>
-            </div>
-
             <div className="flex justify-end space-x-3 pt-4">
               <button
                 onClick={handleCancel}
@@ -223,26 +192,6 @@ const UserProfile = ({ userId, onClose }) => {
               <div>
                 <h4 className="font-medium text-gray-800">Address</h4>
                 <p className="text-gray-600">{profile.address}</p>
-              </div>
-            )}
-
-            {(profile?.emergency_contact || profile?.emergency_phone) && (
-              <div>
-                <h4 className="font-medium text-gray-800 mb-2">Emergency Contact</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {profile.emergency_contact && (
-                    <div>
-                      <span className="text-sm text-gray-500">Name:</span>
-                      <p className="text-gray-600">{profile.emergency_contact}</p>
-                    </div>
-                  )}
-                  {profile.emergency_phone && (
-                    <div>
-                      <span className="text-sm text-gray-500">Phone:</span>
-                      <p className="text-gray-600">{profile.emergency_phone}</p>
-                    </div>
-                  )}
-                </div>
               </div>
             )}
 

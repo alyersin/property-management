@@ -6,22 +6,15 @@ This directory contains configuration files for the Home Admin application.
 
 The `demo-credentials.json` file contains demo user accounts for testing the application. These credentials are used for development and demonstration purposes.
 
-### Available Demo Users
+### Available Demo User
 
-1. **Admin User**
-   - Email: `admin@homeadmin.com`
-   - Password: `password`
-   - Role: `admin`
+**Note:** The application now uses only one demo user configured via environment variables for simplified exam presentation.
 
-2. **Property Manager**
-   - Email: `manager@homeadmin.com`
-   - Password: `manager123`
-   - Role: `manager`
-
-3. **Demo User**
-   - Email: `demo@homeadmin.com`
-   - Password: `demo123`
-   - Role: `user`
+1. **Demo User**
+   - Email: `demo@homeadmin.ro` (configured in `.env` as `DEMO_USER_EMAIL`)
+   - Password: Configured in `.env` as `DEMO_USER_PASSWORD`
+   - Name: Configured in `.env` as `DEMO_USER_NAME`
+   - Role: Configured in `.env` as `DEMO_USER_ROLE`
 
 ### Usage
 
@@ -31,15 +24,15 @@ These credentials are automatically loaded by the authentication system and can 
 
 ⚠️ **Important**: These are demo credentials only. In a production environment, user authentication should be handled by a secure backend service with proper password hashing and database storage.
 
-### Adding New Demo Users
+### Configuration
 
-To add new demo users, edit the `demo-credentials.json` file and add new entries to the `demoUsers` array:
+Demo user credentials are configured via environment variables in `.env` file:
 
-```json
-{
-  "email": "newuser@example.com",
-  "password": "newpassword",
-  "name": "New User",
-  "role": "user"
-}
+```env
+DEMO_USER_EMAIL=demo@homeadmin.ro
+DEMO_USER_PASSWORD=demo123
+DEMO_USER_NAME=Demo User
+DEMO_USER_ROLE=user
 ```
+
+**Note:** Other users should be created via the registration page and will be stored in the database.

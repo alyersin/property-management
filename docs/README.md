@@ -33,6 +33,19 @@ Documentation of features and code that have been removed from the application.
 
 - **[REMOVED_ELEMENTS_DOCUMENTATION.md](./removed-elements/REMOVED_ELEMENTS_DOCUMENTATION.md)** - Comprehensive list of all removed features, components, and code for future reference
 
+### 📊 Recent Updates (December 2024)
+
+**Form Simplification:**
+- Simplified property and tenant forms for exam presentation
+- Removed fields: state, zip, sqft, emergency contact/phone from properties, tenants, and user profiles
+- Updated database schema to match simplified forms
+- Migration scripts available in `src/database/migration_remove_simplified_fields.sql`
+
+**Documentation:**
+- **[FINANCES_EXPENSES_EXPLANATION.md](./FINANCES_EXPENSES_EXPLANATION.md)** - Explanation of Finances vs Expenses pages
+- **[MIGRATION_INSTRUCTIONS.md](./MIGRATION_INSTRUCTIONS.md)** - Guide for running database migrations
+- **[VERIFY_MIGRATION.sql](./VERIFY_MIGRATION.sql)** - SQL queries to verify migration success
+
 ---
 
 ## 🔍 Quick Links
@@ -52,5 +65,10 @@ Documentation of features and code that have been removed from the application.
 
 ---
 
-**Last Updated:** October 25, 2025
+**Last Updated:** December 2024
+
+**Recent Changes:**
+- Form simplification for exam presentation
+- Database schema updated (removed state, zip, sqft, emergency contact fields)
+- All documentation updated to reflect current state
 

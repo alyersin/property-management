@@ -2,19 +2,12 @@
 
 import { useState } from 'react';
 import UniversalPage from "../../components/shared/UniversalPage";
-import PropertyAmenities from "../../components/shared/PropertyAmenities";
 import PropertyTenantManagement from "../../components/shared/PropertyTenantManagement";
 import { getColumnsByType } from "../../config/tableColumns";
 
 export default function Properties() {
-  const [showAmenities, setShowAmenities] = useState(false);
   const [showTenantManagement, setShowTenantManagement] = useState(false);
   const [selectedPropertyId, setSelectedPropertyId] = useState(null);
-
-  const handleAmenitiesClick = (propertyId) => {
-    setSelectedPropertyId(propertyId);
-    setShowAmenities(true);
-  };
 
   const handleTenantManagementClick = (propertyId) => {
     setSelectedPropertyId(propertyId);
@@ -22,11 +15,6 @@ export default function Properties() {
   };
 
   const customActions = [
-    {
-      label: 'Manage Amenities',
-      onClick: handleAmenitiesClick,
-      className: 'bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm'
-    },
     {
       label: 'Manage Tenants',
       onClick: handleTenantManagementClick,
@@ -45,16 +33,6 @@ export default function Properties() {
         emptyMessage="No properties found"
         customActions={customActions}
       />
-      
-      {showAmenities && (
-        <PropertyAmenities
-          propertyId={selectedPropertyId}
-          onClose={() => {
-            setShowAmenities(false);
-            setSelectedPropertyId(null);
-          }}
-        />
-      )}
       
       {showTenantManagement && (
         <PropertyTenantManagement

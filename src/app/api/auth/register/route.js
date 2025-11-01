@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import logger from '../../../../utils/logger';
+import databaseService from '../../../../services/databaseService';
 
 export async function POST(request) {
   try {
@@ -26,23 +27,48 @@ export async function POST(request) {
       );
     }
 
-    // For demo purposes, create a new user
-    // In production, you would save to database
-    const newUser = {
-      id: Date.now(),
+    // Check if user already exists
+    const existingUser = await databaseService.getUserByEmail(email);
+    if (existingUser) {
+      return NextResponse.json(
+        { success: false, error: 'Email already registered' },
+        { status: 400 }
+      );
+    }
+
+    // Create user in database
+    const newUser = await databaseService.createUser({
       email,
+      password,
       name,
-      role: 'user',
-      loginTime: new Date().toISOString()
-    };
+      role: 'user'
+    });
+
+    // Return user data without password
+    const { password: _, ...userWithoutPassword } = newUser;
 
     return NextResponse.json({
       success: true,
-      user: newUser
+      user: {
+        id: userWithoutPassword.id,
+        email: userWithoutPassword.email,
+        name: userWithoutPassword.name,
+        role: userWithoutPassword.role,
+        loginTime: new Date().toISOString()
+      }
     });
 
   } catch (error) {
     logger.error('Registration API error', error);
+    
+    // Handle unique constraint violation (duplicate email)
+    if (error.code === '23505' || error.message?.includes('duplicate')) {
+      return NextResponse.json(
+        { success: false, error: 'Email already registered' },
+        { status: 400 }
+      );
+    }
+    
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 }

@@ -8,7 +8,7 @@ export const PROPERTY_COLUMNS = [
       <div>
         <div style={{ fontWeight: 'bold' }}>{value}</div>
         <div style={{ fontSize: '0.875rem', color: '#666' }}>
-          {item.city}, {item.state} {item.zip}
+          {item.city}
         </div>
       </div>
     )
@@ -19,7 +19,6 @@ export const PROPERTY_COLUMNS = [
     render: (_, item) => (
       <div>
         <div style={{ fontSize: '0.875rem' }}>{item.bedrooms} bed, {item.bathrooms} bath</div>
-        <div style={{ fontSize: '0.875rem', color: '#666' }}>{item.sqft} sqft</div>
       </div>
     )
   },
@@ -35,18 +34,6 @@ export const PROPERTY_COLUMNS = [
   {
     key: 'status',
     label: 'Status'
-  },
-  {
-    key: 'tenant',
-    label: 'Tenant',
-    render: (value, item) => value ? (
-      <div>
-        <div style={{ fontWeight: 'bold' }}>{value}</div>
-        <div style={{ fontSize: '0.875rem', color: '#666' }}>{item.tenantEmail}</div>
-      </div>
-    ) : (
-      <div style={{ color: '#666' }}>No tenant</div>
-    )
   }
 ];
 
@@ -86,11 +73,6 @@ export const TENANT_COLUMNS = [
   {
     key: 'status',
     label: 'Status'
-  },
-  {
-    key: 'leaseEnd',
-    label: 'Lease End',
-    render: (value) => value ? new Date(value).toLocaleDateString() : '-'
   }
 ];
 

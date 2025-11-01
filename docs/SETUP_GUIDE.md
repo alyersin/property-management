@@ -116,10 +116,11 @@ The application will be available at: http://localhost:3000
 
 ## Step 8: Test the Application
 
-1. **Login**: Use any of these test accounts:
-   - Email: `admin@homeadmin.com`, Password: `password`
-   - Email: `manager@homeadmin.com`, Password: `manager123`
-   - Email: `demo@homeadmin.com`, Password: `demo123`
+1. **Login**: Use the demo account configured in your `.env` file:
+   - Email: `demo@homeadmin.ro` (or value from `DEMO_USER_EMAIL`)
+   - Password: Value from `DEMO_USER_PASSWORD` in `.env`
+   
+   **Note:** Additional users can be created via the registration page and will be stored in the database.
 
 2. **Explore Features**:
    - Dashboard with statistics

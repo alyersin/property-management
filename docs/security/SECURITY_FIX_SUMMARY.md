@@ -9,7 +9,7 @@
 ```javascript
 // Found in .next/static/chunks/324-65c19e9dc0fbbcbf.js
 getUsersFromEnv(){return[
-  {id:1,email:"demo@homeadmin.com",password:"demo123",name:"Demo User",role:"user"}
+  {id:1,email:"demo@homeadmin.ro",password:"demo123",name:"Demo User",role:"user"}
 ]}
 ```
 
@@ -109,11 +109,11 @@ export const getDemoUsers = () => {
   return [
     {
       id: 1,
-      email: process.env.DEMO_ADMIN_EMAIL || "admin@homeadmin.com",
-      password: process.env.DEMO_ADMIN_PASSWORD || "password",
-      // ... other fields
+      email: process.env.DEMO_USER_EMAIL || "demo@homeadmin.ro",
+      password: process.env.DEMO_USER_PASSWORD || "demo123",
+      name: process.env.DEMO_USER_NAME || "Demo User",
+      role: process.env.DEMO_USER_ROLE || "user"
     }
-    // ... other users
   ];
 };
 ```
@@ -150,8 +150,8 @@ export const validateCredentials = (email, password) => {
 ```javascript
 // Client-side code with exposed credentials
 const users = [
-  { email: "admin@homeadmin.com", password: "password" },
-  { email: "manager@homeadmin.com", password: "manager123" }
+  { email: "demo@homeadmin.ro", password: "demo123" },
+  // ... hardcoded credentials exposed in client bundle
 ];
 ```
 

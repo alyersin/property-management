@@ -7,16 +7,272 @@ This document tracks all elements that have been removed from the Home Admin app
 **PRIORITY:** Always update this documentation file immediately after removing any element, component, feature, or functionality from the application.
 
 ## Table of Contents
-1. [Maintenance System](#maintenance-system)
-2. [Dashboard Quick Actions](#dashboard-quick-actions)
-3. [Dashboard Alerts & Notifications](#dashboard-alerts--notifications)
-4. [Navigation Elements](#navigation-elements)
-5. [Form Options](#form-options)
-6. [Status Options](#status-options)
-7. [Component References](#component-references)
-8. [Future Removals](#future-removals)
+1. [Form Simplification - December 2024](#form-simplification---december-2024)
+2. [Maintenance System](#maintenance-system)
+3. [Dashboard Quick Actions](#dashboard-quick-actions)
+4. [Dashboard Alerts & Notifications](#dashboard-alerts--notifications)
+5. [Navigation Elements](#navigation-elements)
+6. [Form Options](#form-options)
+7. [Status Options](#status-options)
+8. [Component References](#component-references)
+9. [Amenities Feature - REMOVED](#7-amenities-feature---removed-december-2024)
+10. [Future Removals](#future-removals)
 
 ---
+
+## Form Simplification - December 2024
+
+### Purpose
+Simplified forms for university exam presentation while maintaining functionality. All removed fields can be easily restored.
+
+### 1. Property Form Fields Removed
+**Location:** `src/config/formFields.js` - PROPERTY_FIELDS array  
+**Status:** ❌ REMOVED (can be restored)
+
+**Removed Fields:**
+- `state` - State field (text input)
+- `zip` - ZIP Code field (text input)
+- `sqft` - Square Feet field (number input)
+- `tenant` - Tenant Name field (text input)
+- `tenantEmail` - Tenant Email field (email input)
+- `tenantPhone` - Tenant Phone field (tel input)
+- `leaseEnd` - Lease End Date field (date input)
+
+**Original Implementation:**
+```javascript
+{ name: 'state', label: 'State', type: 'text', required: true, placeholder: 'Enter state' },
+{ name: 'zip', label: 'ZIP Code', type: 'text', required: true, placeholder: 'Enter ZIP code' },
+{ name: 'sqft', label: 'Square Feet', type: 'number', required: true, min: 100 },
+{ name: 'tenant', label: 'Tenant Name', type: 'text', placeholder: 'Enter tenant name' },
+{ name: 'tenantEmail', label: 'Tenant Email', type: 'email', placeholder: 'Enter tenant email' },
+{ name: 'tenantPhone', label: 'Tenant Phone', type: 'tel', placeholder: 'Enter tenant phone' },
+{ name: 'leaseEnd', label: 'Lease End Date', type: 'date' },
+```
+
+**Reason for Removal:** Simplify property form for exam presentation. Tenants are now managed separately via the tenants tab and linked to properties through the property selection dropdown in tenant creation.
+
+**Impact:** 
+- Property creation form is simpler with only: address, city, bedrooms, bathrooms, rent, status, notes
+- Tenant information is no longer stored directly on properties
+- Tenants must be created separately and linked to properties via the tenants tab
+
+### 2. Tenant Form Fields Removed
+**Location:** `src/config/formFields.js` - TENANT_FIELDS array  
+**Status:** ❌ REMOVED (can be restored)
+
+**Removed Fields:**
+- `emergencyContact` - Emergency Contact field (text input)
+- `emergencyPhone` - Emergency Phone field (tel input)
+- `leaseEnd` - Lease End Date field (date input)
+
+**Original Implementation:**
+```javascript
+{ name: 'emergencyContact', label: 'Emergency Contact', type: 'text', placeholder: 'Enter emergency contact name' },
+{ name: 'emergencyPhone', label: 'Emergency Phone', type: 'tel', placeholder: 'Enter emergency contact phone' },
+{ name: 'leaseEnd', label: 'Lease End Date', type: 'date', required: true },
+```
+
+**Reason for Removal:** Simplify tenant form for exam presentation
+
+**Impact:**
+- Tenant creation form is simpler
+- Emergency contact information is no longer tracked
+- Lease end dates can be managed through property-tenant relationships if needed
+
+### 2b. User Profile Fields Removed
+**Location:** `src/components/shared/UserProfile.js`  
+**Status:** ❌ REMOVED (can be restored)
+
+**Removed Fields:**
+- `emergency_contact` - Emergency Contact field (text input)
+- `emergency_phone` - Emergency Phone field (tel input)
+
+**Original Implementation:**
+```javascript
+// In formData state (lines 8-15):
+const [formData, setFormData] = useState({
+  bio: '',
+  phone: '',
+  address: '',
+  date_of_birth: '',
+  emergency_contact: '',  // REMOVED
+  emergency_phone: ''     // REMOVED
+});
+
+// In form inputs (lines 155-181):
+<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+  <div>
+    <label>Emergency Contact</label>
+    <input
+      type="text"
+      value={formData.emergency_contact}
+      onChange={(e) => setFormData({ ...formData, emergency_contact: e.target.value })}
+      placeholder="Emergency contact name"
+    />
+  </div>
+  <div>
+    <label>Emergency Phone</label>
+    <input
+      type="tel"
+      value={formData.emergency_phone}
+      onChange={(e) => setFormData({ ...formData, emergency_phone: e.target.value })}
+      placeholder="(555) 123-4567"
+    />
+  </div>
+</div>
+
+// In display section (lines 232-250):
+{(profile?.emergency_contact || profile?.emergency_phone) && (
+  <div>
+    <h4>Emergency Contact</h4>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {profile.emergency_contact && (
+        <div>
+          <span>Name:</span>
+          <p>{profile.emergency_contact}</p>
+        </div>
+      )}
+      {profile.emergency_phone && (
+        <div>
+          <span>Phone:</span>
+          <p>{profile.emergency_phone}</p>
+        </div>
+      )}
+    </div>
+  </div>
+)}
+```
+
+**Reason for Removal:** Simplify user profile form for exam presentation
+
+**Impact:**
+- User profile form is simpler
+- Emergency contact information is no longer tracked in user profiles
+- User profiles now only contain: bio, phone, address, date_of_birth
+
+### 3. Property Table Columns Simplified
+**Location:** `src/config/tableColumns.js` - PROPERTY_COLUMNS array  
+**Status:** ❌ CHANGED (can be restored)
+
+**Changes:**
+- Removed state and zip code from address display (now shows only city)
+- Removed square feet from details display
+- Removed tenant column (tenants shown via property-tenant relationships)
+
+**Original Implementation:**
+```javascript
+// Address column showed: {item.city}, {item.state} {item.zip}
+// Details column showed: {item.bedrooms} bed, {item.bathrooms} bath + {item.sqft} sqft
+// Had a separate tenant column showing tenant name and email
+```
+
+**Current Implementation:**
+```javascript
+// Address column shows only: {item.city}
+// Details column shows only: {item.bedrooms} bed, {item.bathrooms} bath
+// No tenant column (tenants managed separately)
+```
+
+### 4. Tenant Table Columns Simplified
+**Location:** `src/config/tableColumns.js` - TENANT_COLUMNS array  
+**Status:** ❌ CHANGED (can be restored)
+
+**Changes:**
+- Removed lease end date column
+
+**Original Implementation:**
+```javascript
+{
+  key: 'leaseEnd',
+  label: 'Lease End',
+  render: (value) => value ? new Date(value).toLocaleDateString() : '-'
+}
+```
+
+### 5. FormModal Duplicate Buttons Fixed
+**Location:** `src/components/shared/FormModal.js`  
+**Status:** ✅ FIXED
+
+**Issue:** FormModal component had its own Cancel/Submit buttons that duplicated the buttons in DynamicForm, resulting in two sets of buttons in modals.
+
+**Original Implementation:**
+```javascript
+<ModalBody pb={6}>
+  <VStack spacing={4}>
+    {children}
+    <Flex gap={2} w="full" justify="flex-end">
+      <Button variant="outline" onClick={onClose}>
+        {cancelLabel}
+      </Button>
+      <Button colorScheme="blue" onClick={onSubmit}>
+        {submitLabel}
+      </Button>
+    </Flex>
+  </VStack>
+</ModalBody>
+```
+
+**Current Implementation:**
+```javascript
+<ModalBody pb={6}>
+  {children}
+</ModalBody>
+```
+
+**Reason for Change:** DynamicForm already handles form submission with its own buttons, making FormModal's buttons redundant and confusing.
+
+**Impact:** 
+- Only one set of buttons (Cancel/Create or Cancel/Update) now appears in modals
+- Cleaner UI with no duplicate actions
+
+### 6. Database Schema Fields - REMOVED
+**Location:** `src/database/schema.sql` and `src/services/databaseService.js`  
+**Status:** ✅ REMOVED from schema and service layer
+
+**Database Schema Updates:**
+- **Properties table**: Removed `state`, `zip`, `sqft` columns
+- **Tenants table**: Removed `emergency_contact`, `emergency_phone` columns
+- **User Profiles table**: Removed `emergency_contact`, `emergency_phone` columns
+
+**Migration File Created:**
+`src/database/migration_remove_simplified_fields.sql` - Run this on existing databases to remove the columns
+
+**DatabaseService Updates:**
+**Location:** `src/services/databaseService.js`
+
+**Properties INSERT (line 167-173):**
+```javascript
+// Updated: Removed state, zip, sqft from INSERT statement
+INSERT INTO properties (user_id, address, city, bedrooms, bathrooms, rent, status, notes)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+```
+
+**Tenants INSERT (line 240-244):**
+```javascript
+// Updated: Removed emergency_contact, emergency_phone from INSERT statement
+INSERT INTO tenants (user_id, name, email, phone, status, notes)
+VALUES ($1, $2, $3, $4, $5, $6)
+```
+
+**User Profiles INSERT (line 98-107):**
+```javascript
+// Updated: Removed emergency_contact, emergency_phone from INSERT statement
+INSERT INTO user_profiles (user_id, bio, phone, address, date_of_birth)
+VALUES ($1, $2, $3, $4, $5)
+```
+
+**Query Updates:**
+- Removed `p.state, p.zip` from property-tenant join queries
+- Removed `emergency_contact, emergency_phone` from getUserProfile fallback return
+
+**For Existing Databases:**
+If you have an existing database with these columns, run:
+```bash
+psql -d your_database_name -f src/database/migration_remove_simplified_fields.sql
+```
+
+**For Fresh Installations:**
+The updated `schema.sql` no longer includes these columns, so new installations will match the simplified schema automatically.
 
 ## Future Removals
 
@@ -42,6 +298,7 @@ When documenting new removals, use this template:
 ### Update Log
 - **Initial Documentation**: Created comprehensive documentation of all maintenance system removals and dashboard cleanup
 - **Last Updated**: December 2024 - Initial comprehensive documentation created
+- **Form Simplification (December 2024)**: Removed duplicate buttons from FormModal, simplified property and tenant forms for university exam presentation
 - **Test Login Page**: Created new styled-components test login page at `/test-login` with animated background and Home Admin branding
 - **Test Login Improvements**: Removed browser autocomplete suggestions and increased circle size to cover entire form
 - **Test Register Page**: Created new styled-components register page at `/test-register` with same design as login but without demo credentials
@@ -510,3 +767,211 @@ To restore any of these elements:
 6. **Component References**: Update menu items and color mappings
 
 All removed elements followed the same patterns as existing components, so they can be easily restored by following the established component structure and data management patterns.
+
+---
+
+## 7. Amenities Feature - REMOVED (December 2024)
+
+**Location:** Multiple files  
+**Status:** ✅ REMOVED (can be restored)
+
+**Reason for Removal:** Simplified property management for exam presentation - properties should only use the basic form fields (address, city, bedrooms, bathrooms, rent, status, notes).
+
+### 7a. Component Removal
+
+**Removed Files:**
+- ✅ `src/components/shared/PropertyAmenities.js` - Complete component deleted
+
+**Original Implementation:**
+```javascript
+// PropertyAmenities.js - Modal component for managing property amenities
+const PropertyAmenities = ({ propertyId, onClose }) => {
+  const [amenities, setAmenities] = useState([]);
+  const [propertyAmenities, setPropertyAmenities] = useState([]);
+  
+  // Component allowed users to:
+  // - View all available amenities
+  // - Toggle amenities on/off for a property
+  // - Group amenities by category (indoor, outdoor, building, unit)
+};
+```
+
+### 7b. API Routes Removal
+
+**Removed Files:**
+- ✅ `src/app/api/amenities/route.js` - GET endpoint for all amenities
+- ✅ `src/app/api/properties/[propertyId]/amenities/route.js` - GET, POST, DELETE endpoints for property amenities
+
+**Original API Endpoints:**
+- `GET /api/amenities` - Get all available amenities
+- `GET /api/properties/[propertyId]/amenities` - Get amenities for a property
+- `POST /api/properties/[propertyId]/amenities` - Add amenity to property
+- `DELETE /api/properties/[propertyId]/amenities` - Remove amenity from property
+
+### 7c. Properties Page Updates
+
+**Location:** `src/app/properties/page.js`  
+**Changes:**
+- Removed `PropertyAmenities` import
+- Removed `showAmenities` state
+- Removed `handleAmenitiesClick` handler
+- Removed "Manage Amenities" button from `customActions`
+- Removed amenities modal rendering
+
+**Before:**
+```javascript
+import PropertyAmenities from "../../components/shared/PropertyAmenities";
+
+const customActions = [
+  {
+    label: 'Manage Amenities',
+    onClick: handleAmenitiesClick,
+    className: 'bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm'
+  },
+  {
+    label: 'Manage Tenants',
+    onClick: handleTenantManagementClick,
+    className: 'bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm'
+  }
+];
+
+{showAmenities && (
+  <PropertyAmenities propertyId={selectedPropertyId} onClose={...} />
+)}
+```
+
+**After:**
+```javascript
+// PropertyAmenities import removed
+// Only "Manage Tenants" action remains
+```
+
+### 7d. Database Service Updates
+
+**Location:** `src/services/databaseService.js`  
+**Changes:**
+- Removed `getAmenities()` method
+- Removed `getPropertyAmenities(propertyId, userId)` method
+- Removed amenities JOIN from `getProperties()` query
+- Removed amenities aggregation from properties query
+
+**Removed Methods:**
+```javascript
+// REMOVED: Get all amenities
+async getAmenities() {
+  if (this.useDatabase) {
+    const result = await this.query('SELECT * FROM amenities ORDER BY category, name');
+    return result.rows;
+  }
+  return [/* fallback amenities */];
+}
+
+// REMOVED: Get amenities for a property
+async getPropertyAmenities(propertyId, userId = null) {
+  // ... implementation removed
+}
+```
+
+**Query Changes:**
+```javascript
+// BEFORE: getProperties() included amenities
+SELECT p.*, 
+  STRING_AGG(DISTINCT a.name, ', ') as amenities,
+  STRING_AGG(DISTINCT CONCAT(t.name, ' (', pt.lease_start, ' - ', pt.lease_end, ')'), '; ') as current_tenants
+FROM properties p
+LEFT JOIN property_amenities pa ON p.id = pa.property_id
+LEFT JOIN amenities a ON pa.amenity_id = a.id
+...
+
+// AFTER: Removed amenities JOIN and aggregation
+SELECT p.*, 
+  STRING_AGG(DISTINCT CONCAT(t.name, ' (', pt.lease_start, ' - ', pt.lease_end, ')'), '; ') as current_tenants
+FROM properties p
+...
+```
+
+### 7e. Database Schema Removal
+
+**Location:** `src/database/schema.sql`  
+**Status:** ✅ REMOVED from schema
+
+**Removed from Schema:**
+- ✅ `amenities` table definition
+- ✅ `property_amenities` junction table definition
+- ✅ `idx_amenities_category` index
+- ✅ All amenities INSERT statements (10 sample amenities)
+
+**Original Schema:**
+```sql
+-- REMOVED: Amenities table
+CREATE TABLE amenities (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    description TEXT,
+    category VARCHAR(50), -- 'indoor', 'outdoor', 'building', 'unit'
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- REMOVED: Property-Amenities junction table
+CREATE TABLE property_amenities (
+    property_id INTEGER REFERENCES properties(id) ON DELETE CASCADE,
+    amenity_id INTEGER REFERENCES amenities(id) ON DELETE CASCADE,
+    PRIMARY KEY (property_id, amenity_id)
+);
+
+-- REMOVED: Index
+CREATE INDEX idx_amenities_category ON amenities(category);
+
+-- REMOVED: Sample data (10 amenities)
+INSERT INTO amenities (name, description, category) VALUES
+('Swimming Pool', 'Outdoor swimming pool with deck area', 'outdoor'),
+('Fitness Center', '24/7 fitness center with modern equipment', 'building'),
+...
+```
+
+**Migration File Created:**
+- `src/database/migration_remove_amenities.sql` - Run this on existing databases to drop the tables
+
+**Impact:**
+- Properties can no longer have amenities assigned
+- "Manage Amenities" button removed from properties page
+- Properties are now managed with basic form fields only
+- Tables removed from schema for fresh installations
+- Existing databases need migration to remove tables
+
+### 7f. Restoration Instructions
+
+To restore amenities functionality:
+
+1. **Restore Component:**
+   - Recreate `src/components/shared/PropertyAmenities.js` (see original implementation above)
+
+2. **Restore API Routes:**
+   - Recreate `src/app/api/amenities/route.js` with GET endpoint
+   - Recreate `src/app/api/properties/[propertyId]/amenities/route.js` with GET, POST, DELETE endpoints
+
+3. **Restore Database Service Methods:**
+   - Add back `getAmenities()` method
+   - Add back `getPropertyAmenities()` method
+   - Restore amenities JOIN in `getProperties()` query
+
+4. **Restore Properties Page:**
+   - Re-add `PropertyAmenities` import
+   - Re-add amenities state and handlers
+   - Re-add "Manage Amenities" button to `customActions`
+   - Re-add amenities modal rendering
+
+5. **Database:**
+   - Re-add `amenities` and `property_amenities` table definitions to `schema.sql`
+   - Re-add amenities index and sample data if desired
+   - For existing databases, recreate tables using the schema definitions
+
+**Files to Restore:**
+- `src/components/shared/PropertyAmenities.js`
+- `src/app/api/amenities/route.js`
+- `src/app/api/properties/[propertyId]/amenities/route.js`
+
+**Code to Restore:**
+- Amenities methods in `databaseService.js`
+- Amenities button and modal in `properties/page.js`
+- Amenities JOIN in `getProperties()` query

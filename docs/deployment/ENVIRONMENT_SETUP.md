@@ -16,7 +16,7 @@ Open `.env` file and update the values:
 
 ```env
 # Demo User Credentials
-DEMO_USER_EMAIL=demo@homeadmin.com
+DEMO_USER_EMAIL=demo@homeadmin.ro
 DEMO_USER_PASSWORD=your-secure-demo-password
 DEMO_USER_NAME=Demo User
 DEMO_USER_ROLE=user
@@ -25,20 +25,16 @@ DEMO_USER_ROLE=user
 ## 🔧 Environment Variables Reference
 
 ### **Demo User Credentials**
+**Note:** The application now uses a simplified single demo user configuration for exam presentation.
+
 | Variable | Description | Default Value |
 |----------|-------------|---------------|
-| `DEMO_ADMIN_EMAIL` | Admin user email | `admin@homeadmin.com` |
-| `DEMO_ADMIN_PASSWORD` | Admin user password | `password` |
-| `DEMO_ADMIN_NAME` | Admin user display name | `Admin User` |
-| `DEMO_ADMIN_ROLE` | Admin user role | `admin` |
-| `DEMO_MANAGER_EMAIL` | Manager user email | `manager@homeadmin.com` |
-| `DEMO_MANAGER_PASSWORD` | Manager user password | `manager123` |
-| `DEMO_MANAGER_NAME` | Manager user display name | `Property Manager` |
-| `DEMO_MANAGER_ROLE` | Manager user role | `manager` |
-| `DEMO_USER_EMAIL` | Demo user email | `demo@homeadmin.com` |
+| `DEMO_USER_EMAIL` | Demo user email | `demo@homeadmin.ro` |
 | `DEMO_USER_PASSWORD` | Demo user password | `demo123` |
 | `DEMO_USER_NAME` | Demo user display name | `Demo User` |
 | `DEMO_USER_ROLE` | Demo user role | `user` |
+
+**Additional users** should be created via the registration page and will be stored in the database.
 
 ### **Application Settings**
 | Variable | Description | Default Value |
@@ -73,9 +69,13 @@ DEMO_USER_ROLE=user
 // src/config/env.js
 export const env = {
   demoUsers: {
-    admin: { email: process.env.DEMO_ADMIN_EMAIL, ... },
-    manager: { email: process.env.DEMO_MANAGER_EMAIL, ... },
-    user: { email: process.env.DEMO_USER_EMAIL, ... }
+    // Simplified to single demo user (December 2024)
+    user: { 
+      email: process.env.DEMO_USER_EMAIL, 
+      password: process.env.DEMO_USER_PASSWORD,
+      name: process.env.DEMO_USER_NAME,
+      role: process.env.DEMO_USER_ROLE
+    }
   },
   app: { name: process.env.NEXT_PUBLIC_APP_NAME, ... },
   database: { url: process.env.DATABASE_URL, ... },
@@ -115,16 +115,16 @@ cp .env.example .env
 ### **Staging Environment**
 ```bash
 # Set environment variables
-export DEMO_ADMIN_EMAIL=staging-admin@company.com
-export DEMO_ADMIN_PASSWORD=staging-secure-password
+export DEMO_USER_EMAIL=staging-demo@company.com
+export DEMO_USER_PASSWORD=staging-secure-password
 # ... other variables
 ```
 
 ### **Production Environment**
 ```bash
 # Use secure production credentials
-export DEMO_ADMIN_EMAIL=admin@yourcompany.com
-export DEMO_ADMIN_PASSWORD=super-secure-production-password
+export DEMO_USER_EMAIL=demo@yourcompany.com
+export DEMO_USER_PASSWORD=super-secure-production-password
 # ... other variables
 ```
 
@@ -195,8 +195,7 @@ if (user) {
 ```javascript
 // Check if environment variables are loaded
 console.log('Environment variables:', {
-  adminEmail: process.env.DEMO_ADMIN_EMAIL,
-  adminPassword: process.env.DEMO_ADMIN_PASSWORD,
+  demoUserEmail: process.env.DEMO_USER_EMAIL,
   nodeEnv: process.env.NODE_ENV
 });
 ```

@@ -438,7 +438,7 @@ export const PROPERTY_COLUMNS = [
       <div>
         <div style={{ fontWeight: 'bold' }}>{value}</div>
         <div style={{ fontSize: '0.875rem', color: '#666' }}>
-          {item.city}, {item.state} {item.zip}
+          {item.city}
         </div>
       </div>
     )
@@ -558,6 +558,7 @@ CREATE TABLE users (
 );
 
 -- User Profiles table (One-to-One with users)
+-- Note: emergency_contact and emergency_phone fields removed for simplified form presentation
 CREATE TABLE user_profiles (
     id SERIAL PRIMARY KEY,
     user_id INTEGER UNIQUE REFERENCES users(id) ON DELETE CASCADE,
@@ -566,8 +567,6 @@ CREATE TABLE user_profiles (
     phone VARCHAR(50),
     address TEXT,
     date_of_birth DATE,
-    emergency_contact VARCHAR(255),
-    emergency_phone VARCHAR(50),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -576,15 +575,14 @@ CREATE TABLE user_profiles (
 #### **One-to-Many (1:N) Relationships:**
 ```sql
 -- Properties table (simplified - no direct tenant references)
+-- Note: state, zip, and sqft fields removed for simplified form presentation
 CREATE TABLE properties (
     id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     address VARCHAR(255) NOT NULL,
     city VARCHAR(100) NOT NULL,
-    state VARCHAR(50) NOT NULL,
-    zip VARCHAR(20) NOT NULL,
     bedrooms INTEGER NOT NULL,
     bathrooms INTEGER NOT NULL,
-    sqft INTEGER NOT NULL,
     rent DECIMAL(10,2) NOT NULL,
     status VARCHAR(50) DEFAULT 'Available',
     notes TEXT,
@@ -593,17 +591,18 @@ CREATE TABLE properties (
 );
 
 -- Tenants table (simplified - no direct property references)
+-- Note: emergency_contact and emergency_phone fields removed for simplified form presentation
 CREATE TABLE tenants (
     id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     name VARCHAR(255) NOT NULL,
-    email VARCHAR(255) UNIQUE NOT NULL,
+    email VARCHAR(255) NOT NULL,
     phone VARCHAR(50),
     status VARCHAR(50) DEFAULT 'Active',
-    emergency_contact VARCHAR(255),
-    emergency_phone VARCHAR(50),
     notes TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id, email)
 );
 
 -- Transactions table (One-to-Many from properties and tenants)

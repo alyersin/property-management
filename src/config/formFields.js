@@ -3,11 +3,8 @@
 export const PROPERTY_FIELDS = [
   { name: 'address', label: 'Address', type: 'text', required: true, placeholder: 'Enter property address' },
   { name: 'city', label: 'City', type: 'text', required: true, placeholder: 'Enter city' },
-  { name: 'state', label: 'State', type: 'text', required: true, placeholder: 'Enter state' },
-  { name: 'zip', label: 'ZIP Code', type: 'text', required: true, placeholder: 'Enter ZIP code' },
   { name: 'bedrooms', label: 'Bedrooms', type: 'number', required: true, min: 1, max: 10 },
   { name: 'bathrooms', label: 'Bathrooms', type: 'number', required: true, min: 1, max: 10, step: 0.5 },
-  { name: 'sqft', label: 'Square Feet', type: 'number', required: true, min: 100 },
   { name: 'rent', label: 'Monthly Rent', type: 'number', required: true, min: 0, step: 0.01 },
   { 
     name: 'status', 
@@ -20,10 +17,6 @@ export const PROPERTY_FIELDS = [
       { value: 'Renovating', label: 'Renovating' }
     ]
   },
-  { name: 'tenant', label: 'Tenant Name', type: 'text', placeholder: 'Enter tenant name' },
-  { name: 'tenantEmail', label: 'Tenant Email', type: 'email', placeholder: 'Enter tenant email' },
-  { name: 'tenantPhone', label: 'Tenant Phone', type: 'tel', placeholder: 'Enter tenant phone' },
-  { name: 'leaseEnd', label: 'Lease End Date', type: 'date' },
   { name: 'notes', label: 'Notes', type: 'textarea', placeholder: 'Enter any additional notes' }
 ];
 
@@ -39,7 +32,6 @@ export const TENANT_FIELDS = [
     options: [] // Will be populated dynamically
   },
   { name: 'leaseStart', label: 'Lease Start Date', type: 'date', required: true },
-  { name: 'leaseEnd', label: 'Lease End Date', type: 'date', required: true },
   { name: 'rentAmount', label: 'Monthly Rent', type: 'number', required: true, min: 0, step: 0.01 },
   { 
     name: 'status', 
@@ -52,8 +44,6 @@ export const TENANT_FIELDS = [
       { value: 'Inactive', label: 'Inactive' }
     ]
   },
-  { name: 'emergencyContact', label: 'Emergency Contact', type: 'text', placeholder: 'Enter emergency contact name' },
-  { name: 'emergencyPhone', label: 'Emergency Phone', type: 'tel', placeholder: 'Enter emergency contact phone' },
   { name: 'notes', label: 'Notes', type: 'textarea', placeholder: 'Enter any additional notes' }
 ];
 
