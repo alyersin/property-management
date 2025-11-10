@@ -9,7 +9,7 @@ services:
       POSTGRES_PASSWORD: password
       POSTGRES_DB: home_admin
     ports:
-      - "5533:5532"
+      - "5540:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./src/database/schema.sql:/docker-entrypoint-initdb.d/schema.sql
@@ -20,12 +20,10 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"
+      - "3080:3000"
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=postgresql://postgres:password@postgres:5532/home_admin
-    volumes:
-      - .:/app
+      - DATABASE_URL=postgresql://postgres:password@postgres:5432/home_admin
     depends_on:
       - postgres
     restart: unless-stopped
