@@ -15,10 +15,11 @@ const Logo = ({ isMobile = false }) => {
       /> */}
       
       {/* Temporary text logo - replace with your logo */}
-      <Heading 
-        size={isMobile ? "md" : "lg"} 
-        color="blue.600"
-        fontWeight="bold"
+      <Heading
+        size={isMobile ? "md" : "lg"}
+        color="accent.emphasis"
+        fontWeight="extrabold"
+        letterSpacing="wide"
       >
         Home Admin
       </Heading>

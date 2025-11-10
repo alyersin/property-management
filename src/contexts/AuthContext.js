@@ -89,12 +89,22 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem(STORAGE_KEYS.user);
   };
 
+  const updateUser = (updates) => {
+    setUser((prev) => {
+      if (!prev) return prev;
+      const next = { ...prev, ...updates };
+      localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(next));
+      return next;
+    });
+  };
+
   const value = {
     user,
     login,
     register,
     logout,
-    loading
+    loading,
+    updateUser,
   };
 
   return (

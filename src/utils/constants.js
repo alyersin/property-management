@@ -35,10 +35,6 @@ export const CATEGORY_COLORS = {
   Heating: "orange",
   Garbage: "purple",
   Internet: "teal",
-  Insurance: "red",
-  Taxes: "red",
-  Cleaning: "green",
-  Landscaping: "green",
 };
 
 // Filter options for different pages

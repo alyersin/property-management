@@ -32,20 +32,24 @@ export default function PageHeader({ title, actions = [] }) {
   };
 
   return (
-    <Box bg="white" shadow="sm" px={isMobile ? 4 : 6} py={4}>
+    <Box
+      bgGradient="linear(160deg, rgba(13, 22, 45, 0.95) 0%, rgba(8, 14, 28, 0.98) 100%)"
+      px={isMobile ? 4 : 8}
+      py={isMobile ? 4 : 6}
+      borderBottom="1px solid"
+      borderColor="border.subtle"
+    >
       <Flex justify="space-between" align="center">
-        {/* Left side - Hamburger menu (mobile) or Title (desktop) */}
         {isMobile ? (
           <Box w="40px" />
         ) : (
-          <Heading size="lg" color="blue.600">
+          <Heading size="lg" color="accent.emphasis" fontWeight="700">
             {title}
           </Heading>
         )}
-        
-        {/* Center - Logo placeholder (mobile) or Actions (desktop) */}
+
         {isMobile ? (
-          <Box flex="1" display="flex" justify="center">
+          <Box flex="1" display="flex" justifyContent="center">
             <Logo isMobile={true} />
           </Box>
         ) : (
@@ -55,8 +59,9 @@ export default function PageHeader({ title, actions = [] }) {
                 key={index}
                 size="sm"
                 variant={action.variant || "outline"}
-                colorScheme={action.colorScheme}
-                leftIcon={action.icon ? <Icon as={action.icon} /> : undefined}
+                leftIcon={
+                  action.icon ? <Icon as={action.icon} boxSize={4} /> : undefined
+                }
                 onClick={action.onClick}
               >
                 {action.label}
@@ -64,20 +69,33 @@ export default function PageHeader({ title, actions = [] }) {
             ))}
           </HStack>
         )}
-        
-        {/* Right side - User Menu */}
+
         <Menu>
-          <MenuButton as={Button} rightIcon={<ChevronDownIcon />} variant="ghost" size={isMobile ? "sm" : "md"}>
+          <MenuButton
+            as={Button}
+            rightIcon={<ChevronDownIcon />}
+            variant="ghost"
+            size={isMobile ? "sm" : "md"}
+          >
             <HStack>
-              <Avatar size="sm" name={user?.name} />
-              {!isMobile && <Text fontSize="sm">{user?.name}</Text>}
+              <Avatar size="sm" name={user?.name} bg="accent.subtle" />
+              {!isMobile && (
+                <VStack spacing={0} align="flex-start">
+                  <Text fontSize="sm" color="text.primary">
+                    {user?.name}
+                  </Text>
+                  <Text fontSize="xs" color="text.muted">
+                    {user?.email}
+                  </Text>
+                </VStack>
+              )}
             </HStack>
           </MenuButton>
           <MenuList>
             <MenuItem onClick={() => router.push("/settings")}>
               Settings
             </MenuItem>
-            <MenuItem onClick={handleLogout} color="red.500">
+            <MenuItem onClick={handleLogout} color="danger.default">
               Logout
             </MenuItem>
           </MenuList>

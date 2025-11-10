@@ -174,7 +174,6 @@ const DynamicForm = ({
           </Button>
           <Button
             type="submit"
-            colorScheme="blue"
             isLoading={isLoading}
             loadingText="Saving..."
           >

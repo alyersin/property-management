@@ -36,6 +36,15 @@ const DashboardStats = ({ stats, recentActivities = [] }) => {
     return colors[type] || "gray";
   };
 
+  const available =
+    stats.totalProperties > 0
+      ? stats.totalProperties - stats.occupiedProperties
+      : 0;
+  const availablePercentage =
+    stats.totalProperties > 0
+      ? (available / stats.totalProperties) * 100
+      : 0;
+
   return (
     <VStack spacing={8} align="stretch">
       {/* Key Metrics */}
@@ -44,60 +53,68 @@ const DashboardStats = ({ stats, recentActivities = [] }) => {
           label="Total Properties"
           value={stats.totalProperties}
           helpText={`${stats.occupiedProperties} occupied`}
-          color="blue.500"
+          color="accent.emphasis"
           arrowType="increase"
         />
         <StatCard
           label="Monthly Income"
           value={`$${stats.monthlyIncome.toLocaleString()}`}
           helpText="This month"
-          color="green.500"
+          color="success.default"
           arrowType="increase"
         />
         <StatCard
           label="Monthly Expenses"
           value={`$${stats.monthlyExpenses.toLocaleString()}`}
           helpText="This month"
-          color="red.500"
+          color="danger.default"
           arrowType="decrease"
         />
         <StatCard
           label="Net Income"
           value={`$${stats.netIncome.toLocaleString()}`}
           helpText="This month"
-          color={stats.netIncome > 0 ? "green.500" : "red.500"}
+          color={stats.netIncome > 0 ? "success.default" : "danger.default"}
           arrowType={stats.netIncome > 0 ? "increase" : "decrease"}
         />
       </SimpleGrid>
 
       {/* Property Overview */}
-      <Box bg="white" p={6} borderRadius="lg" shadow="sm">
+      <Box
+        bgGradient="linear(135deg, rgba(36, 52, 109, 0.85) 0%, rgba(17, 25, 56, 0.95) 100%)"
+        p={6}
+        borderRadius="xl"
+        border="1px solid"
+        borderColor="border.subtle"
+      >
         <VStack align="stretch" spacing={4}>
-          <Text fontSize="lg" fontWeight="bold">
+          <Text fontSize="lg" fontWeight="bold" color="text.primary">
             Property Overview
           </Text>
           <Box>
             <Flex justify="space-between" mb={2}>
-              <Text>Occupancy Rate</Text>
-              <Text fontWeight="bold">{stats.occupancyRate}%</Text>
+              <Text color="text.muted">Occupancy Rate</Text>
+              <Text fontWeight="bold" color="text.primary">
+                {stats.occupancyRate}%
+              </Text>
             </Flex>
-            <Progress
-              value={stats.occupancyRate}
-              colorScheme="blue"
-              size="lg"
-            />
+            <Progress value={stats.occupancyRate} size="lg" />
           </Box>
           <Box>
             <Flex justify="space-between" mb={2}>
-              <Text>Available Properties</Text>
-              <Text fontWeight="bold">
-                {stats.totalProperties - stats.occupiedProperties}
+              <Text color="text.muted">Available Properties</Text>
+              <Text fontWeight="bold" color="text.primary">
+                {available}
               </Text>
             </Flex>
             <Progress
-              value={((stats.totalProperties - stats.occupiedProperties) / stats.totalProperties) * 100}
-              colorScheme="green"
+              value={availablePercentage}
               size="lg"
+              sx={{
+                "& > div": {
+                  backgroundColor: "success.default",
+                },
+              }}
             />
           </Box>
         </VStack>
@@ -105,27 +122,40 @@ const DashboardStats = ({ stats, recentActivities = [] }) => {
 
       {/* Recent Activity */}
       {recentActivities.length > 0 && (
-        <Box bg="white" p={6} borderRadius="lg" shadow="sm">
+        <Box
+          bgGradient="linear(135deg, rgba(36, 52, 109, 0.85) 0%, rgba(17, 25, 56, 0.95) 100%)"
+          p={6}
+          borderRadius="xl"
+          border="1px solid"
+          borderColor="border.subtle"
+        >
           <VStack align="stretch" spacing={4}>
-            <Text fontSize="lg" fontWeight="bold">
+            <Text fontSize="lg" fontWeight="bold" color="text.primary">
               Recent Activity
             </Text>
             <VStack align="stretch" spacing={3}>
               {recentActivities.map((activity) => (
-                <Box key={activity.id} p={3} bg="gray.50" borderRadius="md">
+                <Box
+                  key={activity.id}
+                  p={3}
+                  bg="bg.surface"
+                  borderRadius="md"
+                  border="1px solid"
+                  borderColor="border.subtle"
+                >
                   <Flex align="center" gap={3}>
                     <Text fontSize="lg">{getActivityIcon(activity.type)}</Text>
                     <Box flex="1">
-                      <Text fontSize="sm" fontWeight="bold">
+                      <Text fontSize="sm" fontWeight="bold" color="text.primary">
                         {activity.message}
                       </Text>
-                      <Text fontSize="xs" color="gray.600">
+                      <Text fontSize="xs" color="text.muted">
                         {activity.time}
                       </Text>
                       {activity.amount && (
                         <Text
                           fontSize="xs"
-                          color="green.500"
+                          color="success.default"
                           fontWeight="bold"
                         >
                           +${activity.amount.toLocaleString()}

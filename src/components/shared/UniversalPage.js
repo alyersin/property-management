@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useDisclosure } from "@chakra-ui/react";
 import { AddIcon } from "@chakra-ui/icons";
 
@@ -10,6 +10,7 @@ import DataTable from "./DataTable";
 import FormModal from "./FormModal";
 import DynamicForm from "./DynamicForm";
 import { useAppData } from "../../hooks/useAppData";
+import usePersistentState from "../../hooks/usePersistentState";
 import { getFieldsByType } from "../../config/formFields";
 import { FILTER_OPTIONS } from "../../utils/constants";
 import { filterBySearch, filterByStatus, itemMatchesSearch, itemMatchesStatus } from "../../utils/helpers";
@@ -28,40 +29,24 @@ const UniversalPage = ({
   emptyMessage = "No data available"
 }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterValue, setFilterValue] = useState("all");
   const [editingItem, setEditingItem] = useState(null);
 
   // Load page preferences from localStorage
-  useEffect(() => {
-    const storageKey = `${STORAGE_KEYS.preferences}_${dataType}`;
-    const savedPreferences = localStorage.getItem(storageKey);
-    if (savedPreferences) {
-      try {
-        const parsed = JSON.parse(savedPreferences);
-        setSearchTerm(parsed.searchTerm || "");
-        setFilterValue(parsed.filterValue || "all");
-      } catch (error) {
-        logger.error('Failed to load page preferences', error);
-      }
-    }
-  }, [dataType]);
+  const storageKey = `${STORAGE_KEYS.preferences}_${dataType}`;
+  const [preferences, setPreferences] = usePersistentState(storageKey, {
+    searchTerm: "",
+    filterValue: "all",
+    lastUpdated: null,
+  });
 
-  // Save page preferences to localStorage
-  useEffect(() => {
-    const storageKey = `${STORAGE_KEYS.preferences}_${dataType}`;
-    const preferences = {
-      searchTerm,
-      filterValue,
-      lastUpdated: new Date().toISOString()
-    };
-    
-    try {
-      localStorage.setItem(storageKey, JSON.stringify(preferences));
-    } catch (error) {
-      logger.error('Failed to save page preferences', error);
-    }
-  }, [searchTerm, filterValue, dataType]);
+  const { searchTerm = "", filterValue = "all" } = preferences;
+
+  const updatePreferences = (updates) =>
+    setPreferences((prev) => ({
+      ...prev,
+      ...updates,
+      lastUpdated: new Date().toISOString(),
+    }));
   
   const { data, loading, error, create, update, remove } = useAppData(dataType);
   const fields = getFieldsByType(dataType);
@@ -141,9 +126,9 @@ const UniversalPage = ({
       >
         <SearchFilter
           searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
+          onSearchChange={(value) => updatePreferences({ searchTerm: value })}
           filterValue={filterValue}
-          onFilterChange={setFilterValue}
+          onFilterChange={(value) => updatePreferences({ filterValue: value })}
           filterOptions={availableFilterOptions}
           placeholder={`Search ${displayName}...`}
         />

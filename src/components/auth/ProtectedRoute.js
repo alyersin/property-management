@@ -24,8 +24,8 @@ export default function ProtectedRoute({ children }) {
     return (
       <Box minH="100vh" display="flex" alignItems="center" justifyContent="center">
         <VStack spacing={4}>
-          <Spinner size="xl" color="blue.500" />
-          <Text color="gray.600">Loading...</Text>
+          <Spinner size="xl" color="accent.default" />
+      <Text color="text.muted">Loading...</Text>
         </VStack>
       </Box>
     );

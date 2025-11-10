@@ -18,15 +18,19 @@ export default function StatCard({
   helpText,
   arrowType,
   color,
-  trend,
 }) {
   return (
-    <Card>
+    <Card
+      borderColor="border.subtle"
+      bgGradient="linear(135deg, rgba(43, 62, 125, 0.85) 0%, rgba(24, 33, 71, 0.95) 100%)"
+    >
       <CardBody>
         <Stat>
-          <StatLabel>{label}</StatLabel>
-          <StatNumber color={color}>{value}</StatNumber>
-          <StatHelpText>
+          <StatLabel color="text.soft">{label}</StatLabel>
+          <StatNumber color={color || "text.primary"} fontWeight="700">
+            {value}
+          </StatNumber>
+          <StatHelpText color="text.muted">
             {arrowType && <StatArrow type={arrowType} />}
             {helpText}
           </StatHelpText>

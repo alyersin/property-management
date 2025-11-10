@@ -1,12 +1,19 @@
-import styled from 'styled-components';
+"use client";
 
-const StyledWrapper = styled.div`
+import styled from "styled-components";
+
+const SPAN_COUNT = 50;
+
+const Wrapper = styled.div`
   min-height: 100vh;
+  height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
   background: linear-gradient(135deg, #1f293a 0%, #0f1419 100%);
-  font-family: 'Arial', sans-serif;
+  font-family: "Arial", sans-serif;
+  padding: 20px;
+  overflow: hidden;
 
   .container {
     position: relative;
@@ -19,6 +26,45 @@ const StyledWrapper = styled.div`
     overflow: visible;
   }
 
+  @media (max-width: 768px) {
+    padding: 10px;
+    height: 100vh;
+    min-height: 100vh;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+
+    .container {
+      width: 100%;
+      height: auto;
+      min-height: auto;
+      border-radius: 20px;
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+  }
+
+  @media (max-width: 480px) {
+    padding: 5px;
+    height: 100vh;
+    min-height: 100vh;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+
+    .container {
+      width: 100%;
+      height: auto;
+      min-height: auto;
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+  }
+
   .container span {
     position: absolute;
     left: 50%;
@@ -28,10 +74,25 @@ const StyledWrapper = styled.div`
     background: #2c4766;
     border-radius: 80px;
     transform-origin: 0 0;
-    transform: translate(-10%, -50%) rotate(calc(var(--i) * (360deg / 50))) translateX(260px) translateX(30px);
+    transform: translate(-10%, -50%) rotate(calc(var(--i) * (360deg / 50)))
+      translateX(260px) translateX(30px);
     animation: blink 3s linear infinite;
     animation-delay: calc(var(--i) * (3s / 50));
     opacity: 0.8;
+  }
+
+  @media (max-width: 768px) {
+    .container span {
+      transform: translate(-10%, -50%) rotate(calc(var(--i) * (360deg / 50)))
+        translateX(200px) translateX(20px);
+    }
+  }
+
+  @media (max-width: 480px) {
+    .container span {
+      transform: translate(-10%, -50%) rotate(calc(var(--i) * (360deg / 50)))
+        translateX(150px) translateX(15px);
+    }
   }
 
   @keyframes blink {
@@ -69,9 +130,26 @@ const StyledWrapper = styled.div`
     border: 1px solid rgba(0, 239, 255, 0.2);
   }
 
-  form {
-    width: 100%;
-    padding: 0 10px;
+  @media (max-width: 768px) {
+    .login-box {
+      width: 90%;
+      max-width: 350px;
+      padding: 25px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 2;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .login-box {
+      width: 95%;
+      max-width: 320px;
+      padding: 20px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 2;
+    }
   }
 
   h2 {
@@ -79,6 +157,18 @@ const StyledWrapper = styled.div`
     color: #0ef;
     text-align: center;
     margin-bottom: 10px;
+  }
+
+  .subtitle {
+    color: #fff;
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 0.9em;
+  }
+
+  form {
+    width: 100%;
+    padding: 0 10px;
   }
 
   .input-box {
@@ -98,6 +188,14 @@ const StyledWrapper = styled.div`
     padding: 0 15px;
     transition: 0.5s ease;
     box-sizing: border-box;
+  }
+
+  @media (max-width: 480px) {
+    input {
+      height: 50px;
+      font-size: 16px;
+      padding: 0 20px;
+    }
   }
 
   input:focus {
@@ -154,6 +252,13 @@ const StyledWrapper = styled.div`
     transition: all 0.3s ease;
   }
 
+  @media (max-width: 480px) {
+    .btn {
+      height: 50px;
+      font-size: 16px;
+    }
+  }
+
   .btn:hover:not(:disabled) {
     background: #00d4ff;
     transform: translateY(-2px);
@@ -183,4 +288,25 @@ const StyledWrapper = styled.div`
   }
 `;
 
-export default StyledWrapper;
+const AuthLayout = ({
+  title = "Home Admin",
+  subtitle = "Property Management System",
+  children,
+  spanCount = SPAN_COUNT,
+}) => (
+  <Wrapper>
+    <div className="container">
+      <div className="login-box">
+        <h2>{title}</h2>
+        {subtitle ? <p className="subtitle">{subtitle}</p> : null}
+        {children}
+      </div>
+      {Array.from({ length: spanCount }).map((_, index) => (
+        <span key={index} style={{ "--i": index }} />
+      ))}
+    </div>
+  </Wrapper>
+);
+
+export default AuthLayout;
+

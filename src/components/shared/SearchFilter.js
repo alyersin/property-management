@@ -34,24 +34,36 @@ export default function SearchFilter({
   };
 
   return (
-    <Card mb={6}>
+    <Card
+      mb={6}
+      bgGradient="linear(160deg, rgba(30, 45, 99, 0.85) 0%, rgba(16, 23, 52, 0.95) 100%)"
+      borderColor="border.subtle"
+    >
       <CardBody>
-        <Flex gap={4} align="center">
-          <InputGroup maxW="300px">
-            <InputLeftElement>
+        <Flex gap={4} align="center" flexWrap="wrap">
+          <InputGroup maxW="360px" bg="bg.surface" borderRadius="lg">
+            <InputLeftElement pointerEvents="none" color="text.muted">
               <Icon as={SearchIcon} />
             </InputLeftElement>
             <Input
               placeholder={searchPlaceholder}
               value={searchTerm || ""}
               onChange={(e) => handleSearchChange(e.target.value)}
+              border="none"
+              _focusVisible={{
+                border: "none",
+                boxShadow: "0 0 0 1px var(--chakra-colors-accent-default)",
+              }}
             />
           </InputGroup>
           {Array.isArray(filterOptions) && filterOptions.length > 0 && (
             <Select
-              maxW="200px"
+              maxW="220px"
               value={filterValue || "all"}
               onChange={(e) => handleFilterChange(e.target.value)}
+              bg="bg.surface"
+              border="1px solid"
+              borderColor="border.subtle"
             >
               <option value="all">{filterPlaceholder}</option>
               {filterOptions.map((option) => (

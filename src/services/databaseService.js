@@ -79,6 +79,25 @@ class DatabaseService {
     return dataService.createUser(userData);
   }
 
+  async updateUser(id, updates) {
+    if (this.useDatabase) {
+      const fields = Object.keys(updates);
+      if (fields.length === 0) return this.getUserById(id);
+
+      const setClause = fields
+        .map((field, index) => `${field} = $${index + 2}`)
+        .join(', ');
+      const values = [id, ...fields.map((field) => updates[field])];
+
+      const result = await this.query(
+        `UPDATE users SET ${setClause}, updated_at = CURRENT_TIMESTAMP WHERE id = $1 RETURNING *`,
+        values
+      );
+      return result.rows[0];
+    }
+    return dataService.updateUser(id, updates);
+  }
+
   // User Profile operations (One-to-One relationship)
   async getUserProfile(userId) {
     if (this.useDatabase) {
@@ -252,7 +271,7 @@ class DatabaseService {
       return result.rows[0];
     }
     return dataService.deleteFinancialRecords(id);
-  }
+      }
 
 
   // Dashboard operations

@@ -1,35 +1,35 @@
 "use client";
 
 import {
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
-  Box,
-  Text,
+  AlertDialog,
+  AlertDialogBody,
+  AlertDialogContent,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogOverlay,
   Badge,
+  Box,
+  Button,
+  Divider,
+  HStack,
   IconButton,
   Menu,
   MenuButton,
-  MenuList,
   MenuItem,
-  useDisclosure,
-  AlertDialog,
-  AlertDialogBody,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogContent,
-  AlertDialogOverlay,
-  Button,
-  useBreakpointValue,
+  MenuList,
+  Table,
+  Tbody,
+  Td,
+  Text,
+  Th,
+  Thead,
+  Tr,
   VStack,
-  HStack,
-  Divider,
+  useBreakpointValue,
+  useDisclosure,
 } from "@chakra-ui/react";
-import { useRef, useState } from "react";
 import { HamburgerIcon } from "@chakra-ui/icons";
+import { useRef, useState } from "react";
 
 const DataTable = ({
   data = [],
@@ -69,55 +69,84 @@ const DataTable = ({
 
   const getStatusColor = (status) => {
     const colors = {
-      'Active': 'green',
-      'Occupied': 'green',
-      'Available': 'blue',
-      'Renovating': 'orange',
-      'Completed': 'green',
-      'Pending': 'yellow',
-      'Paid': 'green',
-      'Overdue': 'red',
-      'Prospective': 'purple'
+      Active: "green",
+      Occupied: "green",
+      Available: "blue",
+      Renovating: "orange",
+      Completed: "green",
+      Pending: "yellow",
+      Paid: "green",
+      Overdue: "red",
+      Prospective: "purple",
     };
-    return colors[status] || 'gray';
+    return colors[status] || "gray";
   };
 
   if (isLoading) {
     return (
-      <Box p={4} textAlign="center">
-        <Text>Loading...</Text>
+      <Box
+        p={6}
+        textAlign="center"
+        bgGradient="linear(160deg, rgba(30, 45, 99, 0.85) 0%, rgba(16, 23, 52, 0.95) 100%)"
+        borderRadius="xl"
+        border="1px solid"
+        borderColor="border.subtle"
+      >
+        <Text color="text.muted">Loading...</Text>
       </Box>
     );
   }
 
   if (data.length === 0) {
     return (
-      <Box p={4} textAlign="center">
-        <Text color="gray.500">{emptyMessage}</Text>
+      <Box
+        p={6}
+        textAlign="center"
+        bgGradient="linear(160deg, rgba(30, 45, 99, 0.85) 0%, rgba(16, 23, 52, 0.95) 100%)"
+        borderRadius="xl"
+        border="1px solid"
+        borderColor="border.subtle"
+      >
+        <Text color="text.muted">{emptyMessage}</Text>
       </Box>
     );
   }
 
-  // Mobile Card View
   if (isMobile) {
     return (
       <VStack spacing={4} align="stretch">
         {data.map((item, index) => (
-          <Box key={index} bg="white" p={4} borderRadius="md" shadow="sm" border="1px" borderColor="gray.200">
+          <Box
+            key={item.id || index}
+            bgGradient="linear(160deg, rgba(36, 52, 109, 0.85) 0%, rgba(17, 25, 56, 0.95) 100%)"
+            p={4}
+            borderRadius="lg"
+            border="1px solid"
+            borderColor="border.subtle"
+          >
             <VStack align="stretch" spacing={3}>
               {columns.slice(0, 3).map((column) => (
                 <Box key={column.key}>
-                  <Text fontSize="sm" fontWeight="bold" color="gray.600" mb={1}>
-                    {column.label}:
+                  <Text
+                    fontSize="sm"
+                    fontWeight="600"
+                    color="text.soft"
+                    mb={1}
+                  >
+                    {column.label}
                   </Text>
-                  <Box>
-                    {column.key === 'status' ? (
+                  <Box color="text.primary">
+                    {column.key === "status" ? (
                       <Badge colorScheme={getStatusColor(item[column.key])}>
                         {item[column.key]}
                       </Badge>
-                    ) : column.key === 'amount' ? (
+                    ) : column.key === "amount" ? (
                       <Text
-                        color={item[column.key] >= 0 ? 'green.500' : 'red.500'}
+                        color={
+                          item[column.key] >= 0
+                            ? "success.default"
+                            : "danger.default"
+                        }
                         fontWeight="bold"
                       >
                         ${Math.abs(item[column.key]).toLocaleString()}
@@ -128,34 +157,48 @@ const DataTable = ({
                   </Box>
                 </Box>
               ))}
-              
+
               {(onEdit || onDelete || onView || actions.length > 0) && (
                 <>
-                  <Divider />
-                  <HStack justify="space-between">
+                  <Divider borderColor="border.subtle" />
+                  <HStack justify="space-between" w="full">
                     <HStack spacing={2}>
                       {onView && (
-                        <Button size="xs" variant="outline" onClick={() => onView(item)}>
+                        <Button
+                          size="xs"
+                          variant="outline"
+                          onClick={() => onView(item)}
+                        >
                           View
                         </Button>
                       )}
                       {onEdit && (
-                        <Button size="xs" colorScheme="blue" onClick={() => onEdit(item)}>
+                        <Button size="xs" onClick={() => onEdit(item)}>
                           Edit
                         </Button>
                       )}
                     </HStack>
-                    
                     <Menu>
-                      <MenuButton as={IconButton} icon={<HamburgerIcon />} size="xs" variant="ghost" />
+                      <MenuButton
+                        as={IconButton}
+                        icon={<HamburgerIcon />}
+                        size="xs"
+                        variant="ghost"
+                      />
                       <MenuList>
                         {actions.map((action, actionIndex) => (
-                          <MenuItem key={actionIndex} onClick={() => action.onClick(item)}>
+                          <MenuItem
+                            key={actionIndex}
+                            onClick={() => action.onClick(item)}
+                          >
                             {action.label}
                           </MenuItem>
                         ))}
                         {onDelete && (
-                          <MenuItem color="red.500" onClick={() => handleDelete(item)}>
+                          <MenuItem
+                            color="danger.default"
+                            onClick={() => handleDelete(item)}
+                          >
                             Delete
                           </MenuItem>
                         )}
@@ -167,19 +210,23 @@ const DataTable = ({
             </VStack>
           </Box>
         ))}
-        
-        {/* Delete Confirmation Dialog */}
-        <AlertDialog isOpen={isOpen} leastDestructiveRef={cancelRef} onClose={onClose}>
-          <AlertDialogOverlay>
-            <AlertDialogContent>
+
+        <AlertDialog
+          isOpen={isOpen}
+          leastDestructiveRef={cancelRef}
+          onClose={onClose}
+        >
+          <AlertDialogOverlay bg="bg.overlay">
+            <AlertDialogContent bg="bg.surfaceAlt">
               <AlertDialogHeader fontSize="lg" fontWeight="bold">
                 Delete Item
               </AlertDialogHeader>
-              <AlertDialogBody>
-                Are you sure you want to delete this item? This action cannot be undone.
+              <AlertDialogBody color="text.muted">
+                Are you sure you want to delete this item? This action cannot be
+                undone.
               </AlertDialogBody>
               <AlertDialogFooter>
-                <Button ref={cancelRef} onClick={onClose}>
+                <Button ref={cancelRef} onClick={onClose} variant="outline">
                   Cancel
                 </Button>
                 <Button colorScheme="red" onClick={confirmDelete} ml={3}>
@@ -195,97 +242,134 @@ const DataTable = ({
 
   return (
     <>
-      <Table variant="simple" {...props}>
-        <Thead>
-          <Tr>
-            {columns.map((column) => (
-              <Th key={column.key} textAlign={column.align || 'left'}>
-                {column.label}
-              </Th>
-            ))}
-            {(onEdit || onDelete || onView || actions.length > 0) && (
-              <Th textAlign="right">Actions</Th>
-            )}
-          </Tr>
-        </Thead>
-        <Tbody>
-          {data.map((item, index) => (
-            <Tr key={item.id || index}>
+      <Box
+        bgGradient="linear(160deg, rgba(30, 45, 99, 0.85) 0%, rgba(16, 23, 52, 0.95) 100%)"
+        borderRadius="xl"
+        border="1px solid"
+        borderColor="border.subtle"
+        overflow="hidden"
+      >
+        <Table variant="simple" {...props}>
+          <Thead>
+            <Tr>
               {columns.map((column) => (
-                <Td key={column.key} textAlign={column.align || 'left'}>
-                  {column.key === 'status' ? (
-                    <Badge colorScheme={getStatusColor(item[column.key])}>
-                      {item[column.key]}
-                    </Badge>
-                  ) : column.key === 'amount' ? (
-                    <Text
-                      color={item[column.key] >= 0 ? 'green.500' : 'red.500'}
-                      fontWeight="bold"
-                    >
-                      ${Math.abs(item[column.key]).toLocaleString()}
-                    </Text>
-                  ) : (
-                    getCellValue(item, column)
-                  )}
-                </Td>
+                <Th
+                  key={column.key}
+                  textAlign={column.align || "left"}
+                  fontSize="sm"
+                  textTransform="uppercase"
+                  letterSpacing="widest"
+                  color="text.soft"
+                  bg="bg.surface"
+                >
+                  {column.label}
+                </Th>
               ))}
               {(onEdit || onDelete || onView || actions.length > 0) && (
-                <Td textAlign="right">
-                  <Menu>
-                    <MenuButton
-                      as={IconButton}
-                      icon={<HamburgerIcon />}
-                      variant="ghost"
-                      size="sm"
-                    />
-                    <MenuList>
-                      {onView && (
-                        <MenuItem onClick={() => onView(item)}>
-                          View Details
-                        </MenuItem>
-                      )}
-                      {onEdit && (
-                        <MenuItem onClick={() => onEdit(item)}>
-                          Edit
-                        </MenuItem>
-                      )}
-                      {actions.map((action, index) => (
-                        <MenuItem key={index} onClick={() => action.onClick(item)}>
-                          {action.label}
-                        </MenuItem>
-                      ))}
-                      {onDelete && (
-                        <MenuItem
-                          onClick={() => handleDelete(item)}
-                          color="red.500"
-                        >
-                          Delete
-                        </MenuItem>
-                      )}
-                    </MenuList>
-                  </Menu>
-                </Td>
+                <Th
+                  textAlign="right"
+                  fontSize="sm"
+                  textTransform="uppercase"
+                  letterSpacing="widest"
+                  color="text.soft"
+                  bg="bg.surface"
+                >
+                  Actions
+                </Th>
               )}
             </Tr>
-          ))}
-        </Tbody>
-      </Table>
+          </Thead>
+          <Tbody>
+            {data.map((item, index) => (
+              <Tr
+                key={item.id || index}
+                _hover={{ bg: "rgba(91, 124, 255, 0.1)" }}
+                transition="background 0.2s ease"
+              >
+                {columns.map((column) => (
+                  <Td key={column.key} textAlign={column.align || "left"}>
+                    {column.key === "status" ? (
+                      <Badge colorScheme={getStatusColor(item[column.key])}>
+                        {item[column.key]}
+                      </Badge>
+                    ) : column.key === "amount" ? (
+                      <Text
+                        color={
+                          item[column.key] >= 0
+                            ? "success.default"
+                            : "danger.default"
+                        }
+                        fontWeight="bold"
+                      >
+                        ${Math.abs(item[column.key]).toLocaleString()}
+                      </Text>
+                    ) : (
+                      getCellValue(item, column)
+                    )}
+                  </Td>
+                ))}
+                {(onEdit || onDelete || onView || actions.length > 0) && (
+                  <Td textAlign="right">
+                    <Menu>
+                      <MenuButton
+                        as={IconButton}
+                        icon={<HamburgerIcon />}
+                        variant="ghost"
+                        size="sm"
+                      />
+                      <MenuList>
+                        {onView && (
+                          <MenuItem onClick={() => onView(item)}>
+                            View Details
+                          </MenuItem>
+                        )}
+                        {onEdit && (
+                          <MenuItem onClick={() => onEdit(item)}>
+                            Edit
+                          </MenuItem>
+                        )}
+                        {actions.map((action, actionIndex) => (
+                          <MenuItem
+                            key={actionIndex}
+                            onClick={() => action.onClick(item)}
+                          >
+                            {action.label}
+                          </MenuItem>
+                        ))}
+                        {onDelete && (
+                          <MenuItem
+                            onClick={() => handleDelete(item)}
+                            color="danger.default"
+                          >
+                            Delete
+                          </MenuItem>
+                        )}
+                      </MenuList>
+                    </Menu>
+                  </Td>
+                )}
+              </Tr>
+            ))}
+          </Tbody>
+        </Table>
+      </Box>
 
       <AlertDialog
         isOpen={isOpen}
         leastDestructiveRef={cancelRef}
         onClose={onClose}
       >
-        <AlertDialogOverlay>
-          <AlertDialogContent>
+        <AlertDialogOverlay bg="bg.overlay">
+          <AlertDialogContent bg="bg.surfaceAlt">
             <AlertDialogHeader fontSize="lg" fontWeight="bold">
               Delete Item
             </AlertDialogHeader>
-            <AlertDialogBody>
-              Are you sure you want to delete this item? This action cannot be undone.
+            <AlertDialogBody color="text.muted">
+              Are you sure you want to delete this item? This action cannot be
+              undone.
             </AlertDialogBody>
             <AlertDialogFooter>
-              <Button ref={cancelRef} onClick={onClose}>
+              <Button ref={cancelRef} onClick={onClose} variant="outline">
                 Cancel
               </Button>
               <Button colorScheme="red" onClick={confirmDelete} ml={3}>

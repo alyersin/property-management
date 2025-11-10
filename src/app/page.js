@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { Flex, Spinner, Text, VStack } from "@chakra-ui/react";
 import { useAuth } from "../contexts/AuthContext";
 import { ROUTES, LOADING_MESSAGES } from "../constants/app";
 
@@ -19,13 +20,18 @@ export default function Home() {
     }
   }, [user, loading, router]);
 
-  // Show loading while checking authentication
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
-        <p className="mt-4 text-gray-600">{LOADING_MESSAGES.default}</p>
-      </div>
-    </div>
+    <Flex
+      minH="100vh"
+      align="center"
+      justify="center"
+      bg="bg.body"
+      color="text.primary"
+    >
+      <VStack spacing={4}>
+        <Spinner size="xl" color="accent.default" />
+        <Text color="text.muted">{LOADING_MESSAGES.default}</Text>
+      </VStack>
+    </Flex>
   );
 }

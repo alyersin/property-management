@@ -13,59 +13,135 @@ import {
   Button,
   VStack,
   HStack,
-  Switch,
-  Divider,
   SimpleGrid,
-  Tooltip,
+  useToast,
 } from "@chakra-ui/react";
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import PageLayout from "../../components/shared/PageLayout";
 import ProtectedRoute from "../../components/auth/ProtectedRoute";
 import UserProfile from "../../components/shared/UserProfile";
-import { COMPANY_DEFAULTS, NOTIFICATION_DEFAULTS, STORAGE_KEYS } from "../../constants/app";
+import { useAuth } from "../../contexts/AuthContext";
 import logger from "../../utils/logger";
 
 export default function Settings() {
-  const [settings, setSettings] = useState({
-    companyName: COMPANY_DEFAULTS.name,
-    email: COMPANY_DEFAULTS.email,
-    phone: COMPANY_DEFAULTS.phone,
-    address: COMPANY_DEFAULTS.address,
-    notifications: NOTIFICATION_DEFAULTS
+  const toast = useToast();
+  const { user, updateUser } = useAuth();
+  const [info, setInfo] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    address: "",
   });
+  const [profileExists, setProfileExists] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [showUserProfile, setShowUserProfile] = useState(false);
-  const [currentUserId, setCurrentUserId] = useState(1); // This would come from auth context
 
-  // Load settings from localStorage on component mount
-  useEffect(() => {
-    const savedSettings = localStorage.getItem(STORAGE_KEYS.preferences);
-    if (savedSettings) {
-      try {
-        const parsedSettings = JSON.parse(savedSettings);
-        setSettings(prev => ({ ...prev, ...parsedSettings }));
-      } catch (error) {
-        logger.error('Failed to load settings from localStorage', error);
-      }
-    }
-  }, []);
+  const userId = user?.id;
 
-  const handleSettingChange = (category, key, value) => {
-    setSettings(prev => ({
+  const loadProfile = useCallback(async () => {
+    if (!userId) return;
+
+    setLoading(true);
+    setInfo((prev) => ({
       ...prev,
-      [category]: {
-        ...prev[category],
-        [key]: value
+      name: user?.name || "",
+      email: user?.email || "",
+    }));
+
+    try {
+      const res = await fetch(`/api/user-profiles/${userId}`);
+      if (res.ok) {
+        const profile = await res.json();
+        setInfo((prev) => ({
+          ...prev,
+          phone: profile.phone || "",
+          address: profile.address || "",
+        }));
+        setProfileExists(true);
+      } else if (res.status === 404) {
+        setProfileExists(false);
+        setInfo((prev) => ({
+          ...prev,
+          phone: "",
+          address: "",
+        }));
+      } else {
+        logger.error("Failed to load profile", await res.text());
+        toast({
+          title: "Failed to load profile",
+          status: "error",
+        });
       }
+    } catch (error) {
+      logger.error("Error loading profile", error);
+      toast({
+        title: "Failed to load profile",
+        status: "error",
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [toast, user?.email, user?.name, userId]);
+
+  useEffect(() => {
+    loadProfile();
+  }, [loadProfile]);
+
+  const handleChange = (field, value) => {
+    setInfo((prev) => ({
+      ...prev,
+      [field]: value,
     }));
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    if (!userId) return;
+
+    setSaving(true);
+
     try {
-      // Save settings to localStorage
-      localStorage.setItem(STORAGE_KEYS.preferences, JSON.stringify(settings));
-      logger.success("Settings saved successfully", { settings });
+      const userResponse = await fetch(`/api/users/${userId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: info.name, email: info.email }),
+      });
+
+      if (!userResponse.ok) {
+        throw new Error("Failed to update account information");
+      }
+
+      const profilePayload = {
+        phone: info.phone,
+        address: info.address,
+      };
+
+      const profileResponse = await fetch(`/api/user-profiles/${userId}`, {
+        method: profileExists ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(profilePayload),
+      });
+
+      if (!profileResponse.ok) {
+        throw new Error("Failed to update profile information");
+      }
+
+      setProfileExists(true);
+      updateUser({ name: info.name, email: info.email });
+
+      toast({
+        title: "Information updated",
+        status: "success",
+      });
     } catch (error) {
       logger.error("Failed to save settings", error);
+      toast({
+        title: "Failed to save information",
+        description: error.message,
+        status: "error",
+      });
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -78,8 +154,7 @@ export default function Settings() {
             <CardHeader>
               <HStack justify="space-between">
                 <Heading size="md">User Profile</Heading>
-                <Button 
-                  colorScheme="blue" 
+                <Button
                   variant="outline"
                   onClick={() => setShowUserProfile(true)}
                 >
@@ -88,100 +163,64 @@ export default function Settings() {
               </HStack>
             </CardHeader>
             <CardBody>
-              <Text color="gray.600">
+            <Text color="text.muted">
                 Manage your personal information, emergency contacts, and profile details.
               </Text>
             </CardBody>
           </Card>
 
-          {/* Company Information */}
+          {/* Information */}
           <Card>
             <CardHeader>
-              <Heading size="md">Company Information</Heading>
+              <Heading size="md">Information</Heading>
             </CardHeader>
             <CardBody>
               <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
-                <FormControl>
-                  <FormLabel>Company Name</FormLabel>
+                <FormControl isRequired>
+                  <FormLabel>Name</FormLabel>
                   <Input
-                    value={settings.companyName}
-                    onChange={(e) => handleSettingChange('companyName', 'companyName', e.target.value)}
+                    value={info.name}
+                    onChange={(e) => handleChange("name", e.target.value)}
+                    isDisabled={loading}
                   />
                 </FormControl>
-                <FormControl>
+                <FormControl isRequired>
                   <FormLabel>Email</FormLabel>
                   <Input
                     type="email"
-                    value={settings.email}
-                    onChange={(e) => handleSettingChange('email', 'email', e.target.value)}
+                    value={info.email}
+                    onChange={(e) => handleChange("email", e.target.value)}
+                    isDisabled={loading}
                   />
                 </FormControl>
                 <FormControl>
                   <FormLabel>Phone</FormLabel>
                   <Input
-                    value={settings.phone}
-                    onChange={(e) => handleSettingChange('phone', 'phone', e.target.value)}
+                    value={info.phone}
+                    onChange={(e) => handleChange("phone", e.target.value)}
+                    isDisabled={loading}
                   />
                 </FormControl>
                 <FormControl>
                   <FormLabel>Address</FormLabel>
                   <Input
-                    value={settings.address}
-                    onChange={(e) => handleSettingChange('address', 'address', e.target.value)}
+                    value={info.address}
+                    onChange={(e) => handleChange("address", e.target.value)}
+                    isDisabled={loading}
                   />
                 </FormControl>
               </SimpleGrid>
             </CardBody>
           </Card>
 
-          {/* Notification Settings */}
-          <Tooltip label="Under Development" hasArrow>
-            <Card>
-              <CardHeader>
-                <Heading size="md">Notification Settings</Heading>
-              </CardHeader>
-              <CardBody>
-                <VStack spacing={4} align="stretch">
-                  <HStack justify="space-between" w="full">
-                    <Text>Email Notifications</Text>
-                    <Switch
-                      isChecked={settings.notifications.email}
-                      isDisabled={true}
-                      onChange={(e) => handleSettingChange('notifications', 'email', e.target.checked)}
-                    />
-                  </HStack>
-                  <HStack justify="space-between" w="full">
-                    <Text>SMS Notifications</Text>
-                    <Switch
-                      isChecked={settings.notifications.sms}
-                      isDisabled={true}
-                      onChange={(e) => handleSettingChange('notifications', 'sms', e.target.checked)}
-                    />
-                  </HStack>
-                  <HStack justify="space-between" w="full">
-                    <Text>Repair Alerts</Text>
-                    <Switch
-                      isChecked={settings.notifications.repair}
-                      isDisabled={true}
-                      onChange={(e) => handleSettingChange('notifications', 'repair', e.target.checked)}
-                    />
-                  </HStack>
-                  <HStack justify="space-between" w="full">
-                    <Text>Payment Alerts</Text>
-                    <Switch
-                      isChecked={settings.notifications.payments}
-                      isDisabled={true}
-                      onChange={(e) => handleSettingChange('notifications', 'payments', e.target.checked)}
-                    />
-                  </HStack>
-                </VStack>
-              </CardBody>
-            </Card>
-          </Tooltip>
-
           {/* Save Button */}
           <Box>
-            <Button colorScheme="blue" onClick={handleSave} size="lg">
+          <Button
+            onClick={handleSave}
+            size="lg"
+            isLoading={saving}
+            isDisabled={loading}
+          >
               Save Settings
             </Button>
           </Box>
@@ -189,9 +228,9 @@ export default function Settings() {
       </PageLayout>
       
       {/* User Profile Modal */}
-      {showUserProfile && (
+      {showUserProfile && userId && (
         <UserProfile
-          userId={currentUserId}
+          userId={userId}
           onClose={() => setShowUserProfile(false)}
         />
       )}

@@ -95,17 +95,3 @@ export const DEMO_CREDENTIALS = {
   password: "demo123",
   name: "Demo User"
 };
-
-export const COMPANY_DEFAULTS = {
-  name: "Home Admin",
-  email: "contact@homeadmin.ro",
-  phone: "(555) 123-4567",
-  address: "123 Admin Street, San Francisco, CA 94102"
-};
-
-export const NOTIFICATION_DEFAULTS = {
-  email: true,
-  sms: false,
-  repair: true,
-  payments: true
-};

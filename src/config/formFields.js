@@ -41,13 +41,7 @@ export const FINANCIAL_RECORD_FIELDS = [
     required: true,
     options: [
       { value: 'Rent', label: 'Rent' },
-      { value: 'Taxes', label: 'Taxes' },
-      { value: 'Insurance', label: 'Insurance' },
-      { value: 'Repair', label: 'Repair' },
-      { value: 'Utilities', label: 'Utilities' },
-      { value: 'Cleaning', label: 'Cleaning' },
-      { value: 'Landscaping', label: 'Landscaping' },
-      { value: 'Other', label: 'Other' }
+      { value: 'Utilities', label: 'Utilities' }
     ]
   },
   {

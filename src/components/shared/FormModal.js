@@ -24,8 +24,12 @@ export default function FormModal({
 }) {
   return (
     <Modal isOpen={isOpen} onClose={onClose} size={size}>
-      <ModalOverlay />
-      <ModalContent>
+      <ModalOverlay bg="bg.overlay" backdropFilter="blur(8px)" />
+      <ModalContent
+        bgGradient="linear(160deg, rgba(36, 52, 109, 0.9) 0%, rgba(17, 25, 56, 0.96) 100%)"
+        border="1px solid"
+        borderColor="border.subtle"
+      >
         <ModalHeader>{title}</ModalHeader>
         <ModalCloseButton />
         <ModalBody pb={6}>

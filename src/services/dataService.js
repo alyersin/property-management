@@ -91,6 +91,19 @@ class DataService {
     return newUser;
   }
 
+  updateUser(id, updates) {
+    const index = this.data.users.findIndex(user => user.id === parseInt(id));
+    if (index !== -1) {
+      this.data.users[index] = {
+        ...this.data.users[index],
+        ...updates,
+        updatedAt: new Date().toISOString()
+      };
+      return this.data.users[index];
+    }
+    return null;
+  }
+
   // Property operations
   getProperties() {
     return this.data.properties;
