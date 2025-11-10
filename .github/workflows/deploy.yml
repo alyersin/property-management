@@ -20,7 +20,7 @@ jobs:
       - name: Configure SSH
         uses: webfactory/ssh-agent@v0.9.0
         with:
-          ssh-private-key: ${{ secrets.DEPLOY_SSH_KEY }}
+          ssh-private-key: ${{ secrets.SERVER_SSH_KEY }}
 
       - name: Sync files to server
         uses: burnett01/rsync-deployments@v6.0.0
@@ -28,12 +28,12 @@ jobs:
           switches: -az --delete --exclude ".git" --exclude ".github/workflows"
           path: ./
           remote_path: ${{ env.DEPLOY_PATH }}
-          remote_host: ${{ secrets.DEPLOY_HOST }}
-          remote_user: ${{ secrets.DEPLOY_USER }}
+          remote_host: ${{ secrets.SERVER_HOST }}
+          remote_user: ${{ secrets.SERVER_USER }}
 
       - name: Rebuild and restart containers
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} <<'EOF'
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} <<'EOF'
           cd ${DEPLOY_PATH:-/opt/home-admin}
           docker compose pull
           docker compose build app
