@@ -4,7 +4,6 @@ import {
   FormControl,
   FormLabel,
   Input,
-  Select,
   Textarea,
   NumberInput,
   NumberInputField,
@@ -16,7 +15,14 @@ import {
   Button,
   Box,
   Text,
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem,
+  IconButton,
+  HStack as ChakraHStack,
 } from "@chakra-ui/react";
+import { ChevronDownIcon, CheckIcon } from "@chakra-ui/icons";
 import { useState, useEffect } from "react";
 
 const DynamicForm = ({ 
@@ -51,24 +57,50 @@ const DynamicForm = ({
     const value = formData[name] || '';
 
     switch (type) {
-      case 'select':
+      case 'select': {
+        const selectedOption =
+          options.find((option) => option.value === value) || null;
+
         return (
           <FormControl key={name} isRequired={required}>
             <FormLabel>{label}</FormLabel>
-            <Select
-              value={value}
-              onChange={(e) => handleChange(name, e.target.value)}
-              placeholder={placeholder}
-              {...props}
-            >
-              {options.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </Select>
+            <Menu matchWidth>
+              <MenuButton
+                as={Button}
+                rightIcon={<ChevronDownIcon />}
+                justifyContent="space-between"
+                textAlign="left"
+                bg="bg.surface"
+                border="1px solid"
+                borderColor="border.subtle"
+                fontWeight="500"
+                width="100%"
+              >
+                {selectedOption ? selectedOption.label : placeholder || "Select"}
+              </MenuButton>
+              <MenuList
+                bg="bg.surface"
+                border="1px solid"
+                borderColor="border.subtle"
+                color="text.primary"
+                width="100%"
+              >
+                {options.map((option) => (
+                  <MenuItem
+                    key={option.value}
+                    onClick={() => handleChange(name, option.value)}
+                  >
+                    <ChakraHStack justify="space-between" w="full">
+                      <Text>{option.label}</Text>
+                      {value === option.value && <CheckIcon boxSize={3} />}
+                    </ChakraHStack>
+                  </MenuItem>
+                ))}
+              </MenuList>
+            </Menu>
           </FormControl>
         );
+      }
 
       case 'textarea':
         return (

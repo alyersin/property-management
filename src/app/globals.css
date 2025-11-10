@@ -26,3 +26,22 @@ a {
   color: inherit;
   text-decoration: none;
 }
+
+select {
+  background-color: var(--chakra-colors-bg-surface, #111c44);
+  color: var(--chakra-colors-text-primary, #e4ecff);
+  border-color: var(--chakra-colors-border-subtle, rgba(255, 255, 255, 0.08));
+}
+
+select option,
+select optgroup {
+  background-color: var(--chakra-colors-bg-surface, #111c44);
+  color: var(--chakra-colors-text-primary, #e4ecff);
+}
+
+select option:hover,
+select option:focus,
+select option:checked {
+  background-color: var(--chakra-colors-accent-default, #5b7cff);
+  color: #ffffff;
+}

@@ -153,7 +153,9 @@ export default function Settings() {
           <Card>
             <CardHeader>
               <HStack justify="space-between">
-                <Heading size="md">User Profile</Heading>
+                <Heading size="md" color="text.primary">
+                  User Profile
+                </Heading>
                 <Button
                   variant="outline"
                   onClick={() => setShowUserProfile(true)}
@@ -172,12 +174,14 @@ export default function Settings() {
           {/* Information */}
           <Card>
             <CardHeader>
-              <Heading size="md">Information</Heading>
+              <Heading size="md" color="text.primary">
+                Information
+              </Heading>
             </CardHeader>
             <CardBody>
               <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
                 <FormControl isRequired>
-                  <FormLabel>Name</FormLabel>
+                  <FormLabel color="text.primary">Name</FormLabel>
                   <Input
                     value={info.name}
                     onChange={(e) => handleChange("name", e.target.value)}
@@ -185,7 +189,7 @@ export default function Settings() {
                   />
                 </FormControl>
                 <FormControl isRequired>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel color="text.primary">Email</FormLabel>
                   <Input
                     type="email"
                     value={info.email}
@@ -194,7 +198,7 @@ export default function Settings() {
                   />
                 </FormControl>
                 <FormControl>
-                  <FormLabel>Phone</FormLabel>
+                  <FormLabel color="text.primary">Phone</FormLabel>
                   <Input
                     value={info.phone}
                     onChange={(e) => handleChange("phone", e.target.value)}
@@ -202,7 +206,7 @@ export default function Settings() {
                   />
                 </FormControl>
                 <FormControl>
-                  <FormLabel>Address</FormLabel>
+                  <FormLabel color="text.primary">Address</FormLabel>
                   <Input
                     value={info.address}
                     onChange={(e) => handleChange("address", e.target.value)}

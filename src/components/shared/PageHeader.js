@@ -76,9 +76,18 @@ export default function PageHeader({ title, actions = [] }) {
             rightIcon={<ChevronDownIcon />}
             variant="ghost"
             size={isMobile ? "sm" : "md"}
+            _hover={{ bg: "transparent" }}
+            _active={{ bg: "transparent" }}
+            _expanded={{ bg: "transparent" }}
           >
             <HStack>
-              <Avatar size="sm" name={user?.name} bg="accent.subtle" />
+              <Avatar
+                size="sm"
+                name={user?.name}
+                bg="accent.subtle"
+                color="text.primary"
+                fontWeight="bold"
+              />
               {!isMobile && (
                 <VStack spacing={0} align="flex-start">
                   <Text fontSize="sm" color="text.primary">

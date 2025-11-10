@@ -184,14 +184,22 @@ const theme = extendTheme({
           bg: "bg.surface",
           border: "1px solid",
           borderColor: "border.subtle",
+          color: "text.primary",
         },
         item: {
           bg: "transparent",
           color: "text.primary",
+          _focus: {
+            bg: "accent.subtle",
+            color: "text.primary",
+          },
           _hover: {
             bg: "accent.subtle",
             color: "text.primary",
           },
+        },
+        divider: {
+          borderColor: "border.subtle",
         },
       },
     },

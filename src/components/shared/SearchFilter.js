@@ -7,10 +7,18 @@ import {
   Input,
   InputGroup,
   InputLeftElement,
-  Select,
   Icon,
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem,
+  Button,
+  Box,
+  Text,
+  HStack,
 } from "@chakra-ui/react";
 import { SearchIcon } from "@chakra-ui/icons";
+import { ChevronDownIcon, CheckIcon } from "@chakra-ui/icons";
 
 export default function SearchFilter({
   searchTerm = "",
@@ -32,6 +40,10 @@ export default function SearchFilter({
       onFilterChange(value);
     }
   };
+
+  const currentFilter = Array.isArray(filterOptions)
+    ? filterOptions.find((option) => option.value === filterValue)
+    : null;
 
   return (
     <Card
@@ -57,21 +69,54 @@ export default function SearchFilter({
             />
           </InputGroup>
           {Array.isArray(filterOptions) && filterOptions.length > 0 && (
-            <Select
-              maxW="220px"
-              value={filterValue || "all"}
-              onChange={(e) => handleFilterChange(e.target.value)}
-              bg="bg.surface"
-              border="1px solid"
-              borderColor="border.subtle"
-            >
-              <option value="all">{filterPlaceholder}</option>
-              {filterOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </Select>
+            <Menu>
+              <MenuButton
+                as={Button}
+                rightIcon={<ChevronDownIcon />}
+                bg="bg.surface"
+                border="1px solid"
+                borderColor="border.subtle"
+                _hover={{ bg: "bg.surface" }}
+                _expanded={{ bg: "bg.surface" }}
+                px={4}
+                py={2}
+                minW="220px"
+                textAlign="left"
+              >
+                <Box>
+                  <Text fontSize="xs" color="text.muted" textTransform="uppercase">
+                    Filter
+                  </Text>
+                  <Text fontSize="sm" color="text.primary">
+                    {currentFilter?.label || filterPlaceholder}
+                  </Text>
+                </Box>
+              </MenuButton>
+              <MenuList
+                bg="bg.surface"
+                border="1px solid"
+                borderColor="border.subtle"
+                color="text.primary"
+              >
+                <MenuItem onClick={() => handleFilterChange("all")}>
+                  <HStack justify="space-between" w="full">
+                    <Text>{filterPlaceholder}</Text>
+                    {filterValue === "all" && <CheckIcon boxSize={3} />}
+                  </HStack>
+                </MenuItem>
+                {filterOptions.map((option) => (
+                  <MenuItem
+                    key={option.value}
+                    onClick={() => handleFilterChange(option.value)}
+                  >
+                    <HStack justify="space-between" w="full">
+                      <Text>{option.label}</Text>
+                      {filterValue === option.value && <CheckIcon boxSize={3} />}
+                    </HStack>
+                  </MenuItem>
+                ))}
+              </MenuList>
+            </Menu>
           )}
         </Flex>
       </CardBody>
