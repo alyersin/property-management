@@ -1,5 +1,8 @@
 # Migration Instructions - Remove Simplified Fields
 
+> **Update – November 2025**  
+> This walkthrough remains for legacy column cleanup. For the latest schema (no tenants tables, consolidated `financial_records`), use `src/database/schema.sql`.
+
 ## Overview
 
 This migration removes the following fields from your database:
@@ -24,11 +27,11 @@ psql "postgresql://username:password@host:port/database_name"
 
 **Option A: Run from file**
 ```bash
-psql -U your_username -d your_database_name -f src/database/migration_remove_simplified_fields.sql
+psql -U your_username -d your_database_name -f src/database/migration_remove_simplified_fields.sql  # retrieve this script from Git history
 ```
 
 **Option B: Copy and paste SQL**
-1. Open the file: `src/database/migration_remove_simplified_fields.sql`
+1. Open the file: `src/database/migration_remove_simplified_fields.sql` (from Git history)
 2. Copy all the SQL commands
 3. Paste into your psql terminal
 4. Press Enter
@@ -67,7 +70,7 @@ You should **NOT** see:
 ### Step 2: Open the migration file
 
 1. Click **File** → **Open File** (or press `Ctrl+O`)
-2. Navigate to: `src/database/migration_remove_simplified_fields.sql`
+2. Navigate to: `src/database/migration_remove_simplified_fields.sql` (from Git history)
 3. Open the file
 
 ### Step 3: Review and execute

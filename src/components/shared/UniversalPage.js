@@ -121,10 +121,13 @@ const UniversalPage = ({
   // Map data types to their singular forms
   const singularForm = {
     properties: 'property',
-    tenants: 'tenant',
-    transactions: 'transaction',
-    expenses: 'expense'
+    financialRecords: 'record'
   }[dataType] || dataType.slice(0, -1);
+
+  const displayName = {
+    properties: 'properties',
+    financialRecords: 'financial records'
+  }[dataType] || dataType.replace(/([A-Z])/g, ' $1').toLowerCase().trim();
 
   return (
     <ProtectedRoute>
@@ -142,7 +145,7 @@ const UniversalPage = ({
           filterValue={filterValue}
           onFilterChange={setFilterValue}
           filterOptions={availableFilterOptions}
-          placeholder={`Search ${dataType}...`}
+          placeholder={`Search ${displayName}...`}
         />
 
         <DataTable

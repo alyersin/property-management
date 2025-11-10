@@ -1,5 +1,8 @@
 # Migration to Production Database - COMPLETED
 
+> **Update – November 2025**  
+> The production schema has since removed tenant-related tables. Refer to `src/database/schema.sql` and `docs/DATABASE_SCHEMA_VERIFICATION.md` for the latest structure.
+
 ## Summary
 
 Successfully migrated the Home Admin application from mock data to a production-ready PostgreSQL database with proper multi-user data isolation.

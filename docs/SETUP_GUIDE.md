@@ -1,5 +1,8 @@
 # Home Admin Project - Complete Setup Guide
 
+> **Update – November 2025**  
+> Tenant-related features were removed and the Finances and Expenses pages were merged. Fresh databases only need `src/database/schema.sql` applied during setup.
+
 This guide will walk you through setting up the Home Admin project from scratch on any machine (Windows, Mac, or Linux).
 
 ## Prerequisites
@@ -74,15 +77,14 @@ docker exec -i home-admin-postgres psql -U postgres -d home_admin -c "\dt"
 # Check sample data
 docker exec -i home-admin-postgres psql -U postgres -d home_admin -c "SELECT COUNT(*) FROM users;"
 docker exec -i home-admin-postgres psql -U postgres -d home_admin -c "SELECT COUNT(*) FROM properties;"
-docker exec -i home-admin-postgres psql -U postgres -d home_admin -c "SELECT COUNT(*) FROM tenants;"
+docker exec -i home-admin-postgres psql -U postgres -d home_admin -c "SELECT COUNT(*) FROM financial_records;"
 ```
 
 Expected output should show:
-- 9 tables created
-- 3 users
-- 4 properties  
-- 4 tenants
-- Sample data in all tables
+- 4 tables created (`users`, `user_profiles`, `properties`, `financial_records`)
+- 0 users (create accounts through the app)
+- 0 properties  
+- 0 financial records (ready for user input)
 
 ## Step 6: Set Up VS Code Database Extension
 
@@ -125,8 +127,7 @@ The application will be available at: http://localhost:3000
 2. **Explore Features**:
    - Dashboard with statistics
    - Properties management
-   - Tenant management
-   - Financial tracking
+   - Finances & Expenses management
    - Settings with user profiles
 
 ## Database Schema Overview
@@ -137,13 +138,11 @@ The project includes all three types of SQL relationships:
 - `users` ↔ `user_profiles`
 
 ### One-to-Many (1:N)
-- `properties` → `transactions`
-- `properties` → `expenses`
-- `tenants` → `transactions`
+- `users` → `properties`
+- `users` → `financial_records`
 
 ### Many-to-Many (M:N)
-- `properties` ↔ `tenants` (via `property_tenants`)
-- `properties` ↔ `amenities` (via `property_amenities`)
+- _None (amenities and tenants features removed)_
 
 ## Useful Commands
 

@@ -5,8 +5,7 @@ A modern, full-stack property management application built with Next.js, React, 
 ## 📋 Features
 
 - **Property Management**: Manage properties with simplified forms (address, city, bedrooms, bathrooms, rent, status)
-- **Tenant Management**: Track tenants and link them to properties
-- **Financial Tracking**: Separate pages for finances (transactions) and expenses (detailed cost tracking)
+- **Finances & Expenses**: Single consolidated page for income and expense tracking
 - **User Authentication**: Secure login/registration with database integration
 - **Multi-User Support**: Data isolation per user
 - **Responsive Design**: Modern UI built with Chakra UI
@@ -70,25 +69,24 @@ Comprehensive documentation is available in the `/docs` directory:
 
 The application uses PostgreSQL with a simplified schema:
 - **Properties**: address, city, bedrooms, bathrooms, rent, status, notes
-- **Tenants**: name, email, phone, status, notes (linked to properties via M:N relationship)
+- **Financial Records**: type, description, amount, date, category, status, vendor, receipt, notes
 - **User Profiles**: bio, phone, address, date_of_birth
-- **Transactions & Expenses**: Financial tracking with full categorization
 
 See `src/database/schema.sql` for the complete schema.
 
-## 📝 Recent Updates (December 2024)
+## 📝 Recent Updates (November 2025)
 
-- Simplified forms for exam presentation
-- Removed fields: state, zip, sqft from properties; emergency contact/phone from tenants and user profiles
-- Updated database schema to match simplified UI
-- All documentation updated to reflect current state
+- Removed Tenants tab, APIs, and database tables for easier demos
+- Merged Finances and Expenses into a single `financial_records` table and `/finances` page
+- Simplified database setup – fresh installs only require `src/database/schema.sql`
+- Documentation refreshed to reflect the simplified navigation and schema
 
 ## 🔧 Available Scripts
 
 - `npm run dev` - Start development server
 - `npm run build` - Build for production
 - `npm run start` - Start production server
-- `npm run migrate:remove-fields` - Run migration to remove simplified fields
+- Apply schema manually: `psql -d your_database -f src/database/schema.sql`
 
 ## 📖 Learn More
 

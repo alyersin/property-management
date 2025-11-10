@@ -1,5 +1,8 @@
 # 🔗 Component Interactions & Data Flow
 
+> **Update – November 2025**  
+> Tenants and the dedicated Expenses page were removed. Historical diagrams remain for reference; current feature scope is documented in `docs/removed-elements/REMOVED_ELEMENTS_DOCUMENTATION.md`.
+
 ## 📊 Component Interaction Diagram
 
 ```

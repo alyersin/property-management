@@ -1,5 +1,8 @@
 # 📚 Home Admin Documentation
 
+> **Update – November 2025**  
+> Documentation has been refreshed to reflect the removal of tenant management and the new `financial_records` schema. Legacy guides remain for historical purposes and are annotated where applicable.
+
 This directory contains all documentation for the Home Admin property management system, organized by category.
 
 ## 📂 Documentation Structure
@@ -39,7 +42,7 @@ Documentation of features and code that have been removed from the application.
 - Simplified property and tenant forms for exam presentation
 - Removed fields: state, zip, sqft, emergency contact/phone from properties, tenants, and user profiles
 - Updated database schema to match simplified forms
-- Migration scripts available in `src/database/migration_remove_simplified_fields.sql`
+- Legacy migration script lives in Git history (`src/database/migration_remove_simplified_fields.sql`)
 
 **Documentation:**
 - **[FINANCES_EXPENSES_EXPLANATION.md](./FINANCES_EXPENSES_EXPLANATION.md)** - Explanation of Finances vs Expenses pages

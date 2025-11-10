@@ -8,9 +8,7 @@ class DataService {
     this.data = {
       users: [], // SECURITY: No user data in client-side code
       properties: [],
-      tenants: [],
-      transactions: [],
-      expenses: []
+      financialRecords: []
     };
   }
 
@@ -19,9 +17,7 @@ class DataService {
     try {
       const dataToSave = {
         properties: this.data.properties,
-        tenants: this.data.tenants,
-        transactions: this.data.transactions,
-        expenses: this.data.expenses,
+        financialRecords: this.data.financialRecords,
         lastSaved: new Date().toISOString()
       };
       localStorage.setItem(this.storageKey, JSON.stringify(dataToSave));
@@ -36,9 +32,7 @@ class DataService {
       if (saved) {
         const parsedData = JSON.parse(saved);
         this.data.properties = parsedData.properties || this.data.properties;
-        this.data.tenants = parsedData.tenants || this.data.tenants;
-        this.data.transactions = parsedData.transactions || this.data.transactions;
-        this.data.expenses = parsedData.expenses || this.data.expenses;
+        this.data.financialRecords = parsedData.financialRecords || this.data.financialRecords;
       }
     } catch (error) {
       console.warn('Failed to load data from localStorage:', error);
@@ -142,109 +136,45 @@ class DataService {
     return null;
   }
 
-  // Tenant operations
-  getTenants() {
-    return this.data.tenants;
+  // Financial record operations
+  getFinancialRecords() {
+    return this.data.financialRecords;
   }
 
-  getTenantById(id) {
-    return this.data.tenants.find(tenant => tenant.id === parseInt(id));
+  getFinancialRecordById(id) {
+    return this.data.financialRecords.find(record => record.id === parseInt(id));
   }
 
-  addTenant(tenant) {
-    const newTenant = {
-      ...tenant,
-      id: Math.max(...this.data.tenants.map(t => t.id), 0) + 1,
+  addFinancialRecords(record) {
+    const newRecord = {
+      ...record,
+      id: Math.max(...this.data.financialRecords.map(r => r.id), 0) + 1,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
-    this.data.tenants.push(newTenant);
+    this.data.financialRecords.push(newRecord);
     this.saveToStorage();
-    return newTenant;
+    return newRecord;
   }
 
-  updateTenant(id, updates) {
-    const index = this.data.tenants.findIndex(t => t.id === parseInt(id));
+  updateFinancialRecords(id, updates) {
+    const index = this.data.financialRecords.findIndex(r => r.id === parseInt(id));
     if (index !== -1) {
-      this.data.tenants[index] = {
-        ...this.data.tenants[index],
+      this.data.financialRecords[index] = {
+        ...this.data.financialRecords[index],
         ...updates,
         updatedAt: new Date().toISOString()
       };
       this.saveToStorage();
-      return this.data.tenants[index];
+      return this.data.financialRecords[index];
     }
     return null;
   }
 
-  deleteTenant(id) {
-    const index = this.data.tenants.findIndex(t => t.id === parseInt(id));
+  deleteFinancialRecords(id) {
+    const index = this.data.financialRecords.findIndex(r => r.id === parseInt(id));
     if (index !== -1) {
-      const deleted = this.data.tenants.splice(index, 1)[0];
-      this.saveToStorage();
-      return deleted;
-    }
-    return null;
-  }
-
-  // Financial operations
-  getTransactions() {
-    return this.data.transactions;
-  }
-
-  getTransactionById(id) {
-    return this.data.transactions.find(transaction => transaction.id === parseInt(id));
-  }
-
-  addTransaction(transaction) {
-    const newTransaction = {
-      ...transaction,
-      id: Math.max(...this.data.transactions.map(t => t.id), 0) + 1,
-      createdAt: new Date().toISOString()
-    };
-    this.data.transactions.push(newTransaction);
-    this.saveToStorage();
-    return newTransaction;
-  }
-
-  // Expense operations
-  getExpenses() {
-    return this.data.expenses;
-  }
-
-  getExpenseById(id) {
-    return this.data.expenses.find(expense => expense.id === parseInt(id));
-  }
-
-  addExpense(expense) {
-    const newExpense = {
-      ...expense,
-      id: Math.max(...this.data.expenses.map(e => e.id), 0) + 1,
-      createdAt: new Date().toISOString()
-    };
-    this.data.expenses.push(newExpense);
-    this.saveToStorage();
-    return newExpense;
-  }
-
-  updateExpense(id, updates) {
-    const index = this.data.expenses.findIndex(e => e.id === parseInt(id));
-    if (index !== -1) {
-      this.data.expenses[index] = {
-        ...this.data.expenses[index],
-        ...updates,
-        updatedAt: new Date().toISOString()
-      };
-      this.saveToStorage();
-      return this.data.expenses[index];
-    }
-    return null;
-  }
-
-  deleteExpense(id) {
-    const index = this.data.expenses.findIndex(e => e.id === parseInt(id));
-    if (index !== -1) {
-      const deleted = this.data.expenses.splice(index, 1)[0];
+      const deleted = this.data.financialRecords.splice(index, 1)[0];
       this.saveToStorage();
       return deleted;
     }
@@ -254,32 +184,29 @@ class DataService {
   // Dashboard statistics
   getDashboardStats() {
     const properties = this.getProperties();
-    const tenants = this.getTenants();
-    const transactions = this.getTransactions();
+    const financialRecords = this.getFinancialRecords();
     
     const totalProperties = properties.length;
     const occupiedProperties = properties.filter(p => p.status === 'Occupied').length;
-    const totalTenants = tenants.filter(t => t.status === 'Active').length;
     
     const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
-    const monthlyTransactions = transactions.filter(t => 
+    const monthlyRecords = financialRecords.filter(t => 
       t.date.startsWith(currentMonth)
     );
     
-    const monthlyIncome = monthlyTransactions
+    const monthlyIncome = monthlyRecords
       .filter(t => t.type === 'Income')
-      .reduce((sum, t) => sum + t.amount, 0);
+      .reduce((sum, t) => sum + Number(t.amount), 0);
     
-    const monthlyExpenses = Math.abs(monthlyTransactions
+    const monthlyExpenses = Math.abs(monthlyRecords
       .filter(t => t.type === 'Expense')
-      .reduce((sum, t) => sum + t.amount, 0));
+      .reduce((sum, t) => sum + Number(t.amount), 0));
     
     const netIncome = monthlyIncome - monthlyExpenses;
     
     return {
       totalProperties,
       occupiedProperties,
-      totalTenants,
       monthlyIncome,
       monthlyExpenses,
       netIncome,

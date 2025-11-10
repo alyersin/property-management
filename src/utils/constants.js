@@ -2,9 +2,7 @@
 export const NAVIGATION_ITEMS = [
   { href: "/dashboard", label: "🏠 Dashboard", icon: "🏠" },
   { href: "/properties", label: "🏘️ Properties", icon: "🏘️" },
-  { href: "/tenants", label: "👥 Tenants", icon: "👥" },
-  { href: "/finances", label: "💰 Finances", icon: "💰" },
-  { href: "/expenses", label: "💸 Expenses", icon: "💸" },
+  { href: "/finances", label: "💰 Finances & Expenses", icon: "💰" },
   { href: "/settings", label: "⚙️ Settings", icon: "⚙️" },
 ];
 
@@ -15,12 +13,6 @@ export const STATUS_COLORS = {
     Occupied: "green",
     Available: "blue", 
     Renovating: "orange",
-  },
-  // Tenant statuses
-  tenant: {
-    Current: "green",
-    "Moving Out": "orange",
-    "Past Due": "red",
   },
   // Payment statuses
   payment: {
@@ -55,20 +47,9 @@ export const FILTER_OPTIONS = {
     { value: "Occupied", label: "Occupied" },
     { value: "Available", label: "Available" },
   ],
-  tenants: [
-    { value: "Current", label: "Current" },
-    { value: "Moving Out", label: "Moving Out" },
-    { value: "Past Due", label: "Past Due" },
-  ],
-  expenses: [
-    { value: "Water", label: "Water" },
-    { value: "Electricity", label: "Electricity" },
-    { value: "Heating", label: "Heating" },
-    { value: "Garbage", label: "Garbage" },
-    { value: "Internet", label: "Internet" },
-    { value: "Insurance", label: "Insurance" },
-    { value: "Taxes", label: "Taxes" },
-    { value: "Cleaning", label: "Cleaning" },
-    { value: "Landscaping", label: "Landscaping" },
+  financialRecords: [
+    { value: "Completed", label: "Completed" },
+    { value: "Pending", label: "Pending" },
+    { value: "Overdue", label: "Overdue" },
   ],
 };

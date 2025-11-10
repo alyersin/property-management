@@ -1,78 +1,64 @@
--- VERIFY MIGRATION: Check if fields are removed
--- Run this in DBeaver or psql to verify the migration worked
+-- VERIFY SCHEMA: fresh installation checklist
+-- Run these queries in psql or DBeaver after applying src/database/schema.sql
 
 -- ============================================
--- Check Properties Table
+-- Confirm legacy tables are gone
 -- ============================================
-SELECT 
-    column_name, 
-    data_type, 
-    is_nullable
-FROM information_schema.columns 
-WHERE table_name = 'properties' 
+SELECT
+    COUNT(*) = 0 AS tenants_tables_absent
+FROM information_schema.tables
+WHERE table_name IN ('tenants', 'property_tenants', 'transactions', 'expenses');
+
+-- ============================================
+-- Inspect financial_records columns
+-- ============================================
+SELECT
+    column_name,
+    data_type,
+    is_nullable,
+    column_default
+FROM information_schema.columns
+WHERE table_name = 'financial_records'
 ORDER BY ordinal_position;
 
--- Expected columns: id, user_id, address, city, bedrooms, bathrooms, rent, status, notes, created_at, updated_at
--- Should NOT see: state, zip, sqft
+-- Expected columns:
+-- id, user_id, type, description, amount, date, category, status, vendor,
+-- receipt, notes, created_at, updated_at
 
 -- ============================================
--- Check Tenants Table
+-- Check financial_records indexes
 -- ============================================
-SELECT 
-    column_name, 
-    data_type, 
-    is_nullable
-FROM information_schema.columns 
-WHERE table_name = 'tenants' 
-ORDER BY ordinal_position;
+SELECT
+    indexname,
+    indexdef
+FROM pg_indexes
+WHERE tablename = 'financial_records'
+ORDER BY indexname;
 
--- Expected columns: id, user_id, name, email, phone, status, notes, created_at, updated_at
--- Should NOT see: emergency_contact, emergency_phone
-
--- ============================================
--- Check User Profiles Table
--- ============================================
-SELECT 
-    column_name, 
-    data_type, 
-    is_nullable
-FROM information_schema.columns 
-WHERE table_name = 'user_profiles' 
-ORDER BY ordinal_position;
-
--- Expected columns: id, user_id, bio, avatar_url, phone, address, date_of_birth, created_at, updated_at
--- Should NOT see: emergency_contact, emergency_phone
+-- Expected indexes:
+-- idx_financial_records_user, idx_financial_records_date,
+-- idx_financial_records_type, idx_financial_records_status
 
 -- ============================================
--- Quick Check (returns TRUE if fields are gone)
+-- Quick PASS/FAIL summary
 -- ============================================
-SELECT 
-    'Properties columns check' as check_type,
-    CASE 
-        WHEN COUNT(*) FILTER (WHERE column_name IN ('state', 'zip', 'sqft')) = 0 
-        THEN '✅ PASS - Fields removed'
-        ELSE '❌ FAIL - Fields still exist'
-    END as result
-FROM information_schema.columns 
-WHERE table_name = 'properties'
+SELECT
+    'financial_records columns' AS check_type,
+    CASE
+        WHEN COUNT(*) FILTER (WHERE column_name IN ('type','status','vendor','receipt')) = 4
+         AND COUNT(*) = 13
+        THEN '✅ PASS - financial_records schema matches expected columns'
+        ELSE '❌ FAIL - Review financial_records schema'
+    END AS result
+FROM information_schema.columns
+WHERE table_name = 'financial_records'
 UNION ALL
-SELECT 
-    'Tenants columns check' as check_type,
-    CASE 
-        WHEN COUNT(*) FILTER (WHERE column_name IN ('emergency_contact', 'emergency_phone')) = 0 
-        THEN '✅ PASS - Fields removed'
-        ELSE '❌ FAIL - Fields still exist'
-    END as result
-FROM information_schema.columns 
-WHERE table_name = 'tenants'
-UNION ALL
-SELECT 
-    'User Profiles columns check' as check_type,
-    CASE 
-        WHEN COUNT(*) FILTER (WHERE column_name IN ('emergency_contact', 'emergency_phone')) = 0 
-        THEN '✅ PASS - Fields removed'
-        ELSE '❌ FAIL - Fields still exist'
-    END as result
-FROM information_schema.columns 
-WHERE table_name = 'user_profiles';
+SELECT
+    'legacy tables removed' AS check_type,
+    CASE
+        WHEN COUNT(*) = 0 THEN '✅ PASS - tenants/transactions tables absent'
+        ELSE '❌ FAIL - drop legacy tables'
+    END AS result
+FROM information_schema.tables
+WHERE table_name IN ('tenants', 'property_tenants', 'transactions', 'expenses');
 

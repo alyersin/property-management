@@ -20,84 +20,27 @@ export const PROPERTY_FIELDS = [
   { name: 'notes', label: 'Notes', type: 'textarea', placeholder: 'Enter any additional notes' }
 ];
 
-export const TENANT_FIELDS = [
-  { name: 'name', label: 'Full Name', type: 'text', required: true, placeholder: 'Enter full name' },
-  { name: 'email', label: 'Email', type: 'email', required: true, placeholder: 'Enter email address' },
-  { name: 'phone', label: 'Phone', type: 'tel', required: true, placeholder: 'Enter phone number' },
-  { 
-    name: 'propertyId', 
-    label: 'Property', 
-    type: 'select', 
-    required: true,
-    options: [] // Will be populated dynamically
-  },
-  { name: 'leaseStart', label: 'Lease Start Date', type: 'date', required: true },
-  { name: 'rentAmount', label: 'Monthly Rent', type: 'number', required: true, min: 0, step: 0.01 },
-  { 
-    name: 'status', 
-    label: 'Status', 
-    type: 'select', 
-    required: true,
-    options: [
-      { value: 'Active', label: 'Active' },
-      { value: 'Prospective', label: 'Prospective' },
-      { value: 'Inactive', label: 'Inactive' }
-    ]
-  },
-  { name: 'notes', label: 'Notes', type: 'textarea', placeholder: 'Enter any additional notes' }
-];
-
-export const TRANSACTION_FIELDS = [
-  { 
-    name: 'type', 
-    label: 'Type', 
-    type: 'select', 
+export const FINANCIAL_RECORD_FIELDS = [
+  {
+    name: 'type',
+    label: 'Type',
+    type: 'select',
     required: true,
     options: [
       { value: 'Income', label: 'Income' },
       { value: 'Expense', label: 'Expense' }
     ]
   },
-  { name: 'description', label: 'Description', type: 'text', required: true, placeholder: 'Enter transaction description' },
+  { name: 'description', label: 'Description', type: 'text', required: true, placeholder: 'Enter description' },
   { name: 'amount', label: 'Amount', type: 'number', required: true, step: 0.01, placeholder: 'Enter amount' },
   { name: 'date', label: 'Date', type: 'date', required: true },
-  { 
-    name: 'category', 
-    label: 'Category', 
-    type: 'select', 
+  {
+    name: 'category',
+    label: 'Category',
+    type: 'select',
     required: true,
     options: [
       { value: 'Rent', label: 'Rent' },
-      { value: 'Taxes', label: 'Taxes' },
-      { value: 'Insurance', label: 'Insurance' },
-      { value: 'Repair', label: 'Repair' },
-      { value: 'Utilities', label: 'Utilities' },
-      { value: 'Other', label: 'Other' }
-    ]
-  },
-  { 
-    name: 'status', 
-    label: 'Status', 
-    type: 'select', 
-    required: true,
-    options: [
-      { value: 'Completed', label: 'Completed' },
-      { value: 'Pending', label: 'Pending' },
-      { value: 'Cancelled', label: 'Cancelled' }
-    ]
-  }
-];
-
-export const EXPENSE_FIELDS = [
-  { name: 'description', label: 'Description', type: 'text', required: true, placeholder: 'Enter expense description' },
-  { name: 'amount', label: 'Amount', type: 'number', required: true, min: 0, step: 0.01, placeholder: 'Enter amount' },
-  { name: 'date', label: 'Date', type: 'date', required: true },
-  { 
-    name: 'category', 
-    label: 'Category', 
-    type: 'select', 
-    required: true,
-    options: [
       { value: 'Taxes', label: 'Taxes' },
       { value: 'Insurance', label: 'Insurance' },
       { value: 'Repair', label: 'Repair' },
@@ -107,19 +50,19 @@ export const EXPENSE_FIELDS = [
       { value: 'Other', label: 'Other' }
     ]
   },
-  { name: 'vendor', label: 'Vendor', type: 'text', placeholder: 'Enter vendor name' },
-  { 
-    name: 'status', 
-    label: 'Status', 
-    type: 'select', 
+  {
+    name: 'status',
+    label: 'Status',
+    type: 'select',
     required: true,
     options: [
-      { value: 'Paid', label: 'Paid' },
+      { value: 'Completed', label: 'Completed' },
       { value: 'Pending', label: 'Pending' },
       { value: 'Overdue', label: 'Overdue' }
     ]
   },
-  { name: 'receipt', label: 'Receipt Number', type: 'text', placeholder: 'Enter receipt number' },
+  { name: 'vendor', label: 'Vendor', type: 'text', placeholder: 'Enter vendor name (optional)' },
+  { name: 'receipt', label: 'Receipt Number', type: 'text', placeholder: 'Enter receipt (optional)' },
   { name: 'notes', label: 'Notes', type: 'textarea', placeholder: 'Enter any additional notes' }
 ];
 
@@ -128,12 +71,8 @@ export const getFieldsByType = (dataType) => {
   switch (dataType) {
     case 'properties':
       return PROPERTY_FIELDS;
-    case 'tenants':
-      return TENANT_FIELDS;
-    case 'transactions':
-      return TRANSACTION_FIELDS;
-    case 'expenses':
-      return EXPENSE_FIELDS;
+    case 'financialRecords':
+      return FINANCIAL_RECORD_FIELDS;
     default:
       return [];
   }

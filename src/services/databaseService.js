@@ -129,13 +129,9 @@ class DatabaseService {
         throw new Error('userId is required for getProperties');
       }
       const result = await this.query(`
-        SELECT p.*, 
-          STRING_AGG(DISTINCT CONCAT(t.name, ' (', pt.lease_start, ' - ', pt.lease_end, ')'), '; ') as current_tenants
+        SELECT p.*
         FROM properties p
-        LEFT JOIN property_tenants pt ON p.id = pt.property_id AND pt.status = 'Active'
-        LEFT JOIN tenants t ON pt.tenant_id = t.id
         WHERE p.user_id = $1
-        GROUP BY p.id
         ORDER BY p.created_at DESC
       `, [userId]);
       return result.rows;
@@ -199,236 +195,65 @@ class DatabaseService {
     return dataService.deleteProperty(id);
   }
 
-  // Tenant operations with user_id filtering
-  async getTenants(userId = null) {
+  // Financial record operations with user_id filtering
+  async getFinancialRecords(userId = null) {
     if (this.useDatabase) {
       if (!userId) {
-        throw new Error('userId is required for getTenants');
+        throw new Error('userId is required for getFinancialRecords');
       }
       const result = await this.query(`
-        SELECT t.*
-        FROM tenants t
-        WHERE t.user_id = $1
-        ORDER BY t.created_at DESC
+        SELECT fr.*
+        FROM financial_records fr
+        WHERE fr.user_id = $1
+        ORDER BY fr.date DESC
       `, [userId]);
       return result.rows;
     }
-    return dataService.getTenants();
+    return dataService.getFinancialRecords();
   }
 
-  async getTenantById(id, userId = null) {
+  async addFinancialRecords(record, userId = null) {
     if (this.useDatabase) {
       if (!userId) {
-        throw new Error('userId is required for getTenantById');
-      }
-      const result = await this.query('SELECT * FROM tenants WHERE id = $1 AND user_id = $2', [id, userId]);
-      return result.rows[0];
-    }
-    return dataService.getTenantById(id);
-  }
-
-  async addTenant(tenant, userId = null) {
-    if (this.useDatabase) {
-      if (!userId) {
-        throw new Error('userId is required for addTenant');
-      }
-      // Note: emergency_contact and emergency_phone fields removed from database schema
-      const result = await this.query(`
-        INSERT INTO tenants (user_id, name, email, phone, status, notes)
-        VALUES ($1, $2, $3, $4, $5, $6)
-        RETURNING *
-      `, [userId, tenant.name, tenant.email, tenant.phone, tenant.status, tenant.notes]);
-      return result.rows[0];
-    }
-    return dataService.addTenant(tenant);
-  }
-
-  async updateTenant(id, updates, userId = null) {
-    if (this.useDatabase) {
-      if (!userId) {
-        throw new Error('userId is required for updateTenant');
-      }
-      const setClause = Object.keys(updates).map((key, index) => `${key} = $${index + 3}`).join(', ');
-      const values = [id, userId, ...Object.values(updates)];
-      const result = await this.query(`
-        UPDATE tenants SET ${setClause}, updated_at = CURRENT_TIMESTAMP
-        WHERE id = $1 AND user_id = $2 RETURNING *
-      `, values);
-      return result.rows[0];
-    }
-    return dataService.updateTenant(id, updates);
-  }
-
-  async deleteTenant(id, userId = null) {
-    if (this.useDatabase) {
-      if (!userId) {
-        throw new Error('userId is required for deleteTenant');
-      }
-      const result = await this.query('DELETE FROM tenants WHERE id = $1 AND user_id = $2 RETURNING *', [id, userId]);
-      return result.rows[0];
-    }
-    return dataService.deleteTenant(id);
-  }
-
-  // Transaction operations with user_id filtering
-  async getTransactions(userId = null) {
-    if (this.useDatabase) {
-      if (!userId) {
-        throw new Error('userId is required for getTransactions');
+        throw new Error('userId is required for addFinancialRecords');
       }
       const result = await this.query(`
-        SELECT t.*, p.address as property_address, tn.name as tenant_name
-        FROM transactions t
-        LEFT JOIN properties p ON t.property_id = p.id
-        LEFT JOIN tenants tn ON t.tenant_id = tn.id
-        WHERE t.user_id = $1
-        ORDER BY t.date DESC
-      `, [userId]);
-      return result.rows;
-    }
-    return dataService.getTransactions();
-  }
-
-  async addTransaction(transaction, userId = null) {
-    if (this.useDatabase) {
-      if (!userId) {
-        throw new Error('userId is required for addTransaction');
-      }
-      const result = await this.query(`
-        INSERT INTO transactions (user_id, type, description, amount, date, property_id, tenant_id, category, status)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-        RETURNING *
-      `, [userId, transaction.type, transaction.description, transaction.amount, 
-        transaction.date, transaction.property_id, transaction.tenant_id, 
-        transaction.category, transaction.status]);
-      return result.rows[0];
-    }
-    return dataService.addTransaction(transaction);
-  }
-
-  // Expense operations with user_id filtering
-  async getExpenses(userId = null) {
-    if (this.useDatabase) {
-      if (!userId) {
-        throw new Error('userId is required for getExpenses');
-      }
-      const result = await this.query(`
-        SELECT e.*, p.address as property_address
-        FROM expenses e
-        LEFT JOIN properties p ON e.property_id = p.id
-        WHERE e.user_id = $1
-        ORDER BY e.date DESC
-      `, [userId]);
-      return result.rows;
-    }
-    return dataService.getExpenses();
-  }
-
-  async getExpenseById(id, userId = null) {
-    if (this.useDatabase) {
-      if (!userId) {
-        throw new Error('userId is required for getExpenseById');
-      }
-      const result = await this.query('SELECT * FROM expenses WHERE id = $1 AND user_id = $2', [id, userId]);
-      return result.rows[0];
-    }
-    return dataService.getExpenseById(id);
-  }
-
-  async addExpense(expense, userId = null) {
-    if (this.useDatabase) {
-      if (!userId) {
-        throw new Error('userId is required for addExpense');
-      }
-      const result = await this.query(`
-        INSERT INTO expenses (user_id, description, amount, date, category, property_id, vendor, status, receipt, notes)
+        INSERT INTO financial_records (user_id, type, description, amount, date, category, status, vendor, receipt, notes)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
         RETURNING *
-      `, [userId, expense.description, expense.amount, expense.date, expense.category,
-        expense.property_id, expense.vendor, expense.status, expense.receipt, expense.notes]);
+      `, [userId, record.type, record.description, record.amount, record.date, record.category, record.status, record.vendor, record.receipt, record.notes]);
       return result.rows[0];
     }
-    return dataService.addExpense(expense);
+    return dataService.addFinancialRecords(record);
   }
 
-  async updateExpense(id, updates, userId = null) {
+  async updateFinancialRecords(id, updates, userId = null) {
     if (this.useDatabase) {
       if (!userId) {
-        throw new Error('userId is required for updateExpense');
+        throw new Error('userId is required for updateFinancialRecords');
       }
       const setClause = Object.keys(updates).map((key, index) => `${key} = $${index + 3}`).join(', ');
       const values = [id, userId, ...Object.values(updates)];
       const result = await this.query(`
-        UPDATE expenses SET ${setClause}, updated_at = CURRENT_TIMESTAMP
+        UPDATE financial_records SET ${setClause}, updated_at = CURRENT_TIMESTAMP
         WHERE id = $1 AND user_id = $2 RETURNING *
       `, values);
       return result.rows[0];
     }
-    return dataService.updateExpense(id, updates);
+    return dataService.updateFinancialRecords(id, updates);
   }
 
-  async deleteExpense(id, userId = null) {
+  async deleteFinancialRecords(id, userId = null) {
     if (this.useDatabase) {
       if (!userId) {
-        throw new Error('userId is required for deleteExpense');
+        throw new Error('userId is required for deleteFinancialRecords');
       }
-      const result = await this.query('DELETE FROM expenses WHERE id = $1 AND user_id = $2 RETURNING *', [id, userId]);
+      const result = await this.query('DELETE FROM financial_records WHERE id = $1 AND user_id = $2 RETURNING *', [id, userId]);
       return result.rows[0];
     }
-    return dataService.deleteExpense(id);
+    return dataService.deleteFinancialRecords(id);
   }
 
-  // Amenities operations (no user_id filtering needed - shared across all users)
-  async getAmenities() {
-    if (this.useDatabase) {
-      const result = await this.query('SELECT * FROM amenities ORDER BY category, name');
-      return result.rows;
-    }
-    return [
-      { id: 1, name: 'Swimming Pool', description: 'Outdoor swimming pool with deck area', category: 'outdoor' },
-      { id: 2, name: 'Fitness Center', description: '24/7 fitness center with modern equipment', category: 'building' },
-      { id: 3, name: 'Parking Garage', description: 'Covered parking garage with security', category: 'building' },
-      { id: 4, name: 'Balcony', description: 'Private balcony with city views', category: 'unit' },
-      { id: 5, name: 'Dishwasher', description: 'Built-in dishwasher in kitchen', category: 'indoor' }
-    ];
-  }
-
-  // Property-Tenant Many-to-Many operations
-  async getPropertyTenants(propertyId, userId = null) {
-    if (this.useDatabase) {
-      if (!userId) {
-        throw new Error('userId is required for getPropertyTenants');
-      }
-      const result = await this.query(`
-        SELECT pt.*, t.name, t.email, t.phone
-        FROM property_tenants pt
-        JOIN tenants t ON pt.tenant_id = t.id
-        JOIN properties p ON pt.property_id = p.id
-        WHERE pt.property_id = $1 AND p.user_id = $2
-        ORDER BY pt.lease_start DESC
-      `, [propertyId, userId]);
-      return result.rows;
-    }
-    return [];
-  }
-
-  async getTenantProperties(tenantId, userId = null) {
-    if (this.useDatabase) {
-      if (!userId) {
-        throw new Error('userId is required for getTenantProperties');
-      }
-      const result = await this.query(`
-        SELECT pt.*, p.address, p.city
-        FROM property_tenants pt
-        JOIN properties p ON pt.property_id = p.id
-        JOIN tenants t ON pt.tenant_id = t.id
-        WHERE pt.tenant_id = $1 AND p.user_id = $2
-        ORDER BY pt.lease_start DESC
-      `, [tenantId, userId]);
-      return result.rows;
-    }
-    return [];
-  }
 
   // Dashboard operations
   async getDashboardStats(userId = null) {
@@ -443,27 +268,21 @@ class DatabaseService {
         [userId]
       );
       
-      const tenantsResult = await this.query(
-        `SELECT COUNT(*) as active FROM tenants WHERE status = 'Active' AND user_id = $1`,
-        [userId]
-      );
-      
       const currentMonth = new Date().toISOString().slice(0, 7);
-      const transactionsResult = await this.query(`
+      const financialResult = await this.query(`
         SELECT 
           SUM(CASE WHEN type = 'Income' THEN amount ELSE 0 END) as income,
           SUM(CASE WHEN type = 'Expense' THEN ABS(amount) ELSE 0 END) as expenses
-        FROM transactions 
+        FROM financial_records 
         WHERE date >= $1 AND date < $2 AND user_id = $3
       `, [`${currentMonth}-01`, `${currentMonth}-32`, userId]);
       
       const stats = {
         totalProperties: parseInt(propertiesResult.rows[0].total),
         occupiedProperties: parseInt(propertiesResult.rows[0].occupied),
-        totalTenants: parseInt(tenantsResult.rows[0].active),
-        monthlyIncome: parseFloat(transactionsResult.rows[0].income || 0),
-        monthlyExpenses: parseFloat(transactionsResult.rows[0].expenses || 0),
-        netIncome: parseFloat(transactionsResult.rows[0].income || 0) - parseFloat(transactionsResult.rows[0].expenses || 0),
+        monthlyIncome: parseFloat(financialResult.rows[0].income || 0),
+        monthlyExpenses: parseFloat(financialResult.rows[0].expenses || 0),
+        netIncome: parseFloat(financialResult.rows[0].income || 0) - parseFloat(financialResult.rows[0].expenses || 0),
         occupancyRate: propertiesResult.rows[0].total > 0 
           ? Math.round((parseInt(propertiesResult.rows[0].occupied) / parseInt(propertiesResult.rows[0].total)) * 100)
           : 0
@@ -481,16 +300,16 @@ class DatabaseService {
       
       // This is a simplified version - you may want to make it more sophisticated
       const result = await this.query(`
-        SELECT 'transaction' as type, description as message, created_at, amount
-        FROM transactions
+        SELECT id, type, description as message, created_at, amount
+        FROM financial_records
         WHERE user_id = $1
         ORDER BY created_at DESC
         LIMIT 5
       `, [userId]);
       
       return result.rows.map(row => ({
-        id: `transaction-${row.id}`,
-        type: 'payment',
+        id: `financial-${row.id}`,
+        type: row.type === 'Income' ? 'payment' : 'expense',
         message: row.message,
         time: this.getTimeAgo(row.created_at),
         amount: row.amount

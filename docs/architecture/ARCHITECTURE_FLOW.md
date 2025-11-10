@@ -1,5 +1,8 @@
 # 🏗️ Home Admin Architecture Flow
 
+> **Update – November 2025**  
+> Tenants and property-tenant flows were retired. The diagrams below retain historical references; consult `docs/removed-elements/REMOVED_ELEMENTS_DOCUMENTATION.md` for current scope.
+
 ## 📊 Application Flow Diagram
 
 ```

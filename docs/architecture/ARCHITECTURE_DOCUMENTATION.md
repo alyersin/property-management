@@ -1,5 +1,8 @@
 # 🏗️ Home Admin Application Architecture
 
+> **Update – November 2025**  
+> Tenant management and property-tenant relationships were removed to simplify the product demo. Legacy references remain below for historical context—see `docs/removed-elements/REMOVED_ELEMENTS_DOCUMENTATION.md` for the authoritative list of removals.
+
 ## 📋 Table of Contents
 1. [Overview](#overview)
 2. [Architecture Diagram](#architecture-diagram)

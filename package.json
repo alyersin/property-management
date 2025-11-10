@@ -5,8 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "cross-env NEXT_DISABLE_ESLINT=1 next build",
-    "start": "next start",
-    "migrate:remove-fields": "node scripts/run-migration.js"
+    "start": "next start"
   },
   "dependencies": {
     "@chakra-ui/icons": "^2.2.4",

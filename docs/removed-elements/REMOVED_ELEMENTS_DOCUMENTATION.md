@@ -1,3 +1,65 @@
+## Tenant Management Removal - November 2025
+
+### Overview
+To simplify the Home Admin walkthrough we removed every tenant-specific feature and merged all financial tracking into a single Finances & Expenses experience.
+
+### Elements Removed
+- **Navigation item** – `src/utils/constants.js`
+```javascript
+// Before
+{ href: "/tenants", label: "👥 Tenants", icon: "👥" },
+{ href: "/expenses", label: "💸 Expenses", icon: "💸" },
+
+// After
+{ href: "/finances", label: "💰 Finances & Expenses", icon: "💰" },
+```
+- **Tenants page** – `src/app/tenants/page.js` (entire file deleted)
+- **Property tenant management modal** – `src/components/shared/PropertyTenantManagement.js` (entire file deleted)
+- **API routes**
+  - `src/app/api/tenants/route.js`
+  - `src/app/api/tenants/[tenantId]/properties/route.js`
+  - `src/app/api/properties/[propertyId]/tenants/route.js`
+- **Database tables** – removed `tenants`, `property_tenants`, `transactions`, `expenses`; introduced `financial_records`
+```sql
+-- New consolidated table
+CREATE TABLE financial_records (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    type VARCHAR(50) NOT NULL,
+    description VARCHAR(255) NOT NULL,
+    amount DECIMAL(10,2) NOT NULL,
+    date DATE NOT NULL,
+    category VARCHAR(100) NOT NULL,
+    status VARCHAR(50) DEFAULT 'Completed',
+    vendor VARCHAR(255),
+    receipt VARCHAR(255),
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+- **UI integrations**
+  - Removed tenant-specific custom actions from `src/app/properties/page.js`
+  - Updated `src/components/shared/UniversalPage.js` singular names and filters
+  - Replaced transaction/expense columns with `FINANCIAL_RECORD_COLUMNS` in `src/config/tableColumns.js`
+  - Replaced transaction/expense form configs with `FINANCIAL_RECORD_FIELDS` in `src/config/formFields.js`
+- **Service layer**
+  - Simplified `src/services/dataService.js` to manage `financialRecords` only
+  - Replaced tenant, transaction, and expense handlers in `src/services/databaseService.js` with `financial_records` equivalents
+
+### Reason for Removal
+- Reduce cognitive load when demoing the app
+- Remove unused tenant flows that required additional explanations
+- Unify financial reporting to one page so “Finances” covers both incomes and expenses
+
+### Impact
+- UI now exposes four main tabs: Dashboard, Properties, Finances & Expenses, Settings
+- Local storage and mock data now exclude tenants, transactions, and expenses arrays
+- Documentation updated (`docs/FINANCES_EXPENSES_EXPLANATION.md`, `docs/DATABASE_SCHEMA_VERIFICATION.md`)
+
+### Migration
+- Fresh installs only need `src/database/schema.sql`.
+- For legacy databases, manually drop tenant/expense tables or restore the former migration script from Git history if required.
 # Removed Elements Documentation
 
 This document tracks all elements that have been removed from the Home Admin application. These elements can be restored in the future if needed.
@@ -7,16 +69,17 @@ This document tracks all elements that have been removed from the Home Admin app
 **PRIORITY:** Always update this documentation file immediately after removing any element, component, feature, or functionality from the application.
 
 ## Table of Contents
-1. [Form Simplification - December 2024](#form-simplification---december-2024)
-2. [Maintenance System](#maintenance-system)
-3. [Dashboard Quick Actions](#dashboard-quick-actions)
-4. [Dashboard Alerts & Notifications](#dashboard-alerts--notifications)
-5. [Navigation Elements](#navigation-elements)
-6. [Form Options](#form-options)
-7. [Status Options](#status-options)
-8. [Component References](#component-references)
-9. [Amenities Feature - REMOVED](#7-amenities-feature---removed-december-2024)
-10. [Future Removals](#future-removals)
+1. [Tenant Management Removal - November 2025](#tenant-management-removal---november-2025)
+2. [Form Simplification - December 2024](#form-simplification---december-2024)
+3. [Maintenance System](#maintenance-system)
+4. [Dashboard Quick Actions](#dashboard-quick-actions)
+5. [Dashboard Alerts & Notifications](#dashboard-alerts--notifications)
+6. [Navigation Elements](#navigation-elements)
+7. [Form Options](#form-options)
+8. [Status Options](#status-options)
+9. [Component References](#component-references)
+10. [Amenities Feature - REMOVED](#7-amenities-feature---removed-december-2024)
+11. [Future Removals](#future-removals)
 
 ---
 
@@ -234,8 +297,8 @@ const [formData, setFormData] = useState({
 - **Tenants table**: Removed `emergency_contact`, `emergency_phone` columns
 - **User Profiles table**: Removed `emergency_contact`, `emergency_phone` columns
 
-**Migration File Created:**
-`src/database/migration_remove_simplified_fields.sql` - Run this on existing databases to remove the columns
+**Migration File Created (historical):**
+`src/database/migration_remove_simplified_fields.sql` *(removed from main branch; retrieve from Git history if you need to back-port the change)*
 
 **DatabaseService Updates:**
 **Location:** `src/services/databaseService.js`
@@ -266,10 +329,7 @@ VALUES ($1, $2, $3, $4, $5)
 - Removed `emergency_contact, emergency_phone` from getUserProfile fallback return
 
 **For Existing Databases:**
-If you have an existing database with these columns, run:
-```bash
-psql -d your_database_name -f src/database/migration_remove_simplified_fields.sql
-```
+If you encounter these legacy columns, drop them manually or restore the legacy migration script from Git history.
 
 **For Fresh Installations:**
 The updated `schema.sql` no longer includes these columns, so new installations will match the simplified schema automatically.
@@ -929,8 +989,8 @@ INSERT INTO amenities (name, description, category) VALUES
 ...
 ```
 
-**Migration File Created:**
-- `src/database/migration_remove_amenities.sql` - Run this on existing databases to drop the tables
+**Migration File Created (historical):**
+- `src/database/migration_remove_amenities.sql` *(removed from main branch; retrieve from Git history if you need to drop these tables in-place)*
 
 **Impact:**
 - Properties can no longer have amenities assigned

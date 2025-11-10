@@ -19,8 +19,6 @@ export const ROUTES = {
   register: "/register",
   dashboard: "/dashboard",
   properties: "/properties",
-  tenants: "/tenants",
-  expenses: "/expenses",
   finances: "/finances",
   settings: "/settings"
 };
@@ -33,9 +31,7 @@ export const USER_ROLES = {
 
 export const DATA_TYPES = {
   properties: "properties",
-  tenants: "tenants",
-  transactions: "transactions",
-  expenses: "expenses"
+  financialRecords: "financialRecords"
 };
 
 export const STATUS_OPTIONS = {

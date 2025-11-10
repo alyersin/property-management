@@ -7,15 +7,15 @@ import { DownloadIcon } from "@chakra-ui/icons";
 export default function Finances() {
   return (
     <UniversalPage
-      dataType="transactions"
-      title="Financial Dashboard"
+      dataType="financialRecords"
+      title="Finances & Expenses"
       currentPage="/finances"
-      searchFields={['description', 'category', 'property']}
-      columns={getColumnsByType('transactions')}
+      searchFields={['description', 'category', 'vendor']}
+      columns={getColumnsByType('financialRecords')}
       actions={[
         { label: "Export", icon: DownloadIcon, variant: "outline" }
       ]}
-      emptyMessage="No transactions found"
+      emptyMessage="No financial records found"
     />
   );
 }

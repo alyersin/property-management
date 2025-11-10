@@ -37,46 +37,7 @@ export const PROPERTY_COLUMNS = [
   }
 ];
 
-export const TENANT_COLUMNS = [
-  {
-    key: 'name',
-    label: 'Name',
-    render: (value, item) => (
-      <div>
-        <div style={{ fontWeight: 'bold' }}>{value}</div>
-        <div style={{ fontSize: '0.875rem', color: '#666' }}>{item.email}</div>
-      </div>
-    )
-  },
-  {
-    key: 'phone',
-    label: 'Phone'
-  },
-  {
-    key: 'propertyAddress',
-    label: 'Property',
-    render: (value) => value || (
-      <div style={{ color: '#666' }}>No property assigned</div>
-    )
-  },
-  {
-    key: 'rentAmount',
-    label: 'Rent',
-    render: (value) => value ? (
-      <div style={{ fontWeight: 'bold', color: '#22c55e' }}>
-        ${value.toLocaleString()}
-      </div>
-    ) : (
-      <div style={{ color: '#666' }}>-</div>
-    )
-  },
-  {
-    key: 'status',
-    label: 'Status'
-  }
-];
-
-export const TRANSACTION_COLUMNS = [
+export const FINANCIAL_RECORD_COLUMNS = [
   {
     key: 'type',
     label: 'Type',
@@ -96,14 +57,17 @@ export const TRANSACTION_COLUMNS = [
   {
     key: 'amount',
     label: 'Amount',
-    render: (value) => (
-      <div style={{ 
-        fontWeight: 'bold', 
-        color: value >= 0 ? '#22c55e' : '#ef4444' 
-      }}>
-        {value >= 0 ? '+' : ''}${Math.abs(value).toLocaleString()}
-      </div>
-    )
+    render: (value, item) => {
+      const numericValue = Number(value);
+      const isIncome = item.type === 'Income';
+      const color = isIncome ? '#22c55e' : '#ef4444';
+      const prefix = isIncome ? '+' : '-';
+      return (
+        <div style={{ fontWeight: 'bold', color }}>
+          {prefix}${Math.abs(numericValue).toLocaleString()}
+        </div>
+      );
+    }
   },
   {
     key: 'date',
@@ -117,39 +81,10 @@ export const TRANSACTION_COLUMNS = [
   {
     key: 'status',
     label: 'Status'
-  }
-];
-
-export const EXPENSE_COLUMNS = [
-  {
-    key: 'description',
-    label: 'Description'
-  },
-  {
-    key: 'amount',
-    label: 'Amount',
-    render: (value) => (
-      <div style={{ fontWeight: 'bold', color: '#ef4444' }}>
-        ${value.toLocaleString()}
-      </div>
-    )
-  },
-  {
-    key: 'date',
-    label: 'Date',
-    render: (value) => new Date(value).toLocaleDateString()
-  },
-  {
-    key: 'category',
-    label: 'Category'
   },
   {
     key: 'vendor',
     label: 'Vendor'
-  },
-  {
-    key: 'status',
-    label: 'Status'
   }
 ];
 
@@ -158,12 +93,8 @@ export const getColumnsByType = (dataType) => {
   switch (dataType) {
     case 'properties':
       return PROPERTY_COLUMNS;
-    case 'tenants':
-      return TENANT_COLUMNS;
-    case 'transactions':
-      return TRANSACTION_COLUMNS;
-    case 'expenses':
-      return EXPENSE_COLUMNS;
+    case 'financialRecords':
+      return FINANCIAL_RECORD_COLUMNS;
     default:
       return [];
   }
