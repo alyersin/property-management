@@ -38,7 +38,7 @@ const DashboardStats = ({ stats, recentActivities = [] }) => {
 
   const available =
     stats.totalProperties > 0
-      ? stats.totalProperties - stats.occupiedProperties
+      ? stats.availableProperties ?? (stats.totalProperties - stats.occupiedProperties)
       : 0;
   const availablePercentage =
     stats.totalProperties > 0
@@ -57,10 +57,10 @@ const DashboardStats = ({ stats, recentActivities = [] }) => {
           arrowType="increase"
         />
         <StatCard
-          label="Monthly Income"
-          value={`$${stats.monthlyIncome.toLocaleString()}`}
-          helpText="This month"
-          color="success.default"
+          label="Occupied Properties"
+          value={stats.occupiedProperties}
+          helpText={`of ${stats.totalProperties}`}
+          color="accent.default"
           arrowType="increase"
         />
         <StatCard
@@ -71,11 +71,11 @@ const DashboardStats = ({ stats, recentActivities = [] }) => {
           arrowType="decrease"
         />
         <StatCard
-          label="Net Income"
-          value={`$${stats.netIncome.toLocaleString()}`}
-          helpText="This month"
-          color={stats.netIncome > 0 ? "success.default" : "danger.default"}
-          arrowType={stats.netIncome > 0 ? "increase" : "decrease"}
+          label="Available Properties"
+          value={available}
+          helpText="Ready for tenants"
+          color="success.default"
+          arrowType="increase"
         />
       </SimpleGrid>
 

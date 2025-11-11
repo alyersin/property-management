@@ -2,38 +2,25 @@
 
 export const PROPERTY_COLUMNS = [
   {
-    key: 'address',
-    label: 'Address',
-    render: (value, item) => (
-      <div>
-        <div style={{ fontWeight: 'bold' }}>{value}</div>
-        <div style={{ fontSize: '0.875rem', color: '#666' }}>
-          {item.city}
-        </div>
-      </div>
-    )
-  },
-  {
     key: 'details',
     label: 'Details',
     render: (_, item) => (
       <div>
-        <div style={{ fontSize: '0.875rem' }}>{item.bedrooms} bed, {item.bathrooms} bath</div>
-      </div>
-    )
-  },
-  {
-    key: 'rent',
-    label: 'Rent',
-    render: (value) => (
-      <div style={{ fontWeight: 'bold', color: '#22c55e' }}>
-        ${value.toLocaleString()}
+        <div style={{ fontWeight: 'bold' }}>{item.city}</div>
+        <div style={{ fontSize: '0.875rem', color: '#666' }}>
+          {item.bedrooms} bed, {item.bathrooms} bath
+        </div>
       </div>
     )
   },
   {
     key: 'status',
     label: 'Status'
+  },
+  {
+    key: 'notes',
+    label: 'Notes',
+    render: (value) => value || '—'
   }
 ];
 

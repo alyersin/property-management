@@ -11,7 +11,6 @@ import {
   Spinner,
   Stack,
   Text,
-  Textarea,
   VStack,
 } from '@chakra-ui/react';
 import { CloseIcon } from '@chakra-ui/icons';
@@ -20,10 +19,7 @@ const UserProfile = ({ userId, onClose }) => {
   const [profile, setProfile] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
-    bio: '',
     phone: '',
-    address: '',
-    date_of_birth: '',
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -40,10 +36,7 @@ const UserProfile = ({ userId, onClose }) => {
         const profileData = await res.json();
         setProfile(profileData);
         setFormData({
-          bio: profileData.bio || '',
           phone: profileData.phone || '',
-          address: profileData.address || '',
-          date_of_birth: profileData.date_of_birth || '',
         });
       }
     } catch (error) {
@@ -74,10 +67,7 @@ const UserProfile = ({ userId, onClose }) => {
 
   const handleCancel = () => {
     setFormData({
-      bio: profile?.bio || '',
       phone: profile?.phone || '',
-      address: profile?.address || '',
-      date_of_birth: profile?.date_of_birth || '',
     });
     setIsEditing(false);
   };
@@ -151,60 +141,15 @@ const UserProfile = ({ userId, onClose }) => {
           <VStack spacing={5} align="stretch">
             <Box>
               <Text fontSize="sm" color="text.muted" mb={2}>
-                Bio
+                Phone
               </Text>
-              <Textarea
-                value={formData.bio}
+              <Input
+                type="tel"
+                value={formData.phone}
                 onChange={(e) =>
-                  setFormData({ ...formData, bio: e.target.value })
+                  setFormData({ ...formData, phone: e.target.value })
                 }
-                rows={4}
-                placeholder="Tell us about yourself..."
-              />
-            </Box>
-
-            <Stack direction={{ base: 'column', md: 'row' }} spacing={4}>
-              <Box flex="1">
-                <Text fontSize="sm" color="text.muted" mb={2}>
-                  Phone
-                </Text>
-                <Input
-                  type="tel"
-                  value={formData.phone}
-                  onChange={(e) =>
-                    setFormData({ ...formData, phone: e.target.value })
-                  }
-                  placeholder="(555) 123-4567"
-                />
-              </Box>
-              <Box flex="1">
-                <Text fontSize="sm" color="text.muted" mb={2}>
-                  Date of Birth
-                </Text>
-                <Input
-                  type="date"
-                  value={formData.date_of_birth}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      date_of_birth: e.target.value,
-                    })
-                  }
-                />
-              </Box>
-            </Stack>
-
-            <Box>
-              <Text fontSize="sm" color="text.muted" mb={2}>
-                Address
-              </Text>
-              <Textarea
-                value={formData.address}
-                onChange={(e) =>
-                  setFormData({ ...formData, address: e.target.value })
-                }
-                rows={3}
-                placeholder="Your address..."
+                placeholder="(555) 123-4567"
               />
             </Box>
 
@@ -219,57 +164,9 @@ const UserProfile = ({ userId, onClose }) => {
           </VStack>
         ) : (
           <VStack spacing={6} align="stretch">
-            {profile?.bio && (
-              <Box bg="bg.surface" borderRadius="lg" p={4} border="1px solid" borderColor="border.subtle">
-                <Text fontSize="sm" color="text.muted" textTransform="uppercase">
-                  Bio
-                </Text>
-                <Text mt={2} color="text.primary">
-                  {profile.bio}
-                </Text>
-              </Box>
-            )}
-
             <Stack direction={{ base: 'column', md: 'row' }} spacing={4}>
-              {profile?.phone && (
-                <Box
-                  flex="1"
-                  bg="bg.surface"
-                  borderRadius="lg"
-                  p={4}
-                  border="1px solid"
-                  borderColor="border.subtle"
-                >
-                  <Text fontSize="sm" color="text.muted" textTransform="uppercase">
-                    Phone
-                  </Text>
-                  <Text mt={2} color="text.primary">
-                    {profile.phone}
-                  </Text>
-                </Box>
-              )}
-
-              {profile?.date_of_birth && (
-                <Box
-                  flex="1"
-                  bg="bg.surface"
-                  borderRadius="lg"
-                  p={4}
-                  border="1px solid"
-                  borderColor="border.subtle"
-                >
-                  <Text fontSize="sm" color="text.muted" textTransform="uppercase">
-                    Date of Birth
-                  </Text>
-                  <Text mt={2} color="text.primary">
-                    {new Date(profile.date_of_birth).toLocaleDateString()}
-                  </Text>
-                </Box>
-              )}
-            </Stack>
-
-            {profile?.address && (
               <Box
+                flex="1"
                 bg="bg.surface"
                 borderRadius="lg"
                 p={4}
@@ -277,13 +174,13 @@ const UserProfile = ({ userId, onClose }) => {
                 borderColor="border.subtle"
               >
                 <Text fontSize="sm" color="text.muted" textTransform="uppercase">
-                  Address
+                  Phone
                 </Text>
                 <Text mt={2} color="text.primary">
-                  {profile.address}
+                  {profile?.phone || 'Not provided'}
                 </Text>
               </Box>
-            )}
+            </Stack>
 
             <Flex justify="flex-end">
               <Button onClick={() => setIsEditing(true)}>Edit Profile</Button>

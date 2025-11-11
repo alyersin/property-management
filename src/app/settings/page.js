@@ -30,7 +30,6 @@ export default function Settings() {
     name: "",
     email: "",
     phone: "",
-    address: "",
   });
   const [profileExists, setProfileExists] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -56,7 +55,6 @@ export default function Settings() {
         setInfo((prev) => ({
           ...prev,
           phone: profile.phone || "",
-          address: profile.address || "",
         }));
         setProfileExists(true);
       } else if (res.status === 404) {
@@ -64,7 +62,6 @@ export default function Settings() {
         setInfo((prev) => ({
           ...prev,
           phone: "",
-          address: "",
         }));
       } else {
         logger.error("Failed to load profile", await res.text());
@@ -113,7 +110,6 @@ export default function Settings() {
 
       const profilePayload = {
         phone: info.phone,
-        address: info.address,
       };
 
       const profileResponse = await fetch(`/api/user-profiles/${userId}`, {
@@ -165,8 +161,8 @@ export default function Settings() {
               </HStack>
             </CardHeader>
             <CardBody>
-            <Text color="text.muted">
-                Manage your personal information, emergency contacts, and profile details.
+              <Text color="text.muted">
+                Manage your account information and contact details.
               </Text>
             </CardBody>
           </Card>
@@ -202,14 +198,6 @@ export default function Settings() {
                   <Input
                     value={info.phone}
                     onChange={(e) => handleChange("phone", e.target.value)}
-                    isDisabled={loading}
-                  />
-                </FormControl>
-                <FormControl>
-                  <FormLabel color="text.primary">Address</FormLabel>
-                  <Input
-                    value={info.address}
-                    onChange={(e) => handleChange("address", e.target.value)}
                     isDisabled={loading}
                   />
                 </FormControl>

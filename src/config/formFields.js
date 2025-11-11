@@ -1,11 +1,9 @@
 // Form field configurations for different data types
 
 export const PROPERTY_FIELDS = [
-  { name: 'address', label: 'Address', type: 'text', required: true, placeholder: 'Enter property address' },
   { name: 'city', label: 'City', type: 'text', required: true, placeholder: 'Enter city' },
   { name: 'bedrooms', label: 'Bedrooms', type: 'number', required: true, min: 1, max: 10 },
   { name: 'bathrooms', label: 'Bathrooms', type: 'number', required: true, min: 1, max: 10, step: 0.5 },
-  { name: 'rent', label: 'Monthly Rent', type: 'number', required: true, min: 0, step: 0.01 },
   { 
     name: 'status', 
     label: 'Status', 

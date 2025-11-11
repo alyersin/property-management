@@ -204,23 +204,16 @@ class DataService {
     const totalProperties = properties.length;
     const occupiedProperties = properties.filter(p => p.status === 'Occupied').length;
     
-    const monthlyIncome = properties
-      .filter(p => p.status === 'Occupied')
-      .reduce((sum, p) => sum + Number(p.rent || 0), 0);
-    
     const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
     const monthlyExpenses = expenses
       .filter(expense => expense.date && expense.date.startsWith(currentMonth))
       .reduce((sum, expense) => sum + Number(expense.amount || 0), 0);
     
-    const netIncome = monthlyIncome - monthlyExpenses;
-    
     return {
       totalProperties,
       occupiedProperties,
-      monthlyIncome,
       monthlyExpenses,
-      netIncome,
+      availableProperties: totalProperties - occupiedProperties,
       occupancyRate: totalProperties > 0 ? Math.round((occupiedProperties / totalProperties) * 100) : 0
     };
   }

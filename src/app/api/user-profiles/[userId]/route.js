@@ -36,7 +36,10 @@ export async function GET(request, { params }) {
 export async function POST(request, { params }) {
   try {
     const { userId } = params;
-    const profileData = await request.json();
+    const body = await request.json();
+    const profileData = {
+      phone: body.phone ?? null,
+    };
     
     if (!userId) {
       return NextResponse.json(
@@ -61,7 +64,18 @@ export async function POST(request, { params }) {
 export async function PUT(request, { params }) {
   try {
     const { userId } = params;
-    const updates = await request.json();
+    const body = await request.json();
+    const updates = {};
+    if (body.hasOwnProperty('phone')) {
+      updates.phone = body.phone;
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return NextResponse.json(
+        { error: 'No valid fields provided for update' },
+        { status: 400 }
+      );
+    }
     
     if (!userId) {
       return NextResponse.json(

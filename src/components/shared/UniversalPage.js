@@ -13,7 +13,7 @@ import { useAppData } from "../../hooks/useAppData";
 import usePersistentState from "../../hooks/usePersistentState";
 import { getFieldsByType } from "../../config/formFields";
 import { FILTER_OPTIONS } from "../../utils/constants";
-import { filterBySearch, filterByStatus, itemMatchesSearch, itemMatchesStatus } from "../../utils/helpers";
+import { itemMatchesSearch, itemMatchesStatus } from "../../utils/helpers";
 import ProtectedRoute from "../auth/ProtectedRoute";
 import logger from "../../utils/logger";
 import { STORAGE_KEYS } from "../../constants/app";

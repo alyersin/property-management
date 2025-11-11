@@ -9,7 +9,7 @@ export default function Properties() {
       dataType="properties"
       title="Property Management"
       currentPage="/properties"
-      searchFields={['address', 'city']}
+      searchFields={['city', 'status', 'notes']}
       columns={getColumnsByType('properties')}
       emptyMessage="No properties found"
     />

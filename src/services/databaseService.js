@@ -133,10 +133,7 @@ class DatabaseService {
     return {
       id: 1,
       user_id: userId,
-      bio: 'User profile not available in JSON mode',
-      phone: null,
-      address: null,
-      date_of_birth: null
+      phone: null
     };
   }
 
@@ -144,11 +141,10 @@ class DatabaseService {
     if (this.useDatabase) {
       // Note: emergency_contact and emergency_phone fields removed from database schema
       const result = await this.query(`
-        INSERT INTO user_profiles (user_id, bio, phone, address, date_of_birth)
-        VALUES ($1, $2, $3, $4, $5)
+        INSERT INTO user_profiles (user_id, phone)
+        VALUES ($1, $2)
         RETURNING *
-      `, [userId, profileData.bio, profileData.phone, profileData.address, 
-        profileData.date_of_birth]);
+      `, [userId, profileData.phone ?? null]);
       return result.rows[0];
     }
     return { id: Date.now(), user_id: userId, ...profileData };
@@ -156,6 +152,10 @@ class DatabaseService {
 
   async updateUserProfile(userId, updates) {
     if (this.useDatabase) {
+      if (!updates || Object.keys(updates).length === 0) {
+        const existing = await this.getUserProfile(userId);
+        return existing;
+      }
       const setClause = Object.keys(updates).map((key, index) => `${key} = $${index + 2}`).join(', ');
       const values = [userId, ...Object.values(updates)];
       const result = await this.query(`
@@ -202,12 +202,10 @@ class DatabaseService {
       }
       // Note: state, zip, and sqft fields removed from database schema
       const result = await this.query(`
-        INSERT INTO properties (user_id, address, city, bedrooms, bathrooms, rent, status, notes)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        INSERT INTO properties (user_id, city, bedrooms, bathrooms, status, notes)
+        VALUES ($1, $2, $3, $4, $5, $6)
         RETURNING *
-      `, [userId, property.address, property.city, 
-        property.bedrooms, property.bathrooms, property.rent, 
-        property.status, property.notes]);
+      `, [userId, property.city, property.bedrooms, property.bathrooms, property.status, property.notes]);
       return result.rows[0];
     }
     return dataService.addProperty(property);
@@ -312,13 +310,6 @@ class DatabaseService {
         [userId]
       );
 
-      const rentResult = await this.query(
-        `SELECT COALESCE(SUM(rent), 0) as rent_total
-         FROM properties
-         WHERE user_id = $1 AND status = 'Occupied'`,
-        [userId]
-      );
-
       const currentMonth = new Date().toISOString().slice(0, 7);
       const expensesResult = await this.query(`
         SELECT COALESCE(SUM(amount), 0) as expenses
@@ -329,11 +320,12 @@ class DatabaseService {
       const stats = {
         totalProperties: parseInt(propertiesResult.rows[0].total),
         occupiedProperties: parseInt(propertiesResult.rows[0].occupied),
-        monthlyIncome: parseFloat(rentResult.rows[0].rent_total || 0),
         monthlyExpenses: parseFloat(expensesResult.rows[0].expenses || 0),
-        netIncome: parseFloat(rentResult.rows[0].rent_total || 0) - parseFloat(expensesResult.rows[0].expenses || 0),
         occupancyRate: propertiesResult.rows[0].total > 0 
           ? Math.round((parseInt(propertiesResult.rows[0].occupied) / parseInt(propertiesResult.rows[0].total)) * 100)
+          : 0,
+        availableProperties: propertiesResult.rows[0].total > 0
+          ? parseInt(propertiesResult.rows[0].total) - parseInt(propertiesResult.rows[0].occupied)
           : 0
       };
       return stats;

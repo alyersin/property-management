@@ -18,11 +18,7 @@ CREATE TABLE users (
 CREATE TABLE user_profiles (
     id SERIAL PRIMARY KEY,
     user_id INTEGER UNIQUE REFERENCES users(id) ON DELETE CASCADE,
-    bio TEXT,
-    avatar_url VARCHAR(255),
     phone VARCHAR(50),
-    address TEXT,
-    date_of_birth DATE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -32,11 +28,9 @@ CREATE TABLE user_profiles (
 CREATE TABLE properties (
     id SERIAL PRIMARY KEY,
     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    address VARCHAR(255) NOT NULL,
     city VARCHAR(100) NOT NULL,
     bedrooms INTEGER NOT NULL,
     bathrooms INTEGER NOT NULL,
-    rent DECIMAL(10,2) NOT NULL,
     status VARCHAR(50) DEFAULT 'Available',
     notes TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
