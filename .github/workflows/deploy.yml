@@ -22,21 +22,35 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SERVER_SSH_KEY }}
 
-      - name: Sync files to server
-        uses: burnett01/rsync-deployments@v5.2
-        with:
-          switches: -az --delete --exclude ".git" --exclude ".github/workflows"
-          path: ./
-          remote_path: ${{ env.DEPLOY_PATH }}
-          remote_host: ${{ secrets.SERVER_HOST }}
-          remote_user: ${{ secrets.SERVER_USER }}
-
-      - name: Rebuild and restart containers
+      - name: Add server to known_hosts
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} <<'EOF'
-          cd ${DEPLOY_PATH:-/opt/home-admin}
+          mkdir -p ~/.ssh
+          ssh-keyscan -p "${{ secrets.SERVER_PORT || '22' }}" "${{ secrets.SERVER_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Deploy application
+        env:
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+          REPO: ${{ github.repository }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_PORT: ${{ secrets.SERVER_PORT }}
+        run: |
+          ssh -p "${SERVER_PORT:-22}" "${SERVER_USER}@${SERVER_HOST}" <<EOF
+          set -e
+          DEPLOY_DIR="\${DEPLOY_PATH:-/opt/home-admin}"
+          REPO_URL="git@github.com:${REPO}.git"
+
+          mkdir -p "\${DEPLOY_DIR}"
+          if [ ! -d "\${DEPLOY_DIR}/.git" ]; then
+            git clone --depth=1 "\${REPO_URL}" "\${DEPLOY_DIR}"
+          fi
+
+          cd "\${DEPLOY_DIR}"
+          git fetch --depth=1 origin main
+          git reset --hard origin/main
+
           docker compose pull
           docker compose build app
-          docker compose up -d
+          docker compose up -d --remove-orphans
           EOF
 

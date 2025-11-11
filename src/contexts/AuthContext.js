@@ -19,10 +19,15 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check for existing session on app load
-    const savedUser = localStorage.getItem(STORAGE_KEYS.user);
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = window.localStorage.getItem(STORAGE_KEYS.user);
+        if (saved) {
+          setUser(JSON.parse(saved));
+        }
+      } catch (error) {
+        logger.error('Failed to parse stored user', error);
+      }
     }
     setLoading(false);
   }, []);
@@ -30,6 +35,7 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
       logger.auth('Login attempt', { email });
+      setLoading(true);
       const response = await fetch(API_ENDPOINTS.login, {
         method: 'POST',
         headers: {
@@ -44,13 +50,16 @@ export const AuthProvider = ({ children }) => {
         setUser(data.user);
         localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(data.user));
         logger.auth('Login successful', data.user);
+        setLoading(false);
         return { success: true };
       }
       
       logger.warn('Login failed', { email, error: data.error });
+      setLoading(false);
       return { success: false, error: data.error || 'Login failed' };
     } catch (error) {
       logger.error('Login error', error);
+      setLoading(false);
       return { success: false, error: 'Network error. Please try again.' };
     }
   };
@@ -58,6 +67,7 @@ export const AuthProvider = ({ children }) => {
   const register = async (name, email, password, confirmPassword) => {
     try {
       logger.auth('Registration attempt', { email });
+      setLoading(true);
       const response = await fetch(API_ENDPOINTS.register, {
         method: 'POST',
         headers: {
@@ -72,13 +82,16 @@ export const AuthProvider = ({ children }) => {
         setUser(data.user);
         localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(data.user));
         logger.auth('Registration successful', data.user);
+        setLoading(false);
         return { success: true };
       }
       
       logger.warn('Registration failed', { email, error: data.error });
+      setLoading(false);
       return { success: false, error: data.error || 'Registration failed' };
     } catch (error) {
       logger.error('Registration error', error);
+      setLoading(false);
       return { success: false, error: 'Network error. Please try again.' };
     }
   };
@@ -87,6 +100,7 @@ export const AuthProvider = ({ children }) => {
     logger.auth('User logout');
     setUser(null);
     localStorage.removeItem(STORAGE_KEYS.user);
+    setLoading(false);
   };
 
   const updateUser = (updates) => {

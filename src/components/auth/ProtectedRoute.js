@@ -3,12 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../contexts/AuthContext";
-import {
-  Box,
-  Spinner,
-  Text,
-  VStack,
-} from "@chakra-ui/react";
+import { Box } from "@chakra-ui/react";
 
 export default function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
@@ -21,14 +16,7 @@ export default function ProtectedRoute({ children }) {
   }, [user, loading, router]);
 
   if (loading) {
-    return (
-      <Box minH="100vh" display="flex" alignItems="center" justifyContent="center">
-        <VStack spacing={4}>
-          <Spinner size="xl" color="accent.default" />
-      <Text color="text.muted">Loading...</Text>
-        </VStack>
-      </Box>
-    );
+    return <Box minH="100vh" bg="bg.body" />;
   }
 
   if (!user) {
