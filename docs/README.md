@@ -49,12 +49,21 @@ Documentation of features and code that have been removed from the application.
 - **Schema Simplification**: Removed fields from `user_profiles` (bio, avatar_url, date_of_birth) and `properties` (address, rent)
 - **CI/CD Optimization**: Updated deployment workflow to use `git pull` strategy for less disruptive deployments
 
+**Latest Code Optimization (December 2024):**
+- **Removed Logger Utility**: Replaced `logger.js` (79 lines) with direct `console.log/error/warn` calls with prefixes
+- **Removed Helper Utilities**: Inlined `itemMatchesStatus` from `helpers.js` directly into `UniversalPage.js`, removed unused `itemMatchesSearch`
+- **Removed Barrel Exports**: Removed `formFields/index.js`, components now import directly from individual files
+- **Removed Config File**: Inlined `getDemoUsers()` from `config/env.js` directly into login route, removed unused `env` export
+- **Fixed React Warnings**: Fixed `key` prop spreading warnings in `DynamicForm.js` by passing `key` directly
+- **Fixed TabContext**: Updated `Sidebar.js` to work without `TabProvider` (for Settings page), exported `TabContext` directly
+
 **Architecture Improvements:**
 - API routes reduced by 84% in code size
 - Database service reduced from 308 to ~250 lines
 - DynamicForm reduced from 221 to 95 lines
 - Removed 4 component files (consolidated into dashboard page)
 - Removed 2 empty route folders (`/properties`, `/expenses`)
+- Removed 4 utility/config files (logger, helpers, formFields/index, env.js)
 - Zero code duplication with universal components and generic helpers
 - Single route architecture (`/dashboard`) with instant tab switching
 
@@ -86,5 +95,9 @@ Documentation of features and code that have been removed from the application.
 - Code refactoring and optimization
 - Schema simplification (removed unused fields)
 - CI/CD workflow improvements
+- Removed logger utility (replaced with console calls)
+- Removed helper utilities (inlined into components)
+- Removed barrel exports and config files
+- Fixed React warnings and TabContext issues
 - All documentation updated to reflect current architecture
 

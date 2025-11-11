@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
-import logger from '../../../../utils/logger';
 import databaseService from '../../../../services/databaseService';
 
 export async function POST(request) {
@@ -62,7 +61,7 @@ export async function POST(request) {
     });
 
   } catch (error) {
-    logger.error('Registration API error', error);
+    console.error('[ERROR] Registration API error', error);
     
     // Handle unique constraint violation (duplicate email)
     if (error.code === '23505' || error.message?.includes('duplicate')) {

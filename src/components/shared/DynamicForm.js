@@ -2,7 +2,10 @@
 
 import { VStack, HStack, Button } from "@chakra-ui/react";
 import { useState, useEffect } from "react";
-import { TextField, TextareaField, NumberField, SelectField } from "./formFields";
+import TextField from "./formFields/TextField";
+import TextareaField from "./formFields/TextareaField";
+import NumberField from "./formFields/NumberField";
+import SelectField from "./formFields/SelectField";
 
 const DynamicForm = ({ 
   fields = [], 
@@ -35,8 +38,8 @@ const DynamicForm = ({
     const { name, label, type, options = [], required = false, placeholder, ...props } = field;
     const value = formData[name] || '';
 
+    // Extract key separately - React keys must be passed directly, not via spread
     const commonProps = {
-      key: name,
       name,
       label,
       value,
@@ -48,19 +51,19 @@ const DynamicForm = ({
 
     switch (type) {
       case 'select':
-        return <SelectField {...commonProps} options={options} />;
+        return <SelectField key={name} {...commonProps} options={options} />;
       case 'textarea':
-        return <TextareaField {...commonProps} />;
+        return <TextareaField key={name} {...commonProps} />;
       case 'number':
-        return <NumberField {...commonProps} />;
+        return <NumberField key={name} {...commonProps} />;
       case 'date':
-        return <TextField {...commonProps} type="date" />;
+        return <TextField key={name} {...commonProps} type="date" />;
       case 'email':
-        return <TextField {...commonProps} type="email" />;
+        return <TextField key={name} {...commonProps} type="email" />;
       case 'tel':
-        return <TextField {...commonProps} type="tel" />;
+        return <TextField key={name} {...commonProps} type="tel" />;
       default:
-        return <TextField {...commonProps} type={type} />;
+        return <TextField key={name} {...commonProps} type={type} />;
     }
   };
 

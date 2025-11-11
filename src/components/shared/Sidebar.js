@@ -15,13 +15,44 @@ import {
   useBreakpointValue,
 } from "@chakra-ui/react";
 import { HamburgerIcon } from "@chakra-ui/icons";
-import { useTab } from "../../contexts/TabContext";
+import { useContext } from "react";
+import { useRouter, usePathname } from "next/navigation";
+import { TabContext } from "../../contexts/TabContext";
 import { TAB_ITEMS } from "../../utils/constants";
+import { ROUTES } from "../../constants/app";
 
 export default function Sidebar() {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const isMobile = useBreakpointValue({ base: true, md: false });
-  const { activeTab, switchTab } = useTab();
+  const router = useRouter();
+  const pathname = usePathname();
+  
+  // Try to get tab context, but don't fail if not available
+  const tabContext = useContext(TabContext);
+  const hasTabContext = !!tabContext;
+  
+  // Determine active tab based on context or current route
+  const getActiveTab = () => {
+    if (hasTabContext) {
+      return tabContext.activeTab;
+    }
+    // If on dashboard, default to tab 0, otherwise -1 (no active tab)
+    return pathname === ROUTES.dashboard ? 0 : -1;
+  };
+  
+  const activeTab = getActiveTab();
+  
+  const handleNavigation = (index) => {
+    if (isMobile) onClose();
+    
+    if (hasTabContext) {
+      // Use tab switching if TabProvider is available
+      tabContext.switchTab(index);
+    } else {
+      // Navigate to dashboard if TabProvider is not available
+      router.push(ROUTES.dashboard);
+    }
+  };
 
   const NavigationContent = () => (
     <VStack align="stretch" spacing={2}>
@@ -30,10 +61,7 @@ export default function Sidebar() {
         return (
           <Button
             key={item.id}
-            onClick={() => {
-              switchTab(index);
-              if (isMobile) onClose();
-            }}
+            onClick={() => handleNavigation(index)}
             variant="ghost"
             justifyContent="flex-start"
             height="48px"
@@ -121,9 +149,9 @@ export default function Sidebar() {
           >
             Home Admin
           </Box>
-          <Box fontSize="xs" color="text.muted" textTransform="uppercase">
+          {/* <Box fontSize="xs" color="text.muted" textTransform="uppercase">
             Dashboard
-          </Box>
+          </Box> */}
         </VStack>
       </Box>
       <NavigationContent />

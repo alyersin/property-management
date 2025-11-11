@@ -13,9 +13,7 @@ import { useAppData } from "../../hooks/useAppData";
 import usePersistentState from "../../hooks/usePersistentState";
 import { getFieldsByType } from "../../config/formFields";
 import { FILTER_OPTIONS } from "../../utils/constants";
-import { itemMatchesStatus } from "../../utils/helpers";
 import ProtectedRoute from "../auth/ProtectedRoute";
-import logger from "../../utils/logger";
 import { STORAGE_KEYS } from "../../constants/app";
 import { useAuth } from "../../contexts/AuthContext";
 
@@ -55,9 +53,10 @@ const UniversalPage = ({
   const safeData = Array.isArray(data) ? data : [];
 
   // Filter data by status only
-  const filteredData = safeData.filter(item => 
-    itemMatchesStatus(item, filterValue)
-  );
+  const filteredData = safeData.filter(item => {
+    if (filterValue === 'all' || !item || typeof item !== 'object') return true;
+    return item.status === filterValue;
+  });
 
   const handleAdd = () => {
     setEditingItem(null);
@@ -72,9 +71,11 @@ const UniversalPage = ({
   const handleDelete = async (item) => {
     try {
       await remove(item.id);
-      logger.data('delete', dataType, item.id);
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`[DATA] delete ${dataType} (ID: ${item.id})`);
+      }
     } catch (error) {
-      logger.error(`Error deleting ${dataType}`, error);
+      console.error(`[ERROR] Error deleting ${dataType}`, error);
     }
   };
 
@@ -88,7 +89,7 @@ const UniversalPage = ({
       onClose();
       setEditingItem(null);
     } catch (error) {
-      logger.error(`Error saving ${dataType}`, error);
+      console.error(`[ERROR] Error saving ${dataType}`, error);
     }
   };
 

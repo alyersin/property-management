@@ -139,7 +139,6 @@ src/
 ├── config/                       # Configuration Files
 │   ├── formFields.js             # Form field definitions
 │   ├── tableColumns.js           # Table column definitions
-│   ├── env.js                    # Environment variable management
 │   └── README.md                 # Config documentation
 │
 ├── contexts/                     # React Contexts
@@ -151,9 +150,8 @@ src/
 │   └── dbHelpers.js              # Generic CRUD helper functions
 │
 ├── utils/                        # Utility Functions
-│   ├── constants.js              # Application constants
-│   ├── helpers.js                # Helper functions
-│   └── demo-credentials.js       # Deprecated credentials utility
+│   ├── constants.js              # Application constants (TAB_ITEMS, FILTER_OPTIONS)
+│   └── apiHelpers.js            # Generic CRUD route factory
 │
 └── database/                     # Database Schema
     └── schema.sql                # PostgreSQL schema
@@ -185,8 +183,7 @@ components/shared/
 │       ├── TextField.js      # Text, email, tel, date inputs
 │       ├── TextareaField.js  # Textarea inputs
 │       ├── NumberField.js    # Number inputs with steppers
-│       ├── SelectField.js    # Select dropdowns
-│       └── index.js          # Barrel export
+│       └── SelectField.js    # Select dropdowns
 ├── DashboardStats.js         # Dashboard statistics
 ├── PageLayout.js             # Page wrapper
 │   ├── PageHeader            # Header with user menu
@@ -210,12 +207,9 @@ config/
 │   ├── TENANT_FIELDS         # Tenant form fields
 │   ├── TRANSACTION_FIELDS    # Transaction form fields
 │   └── EXPENSE_FIELDS        # Expense form fields
-├── tableColumns.js           # Column definitions for tables
-│   ├── PROPERTY_COLUMNS      # Property table columns
-│   ├── TENANT_COLUMNS        # Tenant table columns
-│   ├── TRANSACTION_COLUMNS   # Transaction table columns
-│   └── EXPENSE_COLUMNS       # Expense table columns
-└── env.js                    # Environment variable management
+└── tableColumns.js           # Column definitions for tables
+    ├── PROPERTY_COLUMNS      # Property table columns
+    └── EXPENSE_COLUMNS       # Expense table columns
 ```
 
 ---
@@ -242,7 +236,7 @@ Form Submit → DynamicForm → useAppData.create() → POST /api/properties →
 
 ### **4. Authentication Flow (Updated)**
 ```
-Login → AuthContext → API Route → env.js → Environment Variables → User Data → Local Storage → Dashboard Redirect
+Login → AuthContext → API Route → getDemoUsers() (inline) → Environment Variables → User Data → Local Storage → Dashboard Redirect
 ```
 
 ---
@@ -292,7 +286,7 @@ export async function POST(request) {
   const { email, password } = await request.json();
   
   // Server-side credential validation
-  const users = getDemoUsers(); // From env.js
+  const users = getDemoUsers(); // Inline function in login route
   const user = users.find(u => u.email === email && u.password === password);
   
   if (!user) {
@@ -328,7 +322,7 @@ export async function POST(request) {
 
 ### **1. Login Process (Updated)**
 ```
-User Input → Login Page → AuthContext.login() → API Route → env.js → Environment Variables → User Data → Local Storage → Dashboard Redirect
+User Input → Login Page → AuthContext.login() → API Route → getDemoUsers() (inline) → Environment Variables → User Data → Local Storage → Dashboard Redirect
 ```
 
 ### **2. Route Protection**
@@ -349,7 +343,7 @@ Login Form → POST request → /api/auth/login
      ↓                         ↓
 AuthContext ← JSON response ← route.js
      ↓                         ↓
-Dashboard   ← User data    ← env.js (credentials)
+Dashboard   ← User data    ← getDemoUsers() inline (credentials)
 ```
 
 ---
@@ -358,8 +352,8 @@ Dashboard   ← User data    ← env.js (credentials)
 
 ### **1. Environment Variable Security**
 ```javascript
-// src/config/env.js - Server-side only
-export const getDemoUsers = () => {
+// src/app/api/auth/login/route.js - Inline function (server-side only)
+const getDemoUsers = () => {
   // Validate that all required environment variables are set
   const requiredVars = [
     'DEMO_USER_EMAIL', 'DEMO_USER_PASSWORD', 'DEMO_USER_NAME', 'DEMO_USER_ROLE'
@@ -507,7 +501,7 @@ export async function POST(request) {
   const { email, password } = await request.json();
   
   // Server-side validation
-  const users = getDemoUsers(); // From env.js
+  const users = getDemoUsers(); // Inline function in login route
   const user = users.find(u => u.email === email && u.password === password);
   
   if (!user) {
@@ -758,6 +752,7 @@ volumes:
 - **API Routes**: Reduced from 4 files (~150 lines) to 4 files (~32 lines) using CRUD factory
 - **Database Service**: Reduced from 308 lines to ~250 lines using generic helpers
 - **DynamicForm**: Reduced from 221 lines to 95 lines using extracted field components
+- **Removed Files**: 4 utility/config files removed (logger.js, helpers.js, formFields/index.js, env.js) - 160 lines total
 - **Code Maintainability**: Significantly improved through separation of concerns
 
 ### **Page Performance**
@@ -823,6 +818,8 @@ volumes:
 - **Code Cleanup**: Removed unused utilities, constants, and hooks
 - **Schema Simplification**: Removed fields from `user_profiles` (bio, avatar_url, date_of_birth) and `properties` (address, rent)
 - **CI/CD Optimization**: Updated deployment workflow to use `git pull` strategy for less disruptive deployments
+- **Latest Optimizations**: Removed `logger.js` (replaced with console calls), `helpers.js` (inlined), `formFields/index.js` (direct imports), `config/env.js` (inlined `getDemoUsers()`)
+- **Bug Fixes**: Fixed React `key` prop warnings in `DynamicForm.js`, fixed `TabContext` for Settings page compatibility
 
 ---
 

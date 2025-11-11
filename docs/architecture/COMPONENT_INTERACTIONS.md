@@ -50,7 +50,7 @@
 │  │   API       │  │ Environment │  │  Security   │            │
 │  │  Routes     │  │ Management  │  │             │            │
 │  │             │  │             │  │ • Server-side│            │
-│  │ • /api/auth │  │ • env.js    │  │   validation│            │
+│  │ • /api/auth │  │ • getDemoUsers│  │   validation│            │
 │  │   /login    │  │ • .env file │  │ • No client │            │
 │  │ • /api/auth │  │ • Vercel    │  │   exposure  │            │
 │  │   /register │  │   variables │  │             │            │
@@ -324,11 +324,8 @@ config/
 │   ├── TENANT_COLUMNS       # 6 column definitions
 │   ├── TRANSACTION_COLUMNS  # 6 column definitions
 │   └── EXPENSE_COLUMNS      # 6 column definitions
-└── env.js                   # 78 lines - Environment variable management
-    ├── getDemoUsers()       # Server-side credential access
-    ├── env.app              # Application settings
-    ├── env.database         # Database settings
-    └── env.security         # Security settings
+└── getDemoUsers()           # Inline function in login route
+    └── Server-side credential access from environment variables
 ```
 
 ## 🔄 User Interaction Flow
@@ -439,7 +436,7 @@ POST /api/auth/login
 API Route validates credentials
         │
         ▼
-env.js gets users from environment variables
+getDemoUsers() (inline) gets users from environment variables
         │
         ▼
 User data returned (without password)
@@ -542,7 +539,7 @@ Property-tenant relationship created with lease information
 
 ### **1. Environment Variable Security**
 ```
-Vercel Dashboard → Environment Variables → env.js → API Routes → Client
+Vercel Dashboard → Environment Variables → getDemoUsers() → API Routes → Client
      │                    │                    │           │
      ▼                    ▼                    ▼           ▼
 Set credentials → Server-side access → Validation → Safe response
@@ -550,7 +547,7 @@ Set credentials → Server-side access → Validation → Safe response
 
 ### **2. Authentication Security**
 ```
-Client Request → API Route → env.js → Environment Variables → Validation → Response
+Client Request → API Route → getDemoUsers() → Environment Variables → Validation → Response
      │              │          │            │                    │
      ▼              ▼          ▼            ▼                    ▼
 No credentials → Server-only → Secure → No fallbacks → Safe data

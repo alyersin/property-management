@@ -2,7 +2,6 @@
 
 import { createContext, useContext, useState, useEffect } from 'react';
 import { STORAGE_KEYS, API_ENDPOINTS } from '../constants/app';
-import logger from '../utils/logger';
 
 const AuthContext = createContext();
 
@@ -26,7 +25,7 @@ export const AuthProvider = ({ children }) => {
           setUser(JSON.parse(saved));
         }
       } catch (error) {
-        logger.error('Failed to parse stored user', error);
+        console.error('[ERROR] Failed to parse stored user', error);
       }
     }
     setLoading(false);
@@ -34,7 +33,9 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      logger.auth('Login attempt', { email });
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[AUTH] Login attempt', { email });
+      }
       setLoading(true);
       const response = await fetch(API_ENDPOINTS.login, {
         method: 'POST',
@@ -49,16 +50,20 @@ export const AuthProvider = ({ children }) => {
       if (data.success) {
         setUser(data.user);
         localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(data.user));
-        logger.auth('Login successful', data.user);
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[AUTH] Login successful', data.user);
+        }
         setLoading(false);
         return { success: true };
       }
       
-      logger.warn('Login failed', { email, error: data.error });
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('[WARN] Login failed', { email, error: data.error });
+      }
       setLoading(false);
       return { success: false, error: data.error || 'Login failed' };
     } catch (error) {
-      logger.error('Login error', error);
+      console.error('[ERROR] Login error', error);
       setLoading(false);
       return { success: false, error: 'Network error. Please try again.' };
     }
@@ -66,7 +71,9 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (name, email, password, confirmPassword) => {
     try {
-      logger.auth('Registration attempt', { email });
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[AUTH] Registration attempt', { email });
+      }
       setLoading(true);
       const response = await fetch(API_ENDPOINTS.register, {
         method: 'POST',
@@ -81,23 +88,29 @@ export const AuthProvider = ({ children }) => {
       if (data.success) {
         setUser(data.user);
         localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(data.user));
-        logger.auth('Registration successful', data.user);
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[AUTH] Registration successful', data.user);
+        }
         setLoading(false);
         return { success: true };
       }
       
-      logger.warn('Registration failed', { email, error: data.error });
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('[WARN] Registration failed', { email, error: data.error });
+      }
       setLoading(false);
       return { success: false, error: data.error || 'Registration failed' };
     } catch (error) {
-      logger.error('Registration error', error);
+      console.error('[ERROR] Registration error', error);
       setLoading(false);
       return { success: false, error: 'Network error. Please try again.' };
     }
   };
 
   const logout = () => {
-    logger.auth('User logout');
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[AUTH] User logout');
+    }
     setUser(null);
     localStorage.removeItem(STORAGE_KEYS.user);
     setLoading(false);

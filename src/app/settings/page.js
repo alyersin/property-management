@@ -21,7 +21,6 @@ import PageLayout from "../../components/shared/PageLayout";
 import ProtectedRoute from "../../components/auth/ProtectedRoute";
 import UserProfile from "../../components/shared/UserProfile";
 import { useAuth } from "../../contexts/AuthContext";
-import logger from "../../utils/logger";
 
 export default function Settings() {
   const toast = useToast();
@@ -64,14 +63,14 @@ export default function Settings() {
           phone: "",
         }));
       } else {
-        logger.error("Failed to load profile", await res.text());
+        console.error("[ERROR] Failed to load profile", await res.text());
         toast({
           title: "Failed to load profile",
           status: "error",
         });
       }
     } catch (error) {
-      logger.error("Error loading profile", error);
+      console.error("[ERROR] Error loading profile", error);
       toast({
         title: "Failed to load profile",
         status: "error",
@@ -130,7 +129,7 @@ export default function Settings() {
         status: "success",
       });
     } catch (error) {
-      logger.error("Failed to save settings", error);
+      console.error("[ERROR] Failed to save settings", error);
       toast({
         title: "Failed to save information",
         description: error.message,

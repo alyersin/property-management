@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState } from "react";
 
-const TabContext = createContext();
+export const TabContext = createContext();
 
 export const useTab = () => {
   const context = useContext(TabContext);

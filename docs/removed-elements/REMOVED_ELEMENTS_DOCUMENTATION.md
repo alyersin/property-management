@@ -1810,3 +1810,278 @@ To restore separate component files:
    ```
 
 **Note:** Current consolidated approach is recommended for simpler maintenance.
+
+---
+
+## 13. Logger Utility Removed - December 2024
+
+**Location:** `src/utils/logger.js`  
+**Status:** ✅ REMOVED (replaced with direct console calls)
+
+**Reason for Removal:** Simplified logging by removing abstraction layer. Direct console calls with prefixes provide same functionality with less code.
+
+### 13a. Logger Utility
+
+**File Deleted:**
+- `src/utils/logger.js` (79 lines)
+
+**Replacement:**
+- All `logger.error()` → `console.error('[ERROR] ...')`
+- All `logger.warn()` → `console.warn('[WARN] ...')`
+- All `logger.info()` → `console.log('[INFO] ...')`
+- All `logger.auth()` → `console.log('[AUTH] ...')`
+- All `logger.data()` → `console.log('[DATA] ...')`
+
+**Files Updated:**
+- `src/contexts/AuthContext.js` - 10 logger calls replaced
+- `src/components/shared/UniversalPage.js` - 3 logger calls replaced
+- `src/app/settings/page.js` - 3 logger calls replaced
+- `src/app/api/auth/login/route.js` - 2 logger calls replaced
+- `src/app/api/auth/register/route.js` - 1 logger call replaced
+
+**Development-Only Logging:**
+- Maintained same behavior using `process.env.NODE_ENV === 'development'` checks
+- Logs only show in development mode, not in production
+
+### 13b. Impact
+
+**Code Reduction:**
+- Removed 79 lines (logger.js)
+- Simplified logging calls (no abstraction layer)
+- Same functionality with direct console calls
+
+**Benefits:**
+- Fewer files to maintain
+- No dependency on logger utility
+- Direct console calls are easier to debug
+- Prefixes maintained for consistency (`[ERROR]`, `[AUTH]`, etc.)
+
+---
+
+## 14. Helper Utilities Removed - December 2024
+
+**Location:** `src/utils/helpers.js`  
+**Status:** ✅ REMOVED (inlined into components)
+
+**Reason for Removal:** Helper functions were only used in one place. Inlining reduces file count and improves code clarity.
+
+### 14a. Helper Functions
+
+**File Deleted:**
+- `src/utils/helpers.js` (16 lines)
+
+**Functions Removed:**
+- `itemMatchesSearch` - Unused (never called)
+- `itemMatchesStatus` - Inlined into `UniversalPage.js`
+
+**Replacement:**
+```javascript
+// Before: src/utils/helpers.js
+export const itemMatchesStatus = (item, filterValue, statusField = 'status') => {
+  if (filterValue === 'all' || !item || typeof item !== 'object') return true;
+  return item[statusField] === filterValue;
+};
+
+// After: Inlined in UniversalPage.js
+const filteredData = safeData.filter(item => {
+  if (filterValue === 'all' || !item || typeof item !== 'object') return true;
+  return item.status === filterValue;
+});
+```
+
+**Files Updated:**
+- `src/components/shared/UniversalPage.js` - Inlined filter logic
+
+### 14b. Impact
+
+**Code Reduction:**
+- Removed 16 lines (helpers.js)
+- Inlined filter logic directly where used
+- Removed unused `itemMatchesSearch` function
+
+**Benefits:**
+- Fewer files to maintain
+- Filter logic is now co-located with usage
+- No unnecessary abstraction for single-use functions
+
+---
+
+## 15. Barrel Export Removed - December 2024
+
+**Location:** `src/components/shared/formFields/index.js`  
+**Status:** ✅ REMOVED (direct imports now)
+
+**Reason for Removal:** Barrel export file was unnecessary. Direct imports are clearer and reduce file count.
+
+### 15a. Barrel Export File
+
+**File Deleted:**
+- `src/components/shared/formFields/index.js` (7 lines)
+
+**Before:**
+```javascript
+// formFields/index.js
+import TextField from './TextField';
+import TextareaField from './TextareaField';
+import NumberField from './NumberField';
+import SelectField from './SelectField';
+
+export { TextField, TextareaField, NumberField, SelectField };
+```
+
+**After:**
+```javascript
+// DynamicForm.js - Direct imports
+import TextField from "./formFields/TextField";
+import TextareaField from "./formFields/TextareaField";
+import NumberField from "./formFields/NumberField";
+import SelectField from "./formFields/SelectField";
+```
+
+**Files Updated:**
+- `src/components/shared/DynamicForm.js` - Changed to direct imports
+
+### 15b. Impact
+
+**Code Reduction:**
+- Removed 7 lines (barrel export file)
+- Direct imports are clearer and more explicit
+
+**Benefits:**
+- Fewer files to maintain
+- Clearer import paths
+- No unnecessary abstraction layer
+
+---
+
+## 16. Environment Config File Removed - December 2024
+
+**Location:** `src/config/env.js`  
+**Status:** ✅ REMOVED (inlined into login route)
+
+**Reason for Removal:** Only `getDemoUsers()` function was used. Inlining reduces file count and keeps related code together.
+
+### 16a. Environment Config File
+
+**File Deleted:**
+- `src/config/env.js` (58 lines)
+
+**Functions Removed:**
+- `getDemoUsers()` - Inlined into `src/app/api/auth/login/route.js`
+- `env` export - Unused (never imported)
+
+**Replacement:**
+```javascript
+// Before: src/config/env.js
+export const getDemoUsers = () => {
+  // ... validation and user creation logic
+};
+
+// After: Inlined in src/app/api/auth/login/route.js
+const getDemoUsers = () => {
+  // ... same validation and user creation logic
+};
+```
+
+**Files Updated:**
+- `src/app/api/auth/login/route.js` - Inlined `getDemoUsers()` function
+
+### 16b. Impact
+
+**Code Reduction:**
+- Removed 58 lines (env.js)
+- Inlined function directly where used
+- Removed unused `env` export
+
+**Benefits:**
+- Fewer files to maintain
+- Demo user logic is now co-located with login route
+- No unnecessary abstraction for single-use function
+
+---
+
+## 17. React Key Prop Warning Fix - December 2024
+
+**Location:** `src/components/shared/DynamicForm.js`  
+**Status:** ✅ FIXED
+
+**Reason for Fix:** React was warning about `key` prop being spread into JSX components. Fixed by passing `key` directly.
+
+### 17a. React Warning Fix
+
+**Problem:**
+```javascript
+// Before: key was in commonProps and spread
+const commonProps = { key: name, name, label, ... };
+return <TextField {...commonProps} />; // React warning
+```
+
+**Solution:**
+```javascript
+// After: key passed directly, not in spread
+const commonProps = { name, label, ... }; // No key here
+return <TextField key={name} {...commonProps} />; // No warning
+```
+
+**Files Updated:**
+- `src/components/shared/DynamicForm.js` - Fixed all 6 field component instances
+
+### 17b. Impact
+
+**Code Quality:**
+- Fixed 6 React warnings (TextField, NumberField x3, TextareaField, SelectField)
+- Follows React best practices for `key` prop
+- No functionality changes
+
+---
+
+## 18. TabContext Fix for Settings Page - December 2024
+
+**Location:** `src/components/shared/Sidebar.js`, `src/contexts/TabContext.js`  
+**Status:** ✅ FIXED
+
+**Reason for Fix:** `Sidebar` was using `useTab()` hook which requires `TabProvider`, but Settings page doesn't have it. Fixed by making `Sidebar` work without `TabProvider`.
+
+### 18a. TabContext Fix
+
+**Problem:**
+- `Sidebar` component used `useTab()` hook
+- `TabProvider` only wraps `/dashboard` page
+- Settings page doesn't have `TabProvider`
+- Error: "useTab must be used within TabProvider"
+
+**Solution:**
+```javascript
+// Before: Sidebar.js
+import { useTab } from "../../contexts/TabContext";
+const { activeTab, switchTab } = useTab(); // Throws error if no TabProvider
+
+// After: Sidebar.js
+import { useContext } from "react";
+import { TabContext } from "../../contexts/TabContext";
+const tabContext = useContext(TabContext);
+const hasTabContext = !!tabContext;
+
+// Use tab switching if available, otherwise navigate to dashboard
+if (hasTabContext) {
+  tabContext.switchTab(index);
+} else {
+  router.push(ROUTES.dashboard);
+}
+```
+
+**Files Updated:**
+- `src/contexts/TabContext.js` - Exported `TabContext` directly
+- `src/components/shared/Sidebar.js` - Added fallback logic for missing `TabProvider`
+
+### 18b. Impact
+
+**Functionality:**
+- `Sidebar` now works on both `/dashboard` (with `TabProvider`) and `/settings` (without `TabProvider`)
+- On dashboard: Uses instant tab switching
+- On settings: Navigates to dashboard when clicking sidebar items
+- No more runtime errors
+
+**Code Quality:**
+- More robust component that handles both contexts gracefully
+- Better user experience (no errors, smooth navigation)

@@ -122,7 +122,7 @@ POST /api/auth/login
 API Route validates credentials
         │
         ▼
-env.js gets users from environment variables
+getDemoUsers() (inline) gets users from environment variables
         │
         ▼
 User data returned (without password)
@@ -142,7 +142,7 @@ Login Form → POST request → /api/auth/login
      ↓                         ↓
 AuthContext ← JSON response ← route.js
      ↓                         ↓
-Dashboard   ← User data    ← env.js (credentials)
+Dashboard   ← User data    ← getDemoUsers() inline (credentials)
 ```
 
 ## 🧩 Component Relationships
@@ -179,11 +179,8 @@ Configuration Files
 │   ├── TENANT_COLUMNS
 │   ├── TRANSACTION_COLUMNS
 │   └── EXPENSE_COLUMNS
-└── env.js (environment variable management)
-    ├── getDemoUsers() (server-side credential access)
-    ├── env.app (application settings)
-    ├── env.database (database settings)
-    └── env.security (security settings)
+└── getDemoUsers() (inline in login route)
+    └── Server-side credential access from environment variables
 ```
 
 ## 📁 File Organization
@@ -248,7 +245,7 @@ hooks/
 config/
 ├── formFields.js         # Form field configurations
 ├── tableColumns.js       # Table column configurations
-└── env.js                # Environment variable management
+└── getDemoUsers()        # Inline function in login route
 
 contexts/
 └── AuthContext.js        # Authentication context (updated for API routes)
@@ -362,7 +359,7 @@ POST /api/auth/login
 API Route validates credentials
         │
         ▼
-env.js gets users from environment variables
+getDemoUsers() (inline) gets users from environment variables
         │
         ▼
 User data returned (without password)
@@ -378,7 +375,7 @@ Redirect to /dashboard
 
 ### **1. Environment Variable Security**
 ```
-Vercel Dashboard → Environment Variables → env.js → API Routes → Client
+Vercel Dashboard → Environment Variables → getDemoUsers() → API Routes → Client
      │                    │                    │           │
      ▼                    ▼                    ▼           ▼
 Set credentials → Server-side access → Validation → Safe response
@@ -386,7 +383,7 @@ Set credentials → Server-side access → Validation → Safe response
 
 ### **2. Authentication Security**
 ```
-Client Request → API Route → env.js → Environment Variables → Validation → Response
+Client Request → API Route → getDemoUsers() → Environment Variables → Validation → Response
      │              │          │            │                    │
      ▼              ▼          ▼            ▼                    ▼
 No credentials → Server-only → Secure → No fallbacks → Safe data

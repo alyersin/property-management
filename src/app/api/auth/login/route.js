@@ -1,8 +1,30 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
-import { getDemoUsers } from '../../../../config/env';
 import databaseService from '../../../../services/databaseService';
-import logger from '../../../../utils/logger';
+
+// Helper function to get demo user from environment variables (server-side only)
+const getDemoUsers = () => {
+  const requiredVars = [
+    'DEMO_USER_EMAIL', 'DEMO_USER_PASSWORD', 'DEMO_USER_NAME', 'DEMO_USER_ROLE'
+  ];
+
+  const missingVars = requiredVars.filter(varName => !process.env[varName]);
+  if (missingVars.length > 0) {
+    throw new Error(`Missing required environment variables: ${missingVars.join(', ')}`);
+  }
+
+  return [
+    {
+      id: 1,
+      email: process.env.DEMO_USER_EMAIL,
+      password: process.env.DEMO_USER_PASSWORD,
+      name: process.env.DEMO_USER_NAME,
+      role: process.env.DEMO_USER_ROLE,
+      createdAt: "2024-02-01T00:00:00Z",
+      lastLogin: "2024-12-15T09:15:00Z"
+    }
+  ];
+};
 
 export async function POST(request) {
   try {
@@ -24,7 +46,9 @@ export async function POST(request) {
       user = demoUsers.find(u => u.email === email && u.password === password);
     } catch (error) {
       // Demo users not configured in .env - continue to database check
-      logger.info('Demo users not configured, checking database');
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[INFO] Demo users not configured, checking database');
+      }
     }
 
     // If not found in demo users, check database for registered users
@@ -61,7 +85,7 @@ export async function POST(request) {
     });
 
   } catch (error) {
-    logger.error('Login API error', error);
+    console.error('[ERROR] Login API error', error);
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 }
