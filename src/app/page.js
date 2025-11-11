@@ -13,9 +13,9 @@ export default function Home() {
   useEffect(() => {
     if (!loading) {
       if (user) {
-        router.push(ROUTES.dashboard);
+        router.replace("/dashboard");
       } else {
-        router.push(ROUTES.login);
+        router.replace(ROUTES.login);
       }
     }
   }, [user, loading, router]);

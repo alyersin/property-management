@@ -1,7 +1,7 @@
 # 🏗️ Home Admin Application Architecture
 
-> **Update – November 2025**  
-> Tenant management and property-tenant relationships were removed to simplify the product demo. Legacy references remain below for historical context—see `docs/removed-elements/REMOVED_ELEMENTS_DOCUMENTATION.md` for the authoritative list of removals.
+> **Update – December 2024**  
+> The application has been refactored to use **PostgreSQL database exclusively** (removed `dataService.js` mock data). API routes now use a **generic CRUD factory pattern**, and form components have been **extracted into reusable field components**. The codebase has been optimized for maintainability and scalability.
 
 ## 📋 Table of Contents
 1. [Overview](#overview)
@@ -21,14 +21,15 @@
 
 ## 🎯 Overview
 
-The Home Admin application is a **Next.js 15** property management system built with **React 18**, **Chakra UI**, and **styled-components**. It follows a **configuration-driven architecture** with **universal components**, **zero code duplication**, and **secure backend implementation**.
+The Home Admin application is a **Next.js 15** property management system built with **React 18**, **Chakra UI**, and **PostgreSQL**. It follows a **configuration-driven architecture** with **universal components**, **zero code duplication**, and **database-first backend implementation**.
 
 ### Key Principles:
-- **DRY (Don't Repeat Yourself)**: Universal components eliminate duplication
+- **DRY (Don't Repeat Yourself)**: Universal components and generic CRUD helpers eliminate duplication
 - **Configuration-Driven**: Add features through configuration, not code
-- **Database-Ready**: Prepared for PostgreSQL integration
+- **Database-First**: PostgreSQL is the single source of truth (no mock data)
 - **Secure**: Server-side authentication with environment variables
-- **Scalable**: Easy to extend and maintain
+- **Scalable**: Generic API routes and database helpers make adding resources trivial
+- **Maintainable**: Refactored code structure with extracted components and utilities
 
 ---
 
@@ -54,8 +55,8 @@ The Home Admin application is a **Next.js 15** property management system built 
 │  ┌─────────────────┐    ┌─────────────────┐    ┌──────────────┐ │
 │  │  Configuration  │    │   Services      │    │   Contexts   │ │
 │  │                 │    │                 │    │              │ │
-│  │ • formFields.js │    │ • dataService.js│    │ • AuthContext│ │
-│  │ • tableColumns.js│   │ • databaseService│   │              │ │
+│  │ • formFields.js │    │ • databaseService│   │ • AuthContext│ │
+│  │ • tableColumns.js│   │ • dbHelpers.js  │    │              │ │
 │  │ • constants.js  │    │                 │    │              │ │
 │  └─────────────────┘    └─────────────────┘    └──────────────┘ │
 └─────────────────────────────────────────────────────────────────┘
@@ -65,25 +66,25 @@ The Home Admin application is a **Next.js 15** property management system built 
 │                        SERVER SIDE (Backend)                   │
 ├─────────────────────────────────────────────────────────────────┤
 │  ┌─────────────────┐    ┌─────────────────┐    ┌──────────────┐ │
-│  │   API Routes    │    │  Environment    │    │  Database    │ │
-│  │                 │    │  Management    │    │              │ │
-│  │ • /api/auth/    │    │ • env.js       │    │ • PostgreSQL │ │
-│  │   login         │    │ • .env file    │    │ • Schema     │ │
-│  │ • /api/auth/    │    │ • Vercel vars  │    │ • Docker     │ │
-│  │   register      │    │                 │    │              │ │
+│  │   API Routes    │    │  API Helpers    │    │  Database    │ │
+│  │                 │    │                 │    │              │ │
+│  │ • /api/auth/    │    │ • apiHelpers.js │    │ • PostgreSQL │ │
+│  │ • /api/properties│   │ • CRUD Factory  │    │ • Schema     │ │
+│  │ • /api/expenses │    │                 │    │ • Docker     │ │
+│  │ • /api/dashboard│    │                 │    │              │ │
 │  └─────────────────┘    └─────────────────┘    └──────────────┘ │
 └─────────────────────────────────────────────────────────────────┘
                                 │
                                 ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                    DATA LAYER                                   │
+│                    DATA LAYER (PostgreSQL Only)                 │
 ├─────────────────────────────────────────────────────────────────┤
 │  ┌─────────────────┐    ┌─────────────────┐    ┌──────────────┐ │
-│  │  Current Data   │    │  Future Data    │    │  Database    │ │
+│  │   Database      │    │   Connection    │    │  Schema      │ │
 │  │                 │    │                 │    │              │ │
-│  │ • Inline Data   │    │ • API Calls    │    │ • PostgreSQL │ │
-│  │ • dataService.js│    │ • External APIs│    │ • Docker     │ │
-│  │ • In-Memory     │    │ • Real-time    │    │ • Linux      │ │
+│  │ • PostgreSQL    │    │ • Connection    │    │ • Users      │ │
+│  │ • Docker        │    │   Pool          │    │ • Properties │ │
+│  │ • Multi-user    │    │ • Transactions  │    │ • Expenses   │ │
 │  └─────────────────┘    └─────────────────┘    └──────────────┘ │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -99,9 +100,7 @@ src/
 │   │   └── auth/                  # Authentication endpoints
 │   │       ├── login/route.js     # Login API (48 lines)
 │   │       └── register/route.js # Register API (51 lines)
-│   ├── dashboard/page.js          # Dashboard (43 lines)
-│   ├── properties/page.js         # Properties (17 lines)
-│   ├── expenses/page.js          # Expenses (17 lines)
+│   ├── dashboard/page.js          # Main app with tabs (94 lines)
 │   ├── settings/page.js          # Settings (120 lines)
 │   ├── login/page.js             # Login (151 lines)
 │   │   └── StyledWrapper.js      # Styled components
@@ -126,8 +125,12 @@ src/
 │       ├── FormModal.js          # Modal wrapper
 │       ├── StatCard.js           # Statistics card
 │       ├── UserProfile.js        # User profile management (1:1)
-│       ├── PropertyAmenities.js  # Property amenities management (M:N)
-│       └── PropertyTenantManagement.js # Property-tenant management (M:N)
+│       ├── Logo.js               # Application logo
+│       └── formFields/           # Form field components
+│           ├── TextField.js
+│           ├── NumberField.js
+│           ├── SelectField.js
+│           └── TextareaField.js
 │
 ├── hooks/                        # Custom React Hooks
 │   ├── useAppData.js             # Universal data hook
@@ -140,11 +143,12 @@ src/
 │   └── README.md                 # Config documentation
 │
 ├── contexts/                     # React Contexts
-│   └── AuthContext.js            # Authentication context
+│   ├── AuthContext.js            # Authentication context
+│   └── TabContext.js             # Tab navigation context
 │
 ├── services/                     # Data Services
-│   ├── dataService.js            # Current data operations
-│   └── databaseService.js        # Future database operations
+│   ├── databaseService.js        # PostgreSQL database operations
+│   └── dbHelpers.js              # Generic CRUD helper functions
 │
 ├── utils/                        # Utility Functions
 │   ├── constants.js              # Application constants
@@ -162,24 +166,27 @@ src/
 ### **1. Page Layer**
 ```
 app/
-├── dashboard/page.js          # Uses DashboardStats component
-├── properties/page.js         # Uses UniversalPage component
-├── tenants/page.js           # Uses UniversalPage component
-├── finances/page.js          # Uses UniversalPage component
-├── expenses/page.js          # Uses UniversalPage component
-├── settings/page.js          # Custom settings form
-├── login/page.js             # Styled login form
-└── register/page.js          # Styled register form
+├── dashboard/page.js          # Main app with tabs (Dashboard, Properties, Expenses)
+├── settings/page.js           # Custom settings form
+├── login/page.js              # Styled login form
+└── register/page.js           # Styled register form
 ```
 
 ### **2. Universal Components**
 ```
 components/shared/
 ├── UniversalPage.js          # Handles all CRUD pages
-│   ├── SearchFilter          # Search and filtering
+│   ├── SearchFilter          # Filtering (search optional, only if searchFields provided)
 │   ├── DataTable             # Data display
 │   ├── FormModal             # Form modal
 │   └── DynamicForm           # Dynamic form generation
+├── DynamicForm.js            # Form generator (uses field components)
+│   └── formFields/           # Extracted field components
+│       ├── TextField.js      # Text, email, tel, date inputs
+│       ├── TextareaField.js  # Textarea inputs
+│       ├── NumberField.js    # Number inputs with steppers
+│       ├── SelectField.js    # Select dropdowns
+│       └── index.js          # Barrel export
 ├── DashboardStats.js         # Dashboard statistics
 ├── PageLayout.js             # Page wrapper
 │   ├── PageHeader            # Header with user menu
@@ -217,20 +224,20 @@ config/
 
 ### **1. User Interaction Flow**
 ```
-User Action → Component → Hook → Service → Data → UI Update
-     │            │         │        │       │        │
-     ▼            ▼         ▼        ▼       ▼        ▼
-Click Button → UniversalPage → useAppData → dataService → Inline Data → Re-render
+User Action → Component → Hook → API Route → Database → UI Update
+     │            │         │        │          │         │
+     ▼            ▼         ▼        ▼          ▼         ▼
+Click Button → UniversalPage → useAppData → /api/properties → PostgreSQL → Re-render
 ```
 
 ### **2. Data Loading Flow**
 ```
-Page Load → useAppData → dataService.getProperties() → Inline Data → Component State → UI Render
+Page Load → useAppData → GET /api/properties → databaseService → PostgreSQL → Component State → UI Render
 ```
 
 ### **3. Form Submission Flow**
 ```
-Form Submit → DynamicForm → useAppData.create() → dataService.addProperty() → Data Update → UI Refresh
+Form Submit → DynamicForm → useAppData.create() → POST /api/properties → databaseService → PostgreSQL → UI Refresh
 ```
 
 ### **4. Authentication Flow (Updated)**
@@ -242,31 +249,41 @@ Login → AuthContext → API Route → env.js → Environment Variables → Use
 
 ## 🔧 Backend Architecture
 
-### **1. API Routes Structure**
+### **1. API Routes Structure (Refactored with CRUD Factory)**
 ```
 src/app/api/
 ├── auth/
 │   ├── login/route.js        # POST /api/auth/login
 │   └── register/route.js     # POST /api/auth/register
-├── user-profiles/
-│   └── [userId]/route.js     # GET/POST/PUT /api/user-profiles/[userId]
-├── amenities/
-│   └── route.js              # GET /api/amenities
+├── dashboard/
+│   ├── route.js               # GET /api/dashboard?userId=X
+│   └── activities/route.js   # GET /api/dashboard/activities?userId=X
 ├── properties/
-│   └── [propertyId]/
-│       ├── amenities/route.js    # GET/POST/DELETE /api/properties/[propertyId]/amenities
-│       └── tenants/route.js     # GET/POST/PUT/DELETE /api/properties/[propertyId]/tenants
-└── tenants/
-    └── [tenantId]/
-        └── properties/route.js  # GET /api/tenants/[tenantId]/properties
+│   ├── route.js               # GET/POST /api/properties (uses CRUD factory)
+│   └── [propertyId]/route.js # PUT/DELETE /api/properties/[id] (uses CRUD factory)
+├── expenses/
+│   ├── route.js               # GET/POST /api/expenses (uses CRUD factory)
+│   └── [expenseId]/route.js  # PUT/DELETE /api/expenses/[id] (uses CRUD factory)
+└── user-profiles/
+    └── [userId]/route.js      # GET/POST/PUT /api/user-profiles/[userId]
 ```
 
-**Import Path Structure:**
-- All API routes use relative imports to `databaseService`:
-  - `src/app/api/amenities/route.js` → `../../services/databaseService`
-  - `src/app/api/auth/login/route.js` → `../../../services/databaseService`
-  - `src/app/api/properties/[propertyId]/amenities/route.js` → `../../../../../services/databaseService`
-  - `src/app/api/user-profiles/[userId]/route.js` → `../../../../services/databaseService`
+**CRUD Factory Pattern:**
+- Generic route handlers in `src/utils/apiHelpers.js`:
+  - `createCrudRoutes(service, resourceName)` - Generates GET/POST/PUT/DELETE handlers
+  - Reduces route files from ~50 lines to ~8 lines each
+  - Handles validation, error handling, and response formatting automatically
+
+**Example Route Implementation:**
+```javascript
+// src/app/api/properties/route.js (8 lines)
+import databaseService from '../../../services/databaseService';
+import { createCrudRoutes } from '../../../utils/apiHelpers';
+
+const routes = createCrudRoutes(databaseService, 'properties');
+export const GET = routes.GET;
+export const POST = routes.POST;
+```
 
 ### **2. Login API Route**
 ```javascript
@@ -457,9 +474,23 @@ export default function Properties() {
       dataType="properties"
       title="Property Management"
       currentPage="/properties"
-      searchFields={['address', 'city', 'tenant']}
+      // searchFields prop removed - only filter is shown
       columns={getColumnsByType('properties')}
       emptyMessage="No properties found"
+    />
+  );
+}
+
+// app/expenses/page.js - Still uses search
+export default function Expenses() {
+  return (
+    <UniversalPage
+      dataType="expenses"
+      title="Expenses"
+      currentPage="/expenses"
+      searchFields={['description', 'notes']}  // Search enabled
+      columns={getColumnsByType('expenses')}
+      emptyMessage="No expenses recorded"
     />
   );
 }
@@ -508,38 +539,43 @@ const login = async (email, password) => {
 
 ## 🗄️ Database Integration
 
-### **Current State (Production Ready)**
-The application now supports **both inline data and PostgreSQL** with complete relationship management:
+### **Current State (Database-Only Production)**
+The application now uses **PostgreSQL exclusively** as the single source of truth. All data operations go through the database service:
 
 ```javascript
-// databaseService.js - Hybrid data service
+// databaseService.js - PostgreSQL-only service
 class DatabaseService {
   constructor() {
-    this.isProduction = process.env.NODE_ENV === 'production';
     this.useDatabase = process.env.USE_DATABASE === 'true';
+    
+    if (this.useDatabase) {
+      this.pool = new Pool({
+        connectionString: process.env.DATABASE_URL,
+        max: 20,
+        idleTimeoutMillis: 30000,
+        connectionTimeoutMillis: 2000,
+      });
+    }
   }
 
-  // Automatic switching between data sources
-  async getProperties() {
-    if (this.useDatabase) {
-      // PostgreSQL with relationships
-      const result = await this.query(`
-        SELECT p.*, 
-          STRING_AGG(DISTINCT a.name, ', ') as amenities,
-          STRING_AGG(DISTINCT CONCAT(t.name, ' (', pt.lease_start, ' - ', pt.lease_end, ')'), '; ') as current_tenants
-        FROM properties p
-        LEFT JOIN property_amenities pa ON p.id = pa.property_id
-        LEFT JOIN amenities a ON pa.amenity_id = a.id
-        LEFT JOIN property_tenants pt ON p.id = pt.property_id AND pt.status = 'Active'
-        LEFT JOIN tenants t ON pt.tenant_id = t.id
-        GROUP BY p.id
-      `);
-      return result.rows;
-    }
-    return dataService.getProperties(); // Fallback to inline data
+  // Uses generic CRUD helpers for common operations
+  async getProperties(userId) {
+    return createGetAll(this.query.bind(this), 'properties', 'created_at DESC')(userId);
+  }
+
+  async updateProperty(id, updates, userId) {
+    return createUpdate(this.query.bind(this), 'properties')(id, updates, userId);
   }
 }
 ```
+
+**Generic CRUD Helpers (`src/services/dbHelpers.js`):**
+- `createGetAll()` - Generic GET all operations
+- `createGetById()` - Generic GET by ID operations  
+- `createUpdate()` - Generic UPDATE operations
+- `createDelete()` - Generic DELETE operations
+
+These helpers eliminate repetitive code and ensure consistent behavior across all resources.
 
 ### **Complete Database Schema (PostgreSQL)**
 The database now includes **all three SQL relationship types**:
@@ -559,15 +595,11 @@ CREATE TABLE users (
 );
 
 -- User Profiles table (One-to-One with users)
--- Note: emergency_contact and emergency_phone fields removed for simplified form presentation
+-- Simplified schema: only phone field retained
 CREATE TABLE user_profiles (
     id SERIAL PRIMARY KEY,
     user_id INTEGER UNIQUE REFERENCES users(id) ON DELETE CASCADE,
-    bio TEXT,
-    avatar_url VARCHAR(255),
     phone VARCHAR(50),
-    address TEXT,
-    date_of_birth DATE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -575,52 +607,21 @@ CREATE TABLE user_profiles (
 
 #### **One-to-Many (1:N) Relationships:**
 ```sql
--- Properties table (simplified - no direct tenant references)
--- Note: state, zip, and sqft fields removed for simplified form presentation
+-- Properties table (simplified schema)
+-- Fields removed: address, rent (simplified for demo)
 CREATE TABLE properties (
     id SERIAL PRIMARY KEY,
     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    address VARCHAR(255) NOT NULL,
     city VARCHAR(100) NOT NULL,
     bedrooms INTEGER NOT NULL,
     bathrooms INTEGER NOT NULL,
-    rent DECIMAL(10,2) NOT NULL,
     status VARCHAR(50) DEFAULT 'Available',
     notes TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Tenants table (simplified - no direct property references)
--- Note: emergency_contact and emergency_phone fields removed for simplified form presentation
-CREATE TABLE tenants (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    name VARCHAR(255) NOT NULL,
-    email VARCHAR(255) NOT NULL,
-    phone VARCHAR(50),
-    status VARCHAR(50) DEFAULT 'Active',
-    notes TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(user_id, email)
-);
-
--- Transactions table (One-to-Many from properties and tenants)
-CREATE TABLE transactions (
-    id SERIAL PRIMARY KEY,
-    type VARCHAR(50) NOT NULL,
-    description VARCHAR(255) NOT NULL,
-    amount DECIMAL(10,2) NOT NULL,
-    date DATE NOT NULL,
-    property_id INTEGER REFERENCES properties(id),
-    tenant_id INTEGER REFERENCES tenants(id),
-    category VARCHAR(100),
-    status VARCHAR(50) DEFAULT 'Completed',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Expenses table (tied to users)
+-- Expenses table (utility tracking)
 CREATE TABLE expenses (
     id SERIAL PRIMARY KEY,
     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -633,61 +634,36 @@ CREATE TABLE expenses (
 );
 ```
 
-#### **Many-to-Many (M:N) Relationships:**
-```sql
--- Amenities table
-CREATE TABLE amenities (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    description TEXT,
-    category VARCHAR(50), -- 'indoor', 'outdoor', 'building', 'unit'
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Property-Amenities junction table (Many-to-Many)
-CREATE TABLE property_amenities (
-    property_id INTEGER REFERENCES properties(id) ON DELETE CASCADE,
-    amenity_id INTEGER REFERENCES amenities(id) ON DELETE CASCADE,
-    PRIMARY KEY (property_id, amenity_id)
-);
-
--- Property-Tenants junction table (Many-to-Many)
-CREATE TABLE property_tenants (
-    id SERIAL PRIMARY KEY,
-    property_id INTEGER REFERENCES properties(id) ON DELETE CASCADE,
-    tenant_id INTEGER REFERENCES tenants(id) ON DELETE CASCADE,
-    lease_start DATE NOT NULL,
-    lease_end DATE,
-    rent_amount DECIMAL(10,2),
-    status VARCHAR(50) DEFAULT 'Active',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(property_id, tenant_id, lease_start)
-);
-```
-
 ### **Database Service Methods**
-The service now includes methods for all relationship types:
+The service uses generic CRUD helpers for common operations:
 
 ```javascript
-// One-to-One methods
+// One-to-One methods (user profiles)
 async getUserProfile(userId) { /* ... */ }
 async createUserProfile(userId, profileData) { /* ... */ }
 async updateUserProfile(userId, updates) { /* ... */ }
 
-// Many-to-Many methods
-async getPropertyTenants(propertyId) { /* ... */ }
-async getTenantProperties(tenantId) { /* ... */ }
-async assignTenantToProperty(propertyId, tenantId, leaseData) { /* ... */ }
-async updatePropertyTenant(propertyId, tenantId, updates) { /* ... */ }
-async removeTenantFromProperty(propertyId, tenantId) { /* ... */ }
+// One-to-Many methods (properties & expenses)
+async getProperties(userId) {
+  return createGetAll(this.query.bind(this), 'properties', 'created_at DESC')(userId);
+}
+async updateProperty(id, updates, userId) {
+  return createUpdate(this.query.bind(this), 'properties')(id, updates, userId);
+}
+async deleteProperty(id, userId) {
+  return createDelete(this.query.bind(this), 'properties')(id, userId);
+}
 
-// Amenities methods
-async getAmenities() { /* ... */ }
-async getPropertyAmenities(propertyId) { /* ... */ }
-async addAmenityToProperty(propertyId, amenityId) { /* ... */ }
-async removeAmenityFromProperty(propertyId, amenityId) { /* ... */ }
+// Similar pattern for expenses
+async getExpenses(userId) {
+  return createGetAll(this.query.bind(this), 'expenses', 'date DESC')(userId);
+}
 ```
+
+**Benefits:**
+- Reduced code duplication (from ~50 lines per resource to ~5 lines)
+- Consistent error handling and validation
+- Easy to add new resources (just call the helper)
 
 ---
 
@@ -764,25 +740,25 @@ volumes:
 ## 📊 Performance Metrics
 
 ### **Code Efficiency**
-- **Total Files**: 35+ (includes new relationship components)
-- **Total Lines**: ~2,500 (includes database schema and new features)
-- **Code Duplication**: 0% (universal components)
+- **Total Files**: 40+ (includes refactored components and utilities)
+- **Total Lines**: ~2,200 (reduced through refactoring)
+- **Code Duplication**: 0% (universal components + generic helpers)
 - **Component Reusability**: 95%
+- **API Route Lines**: Reduced from ~50 to ~8 lines per route (84% reduction)
 - **Maintenance Effort**: Reduced by 90%
 
 ### **Database Relationships**
 - **One-to-One**: 1 relationship (users ↔ user_profiles)
-- **One-to-Many**: 4 relationships (properties → transactions, expenses; tenants → transactions)
-- **Many-to-Many**: 2 relationships (properties ↔ tenants, properties ↔ amenities)
-- **Total Tables**: 9 tables with proper relationships
-- **Sample Data**: Complete dataset with all relationship types
+- **One-to-Many**: 2 relationships (users → properties, users → expenses)
+- **Many-to-Many**: None (simplified for demo)
+- **Total Tables**: 4 tables (users, user_profiles, properties, expenses)
+- **Data Isolation**: Multi-user support with `user_id` filtering
 
-### **New Features Added**
-- **User Profile Management**: Complete 1:1 relationship handling
-- **Property Amenities**: Full M:N relationship management
-- **Property-Tenant Management**: Complete M:N relationship with lease tracking
-- **API Endpoints**: 8 new RESTful endpoints for relationship management
-- **Database Schema**: Production-ready PostgreSQL schema
+### **Refactoring Benefits**
+- **API Routes**: Reduced from 4 files (~150 lines) to 4 files (~32 lines) using CRUD factory
+- **Database Service**: Reduced from 308 lines to ~250 lines using generic helpers
+- **DynamicForm**: Reduced from 221 lines to 95 lines using extracted field components
+- **Code Maintainability**: Significantly improved through separation of concerns
 
 ### **Page Performance**
 - **Properties Page**: 70 lines (includes relationship management)
@@ -826,11 +802,12 @@ volumes:
 - **API Route Protection**: Secure authentication endpoints
 - **Client-Side Safety**: No sensitive data in browser
 
-### **4. Database Ready**
-- **Easy Migration**: Switch from inline data to PostgreSQL
-- **Schema Prepared**: Complete database schema ready
-- **Docker Ready**: Containerized deployment ready
-- **Production Ready**: Scalable architecture
+### **4. Database-First Architecture**
+- **PostgreSQL Only**: Single source of truth, no mock data
+- **Schema Optimized**: Simplified schema focused on core features
+- **Docker Ready**: Containerized deployment with docker-compose
+- **Production Ready**: Scalable architecture with connection pooling
+- **Generic CRUD**: Easy to add new resources with minimal code
 
 ### **5. Developer Experience**
 - **Fast Development**: Add features in minutes
@@ -838,11 +815,14 @@ volumes:
 - **Clear Structure**: Logical file organization
 - **Documentation**: Comprehensive architecture docs
 
-### **6. Recent Build Fixes (Latest Updates)**
-- **Import Path Corrections**: Fixed all API route import paths to correctly reference `databaseService`
-- **DELETE Route Fix**: Corrected amenities DELETE route to get `amenityId` from request body instead of params
-- **Vercel Deployment Ready**: All build errors resolved, application compiles successfully
-- **Module Resolution**: All API routes now properly import database service with correct relative paths
+### **6. Recent Refactoring (December 2024)**
+- **Database-Only Architecture**: Removed `dataService.js` mock data, app now uses PostgreSQL exclusively
+- **Generic CRUD Factory**: API routes use `createCrudRoutes()` helper, reducing code from ~50 lines to ~8 lines per route
+- **Database CRUD Helpers**: Extracted generic helpers (`createGetAll`, `createUpdate`, `createDelete`) in `dbHelpers.js`
+- **Form Field Components**: Extracted `DynamicForm` field rendering into reusable components (`TextField`, `NumberField`, `SelectField`, `TextareaField`)
+- **Code Cleanup**: Removed unused utilities, constants, and hooks
+- **Schema Simplification**: Removed fields from `user_profiles` (bio, avatar_url, date_of_birth) and `properties` (address, rent)
+- **CI/CD Optimization**: Updated deployment workflow to use `git pull` strategy for less disruptive deployments
 
 ---
 

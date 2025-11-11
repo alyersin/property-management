@@ -1,17 +1,30 @@
 "use client";
 
-import { useEffect } from "react";
-import { useAuth } from "../../contexts/AuthContext";
-import PageLayout from "../../components/shared/PageLayout";
-import DashboardStats from "../../components/shared/DashboardStats";
-import { useDashboardData } from "../../hooks/useAppData";
+import { useState, useEffect } from "react";
 import ProtectedRoute from "../../components/auth/ProtectedRoute";
+import PageLayout from "../../components/shared/PageLayout";
+import { TabProvider, useTab } from "../../contexts/TabContext";
+import { useAuth } from "../../contexts/AuthContext";
+import DashboardStats from "../../components/shared/DashboardStats";
+import UniversalPage from "../../components/shared/UniversalPage";
+import { useDashboardData } from "../../hooks/useAppData";
+import { getColumnsByType } from "../../config/tableColumns";
 import { STORAGE_KEYS } from "../../constants/app";
 import usePersistentState from "../../hooks/usePersistentState";
 
-export default function Dashboard() {
+function TabContent({ onTitleChange }) {
+  const { activeTab, getTabTitle } = useTab();
   const { user } = useAuth();
-  const { stats, activities, loading, error } = useDashboardData();
+
+  // Update title when tab changes
+  useEffect(() => {
+    if (onTitleChange) {
+      onTitleChange(getTabTitle(activeTab));
+    }
+  }, [activeTab, getTabTitle, onTitleChange]);
+
+  // Dashboard tab content
+  const { stats, activities, loading, error } = useDashboardData(user?.id);
   const [dashboardPreferences, setDashboardPreferences, preferencesHydrated] =
     usePersistentState(`${STORAGE_KEYS.preferences}_dashboard`, {
       showWelcomeMessage: true,
@@ -27,34 +40,55 @@ export default function Dashboard() {
     }));
   }, [preferencesHydrated, setDashboardPreferences]);
 
-  if (loading) {
-    return (
-      <ProtectedRoute>
-        <PageLayout title="Loading..." currentPage="/dashboard">
-          <div>Loading dashboard data...</div>
-        </PageLayout>
-      </ProtectedRoute>
-    );
-  }
+  // Render content based on active tab
+  switch (activeTab) {
+    case 0: // Dashboard
+      if (loading) {
+        return <div>Loading dashboard data...</div>;
+      }
+      if (error) {
+        return <div>Error loading dashboard: {error}</div>;
+      }
+      return <DashboardStats stats={stats} recentActivities={activities} />;
 
-  if (error) {
-    return (
-      <ProtectedRoute>
-        <PageLayout title="Error" currentPage="/dashboard">
-          <div>Error loading dashboard: {error}</div>
-        </PageLayout>
-      </ProtectedRoute>
-    );
+    case 1: // Properties
+      return (
+        <UniversalPage
+          dataType="properties"
+          title="Property Management"
+          columns={getColumnsByType('properties')}
+          emptyMessage="No properties found"
+          hidePageLayout={true}
+        />
+      );
+
+    case 2: // Expenses
+      return (
+        <UniversalPage
+          dataType="expenses"
+          title="Expenses"
+          columns={getColumnsByType('expenses')}
+          emptyMessage="No expenses recorded"
+          hidePageLayout={true}
+        />
+      );
+
+    default:
+      return <DashboardStats stats={stats} recentActivities={activities} />;
   }
+}
+
+export default function Dashboard() {
+  const { user } = useAuth();
+  const [pageTitle, setPageTitle] = useState("Dashboard");
 
   return (
     <ProtectedRoute>
-      <PageLayout 
-        title={`Welcome back, ${user?.name || 'Admin'}!`} 
-        currentPage="/dashboard"
-      >
-        <DashboardStats stats={stats} recentActivities={activities} />
-      </PageLayout>
+      <TabProvider>
+        <PageLayout title={pageTitle}>
+          <TabContent onTitleChange={setPageTitle} />
+        </PageLayout>
+      </TabProvider>
     </ProtectedRoute>
   );
 }

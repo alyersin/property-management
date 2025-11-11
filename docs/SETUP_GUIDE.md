@@ -1,7 +1,7 @@
 # Home Admin Project - Complete Setup Guide
 
-> **Update – November 2025**  
-> Tenant-related features were removed and the Finances tab was replaced with a utility-focused Expenses page. Fresh databases only need `src/database/schema.sql` applied during setup.
+> **Update – December 2024**  
+> The application now uses **PostgreSQL exclusively** (removed mock data service). All data operations go through the database. The application has been refactored with generic CRUD helpers and extracted form components for better maintainability.
 
 This guide will walk you through setting up the Home Admin project from scratch on any machine (Windows, Mac, or Linux).
 
@@ -132,17 +132,19 @@ The application will be available at: http://localhost:3000
 
 ## Database Schema Overview
 
-The project includes all three types of SQL relationships:
+The project uses a simplified schema focused on core features:
 
 ### One-to-One (1:1)
-- `users` ↔ `user_profiles`
+- `users` ↔ `user_profiles` (phone information)
 
 ### One-to-Many (1:N)
-- `users` → `properties`
-- `users` → `expenses`
+- `users` → `properties` (city, bedrooms, bathrooms, status, notes)
+- `users` → `expenses` (description, amount, date, notes)
 
-### Many-to-Many (M:N)
-- _None (amenities and tenants features removed)_
+### Schema Simplification
+- **User Profiles**: Only `phone` field retained (removed: bio, avatar_url, date_of_birth)
+- **Properties**: Removed `address` and `rent` fields for simplified demo
+- **Multi-User**: All data is isolated per user using `user_id` foreign keys
 
 ## Useful Commands
 
@@ -238,18 +240,24 @@ sudo usermod -aG docker $USER
 
 ## Environment Variables
 
-Create a `.env.local` file for custom configuration:
+Create a `.env.local` file in the project root:
 
 ```bash
-# Database
-DATABASE_URL=postgresql://postgres:password@localhost:5432/home_admin
+# Database Configuration (REQUIRED)
+DATABASE_URL=postgresql://postgres:password@localhost:5540/home_admin
 USE_DATABASE=true
+
+# Demo User Credentials (for login)
+DEMO_USER_EMAIL=demo@homeadmin.ro
+DEMO_USER_PASSWORD=demo123
+DEMO_USER_NAME=Demo User
+DEMO_USER_ROLE=user
 
 # Application
 NODE_ENV=development
-NEXTAUTH_SECRET=your-secret-key
-NEXTAUTH_URL=http://localhost:3000
 ```
+
+**Note**: The database port is `5540` (mapped from container port `5432`) as configured in `docker_compose.yml`.
 
 ## Project Structure
 

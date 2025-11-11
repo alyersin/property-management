@@ -1035,3 +1035,778 @@ To restore amenities functionality:
 - Amenities methods in `databaseService.js`
 - Amenities button and modal in `properties/page.js`
 - Amenities JOIN in `getProperties()` query
+
+---
+
+## 8. Search Functionality Removed from Properties - December 2024
+
+**Location:** Multiple files  
+**Status:** ✅ REMOVED (can be restored)
+
+**Reason for Removal:** Simplified properties page to use only status filter, removing search input for cleaner UI.
+
+### 8a. Properties Page Updates
+
+**Location:** `src/app/properties/page.js`  
+**Changes:**
+- Removed `searchFields={['city', 'status', 'notes']}` prop from UniversalPage
+
+**Before:**
+```javascript
+<UniversalPage
+  dataType="properties"
+  title="Property Management"
+  currentPage="/properties"
+  searchFields={['city', 'status', 'notes']}  // REMOVED
+  columns={getColumnsByType('properties')}
+  emptyMessage="No properties found"
+/>
+```
+
+**After:**
+```javascript
+<UniversalPage
+  dataType="properties"
+  title="Property Management"
+  currentPage="/properties"
+  columns={getColumnsByType('properties')}
+  emptyMessage="No properties found"
+/>
+```
+
+### 8b. UniversalPage Component Updates
+
+**Location:** `src/components/shared/UniversalPage.js`  
+**Changes:**
+- Made search conditional - only shows if `searchFields` prop is provided
+- Updated filtering logic to skip search when no searchFields
+- Updated SearchFilter props to conditionally pass search-related props
+
+**Filtering Logic:**
+```javascript
+// BEFORE: Always applied search filter
+const filteredData = safeData.filter(item => 
+  itemMatchesSearch(item, searchTerm, searchFields) && 
+  itemMatchesStatus(item, filterValue)
+);
+
+// AFTER: Only applies search if searchFields provided
+const filteredData = safeData.filter(item => {
+  const matchesSearch = searchFields.length > 0 
+    ? itemMatchesSearch(item, searchTerm, searchFields)
+    : true;
+  return matchesSearch && itemMatchesStatus(item, filterValue);
+});
+```
+
+**SearchFilter Props:**
+```javascript
+// BEFORE: Always passed search props
+<SearchFilter
+  searchTerm={searchTerm}
+  onSearchChange={(value) => updatePreferences({ searchTerm: value })}
+  filterValue={filterValue}
+  onFilterChange={(value) => updatePreferences({ filterValue: value })}
+  filterOptions={availableFilterOptions}
+  placeholder={`Search ${displayName}...`}
+/>
+
+// AFTER: Conditionally passes search props
+<SearchFilter
+  searchTerm={searchFields.length > 0 ? searchTerm : undefined}
+  onSearchChange={searchFields.length > 0 ? (value) => updatePreferences({ searchTerm: value }) : undefined}
+  filterValue={filterValue}
+  onFilterChange={(value) => updatePreferences({ filterValue: value })}
+  filterOptions={availableFilterOptions}
+  placeholder={searchFields.length > 0 ? `Search ${displayName}...` : undefined}
+/>
+```
+
+### 8c. SearchFilter Component Updates
+
+**Location:** `src/components/shared/SearchFilter.js`  
+**Changes:**
+- Made search input conditional - only renders if `searchTerm` and `onSearchChange` props are provided
+
+**Before:**
+```javascript
+<Flex gap={4} align="center" flexWrap="wrap">
+  <InputGroup maxW="360px" bg="bg.surface" borderRadius="lg">
+    {/* Search input always shown */}
+  </InputGroup>
+  {/* Filter dropdown */}
+</Flex>
+```
+
+**After:**
+```javascript
+const showSearch = searchTerm !== undefined && onSearchChange !== undefined;
+
+<Flex gap={4} align="center" flexWrap="wrap">
+  {showSearch && (
+    <InputGroup maxW="360px" bg="bg.surface" borderRadius="lg">
+      {/* Search input only shown if props provided */}
+    </InputGroup>
+  )}
+  {/* Filter dropdown */}
+</Flex>
+```
+
+### 8d. Impact
+
+**Properties Page:**
+- Search input removed from UI
+- Only status filter (Available/Occupied) remains
+- Cleaner, simpler interface
+
+**Other Pages:**
+- Expenses page still uses search (has `searchFields={['description', 'notes']}`)
+- Search functionality remains available for other pages that provide `searchFields` prop
+
+**Backend/Database:**
+- No backend changes required (search was client-side only)
+- No database changes required (no search queries existed)
+
+### 8e. Restoration Instructions
+
+To restore search functionality on properties page:
+
+1. **Restore Properties Page:**
+   ```javascript
+   <UniversalPage
+     dataType="properties"
+     title="Property Management"
+     currentPage="/properties"
+     searchFields={['city', 'status', 'notes']}  // Add back
+     columns={getColumnsByType('properties')}
+     emptyMessage="No properties found"
+   />
+   ```
+
+2. **No other changes needed** - UniversalPage and SearchFilter already support conditional search rendering
+
+**Note:** The `itemMatchesSearch` helper function in `src/utils/helpers.js` was kept for potential future use but is no longer called anywhere in the application.
+
+---
+
+## 9. Search Functionality Removed from Entire App - December 2024
+
+**Location:** Multiple files  
+**Status:** ✅ REMOVED (can be restored)
+
+**Reason for Removal:** Removed search inputs from all pages (Properties and Expenses) to simplify the UI. Only status filters remain.
+
+### 9a. Expenses Page Updates
+
+**Location:** `src/app/expenses/page.js`  
+**Changes:**
+- Removed `searchFields={['description', 'notes']}` prop from UniversalPage
+
+**Before:**
+```javascript
+<UniversalPage
+  dataType="expenses"
+  title="Expenses"
+  currentPage="/expenses"
+  searchFields={['description', 'notes']}  // REMOVED
+  columns={getColumnsByType('expenses')}
+  emptyMessage="No expenses recorded"
+/>
+```
+
+**After:**
+```javascript
+<UniversalPage
+  dataType="expenses"
+  title="Expenses"
+  currentPage="/expenses"
+  columns={getColumnsByType('expenses')}
+  emptyMessage="No expenses recorded"
+/>
+```
+
+### 9b. UniversalPage Component Updates
+
+**Location:** `src/components/shared/UniversalPage.js`  
+**Changes:**
+- Removed `searchFields` prop entirely
+- Removed `searchTerm` from preferences storage
+- Removed search filtering logic
+- Removed `itemMatchesSearch` import
+- Made SearchFilter conditional - only renders if filterOptions exist
+
+**Filtering Logic:**
+```javascript
+// BEFORE: Applied both search and status filters
+const filteredData = safeData.filter(item => {
+  const matchesSearch = searchFields.length > 0 
+    ? itemMatchesSearch(item, searchTerm, searchFields)
+    : true;
+  return matchesSearch && itemMatchesStatus(item, filterValue);
+});
+
+// AFTER: Only applies status filter
+const filteredData = safeData.filter(item => 
+  itemMatchesStatus(item, filterValue)
+);
+```
+
+**Preferences:**
+```javascript
+// BEFORE: Stored both searchTerm and filterValue
+const [preferences, setPreferences] = usePersistentState(storageKey, {
+  searchTerm: "",
+  filterValue: "all",
+  lastUpdated: null,
+});
+
+// AFTER: Only stores filterValue
+const [preferences, setPreferences] = usePersistentState(storageKey, {
+  filterValue: "all",
+  lastUpdated: null,
+});
+```
+
+**SearchFilter Rendering:**
+```javascript
+// BEFORE: Always rendered SearchFilter
+<SearchFilter
+  searchTerm={searchFields.length > 0 ? searchTerm : undefined}
+  onSearchChange={...}
+  filterValue={filterValue}
+  onFilterChange={...}
+  filterOptions={availableFilterOptions}
+/>
+
+// AFTER: Only renders if filterOptions exist
+{availableFilterOptions.length > 0 && (
+  <SearchFilter
+    filterValue={filterValue}
+    onFilterChange={(value) => updatePreferences({ filterValue: value })}
+    filterOptions={availableFilterOptions}
+  />
+)}
+```
+
+### 9c. SearchFilter Component Updates
+
+**Location:** `src/components/shared/SearchFilter.js`  
+**Changes:**
+- Removed all search-related props (`searchTerm`, `onSearchChange`, `searchPlaceholder`)
+- Removed search input rendering code
+- Removed unused imports (`Input`, `InputGroup`, `InputLeftElement`, `Icon`, `SearchIcon`)
+- Added early return if no filterOptions
+- Component now only handles filter dropdown
+
+**Before:**
+```javascript
+export default function SearchFilter({
+  searchTerm = "",
+  onSearchChange,
+  searchPlaceholder = "Search...",
+  filterValue = "all",
+  onFilterChange,
+  filterOptions = [],
+  filterPlaceholder = "All",
+}) {
+  // ... search input rendering code
+  const showSearch = searchTerm !== undefined && onSearchChange !== undefined;
+  
+  return (
+    <Card>
+      <CardBody>
+        <Flex>
+          {showSearch && (
+            <InputGroup>
+              {/* Search input */}
+            </InputGroup>
+          )}
+          {/* Filter dropdown */}
+        </Flex>
+      </CardBody>
+    </Card>
+  );
+}
+```
+
+**After:**
+```javascript
+export default function SearchFilter({
+  filterValue = "all",
+  onFilterChange,
+  filterOptions = [],
+  filterPlaceholder = "All",
+}) {
+  // Only render if filter options exist
+  if (!Array.isArray(filterOptions) || filterOptions.length === 0) {
+    return null;
+  }
+  
+  return (
+    <Card>
+      <CardBody>
+        <Flex>
+          {/* Only filter dropdown */}
+        </Flex>
+      </CardBody>
+    </Card>
+  );
+}
+```
+
+### 9d. Impact
+
+**Properties Page:**
+- No search input
+- Filter dropdown remains (Available/Occupied status filter)
+
+**Expenses Page:**
+- No search input
+- No filter dropdown (no filterOptions defined for expenses)
+
+**Helper Functions:**
+- `itemMatchesSearch` in `src/utils/helpers.js` is no longer used but kept for potential future use
+
+**Backend/Database:**
+- No backend changes required (search was client-side only)
+- No database changes required (no search queries existed)
+
+### 9e. Restoration Instructions
+
+To restore search functionality:
+
+1. **Restore Expenses Page:**
+   ```javascript
+   <UniversalPage
+     dataType="expenses"
+     searchFields={['description', 'notes']}  // Add back
+     // ...
+   />
+   ```
+
+2. **Restore Properties Page (if needed):**
+   ```javascript
+   <UniversalPage
+     dataType="properties"
+     searchFields={['city', 'status', 'notes']}  // Add back
+     // ...
+   />
+   ```
+
+3. **Restore UniversalPage:**
+   - Add back `searchFields` prop
+   - Add back `searchTerm` to preferences
+   - Restore search filtering logic
+   - Restore SearchFilter search props
+
+4. **Restore SearchFilter:**
+   - Add back search-related props
+   - Add back search input rendering
+   - Restore search imports
+
+**Note:** The `itemMatchesSearch` helper function in `src/utils/helpers.js` is still available and will work when restored.
+
+---
+
+## 10. Export Button Removed from Expenses - December 2024
+
+**Location:** `src/app/expenses/page.js`  
+**Status:** ✅ REMOVED (can be restored)
+
+**Reason for Removal:** Export functionality was not implemented, button was placeholder only. Removed to simplify UI.
+
+### 10a. Expenses Page Updates
+
+**Location:** `src/app/expenses/page.js`  
+**Changes:**
+- Removed `DownloadIcon` import from `@chakra-ui/icons`
+- Removed `actions` prop with Export button from UniversalPage
+
+**Before:**
+```javascript
+import { DownloadIcon } from "@chakra-ui/icons";
+
+export default function Expenses() {
+  return (
+    <UniversalPage
+      dataType="expenses"
+      title="Expenses"
+      currentPage="/expenses"
+      columns={getColumnsByType('expenses')}
+      actions={[
+        { label: "Export", icon: DownloadIcon, variant: "outline" }  // REMOVED
+      ]}
+      emptyMessage="No expenses recorded"
+    />
+  );
+}
+```
+
+**After:**
+```javascript
+export default function Expenses() {
+  return (
+    <UniversalPage
+      dataType="expenses"
+      title="Expenses"
+      currentPage="/expenses"
+      columns={getColumnsByType('expenses')}
+      emptyMessage="No expenses recorded"
+    />
+  );
+}
+```
+
+### 10b. Impact
+
+**Expenses Page:**
+- Export button removed from page header
+- No export functionality was implemented, so no handlers or API endpoints to remove
+- Cleaner UI with only "Add expense" button
+
+**Other Components:**
+- `PageHeader` component still supports `actions` prop (used by other pages if needed)
+- `UniversalPage` still supports `actions` prop (for future use)
+- No breaking changes to other pages
+
+**Backend/Database:**
+- No backend changes required (export functionality was never implemented)
+- No database changes required
+
+### 10c. Restoration Instructions
+
+To restore export functionality:
+
+1. **Restore Expenses Page:**
+   ```javascript
+   import { DownloadIcon } from "@chakra-ui/icons";
+   
+   <UniversalPage
+     dataType="expenses"
+     actions={[
+       { 
+         label: "Export", 
+         icon: DownloadIcon, 
+         variant: "outline",
+         onClick: handleExport  // Implement export handler
+       }
+     ]}
+     // ...
+   />
+   ```
+
+2. **Implement Export Handler:**
+   - Create `handleExport` function to export expenses data
+   - Implement CSV/Excel/PDF export functionality
+   - Add export API endpoint if needed (optional)
+
+**Note:** The `actions` prop system in `UniversalPage` and `PageHeader` is still fully functional and can be used for any future action buttons.
+
+---
+
+## 11. Settings Removed from Sidebar - December 2024
+
+**Location:** `src/utils/constants.js`, `src/components/shared/Sidebar.js`  
+**Status:** ✅ REMOVED (Settings still accessible via profile dropdown)
+
+**Reason for Removal:** Settings moved to profile dropdown menu for cleaner sidebar navigation. Dashboard, Properties, and Expenses converted to tabs.
+
+### 11a. Navigation Structure Changes
+
+**Location:** `src/utils/constants.js`  
+**Changes:**
+- Removed `NAVIGATION_ITEMS` array
+- Created `TAB_ITEMS` array for tab-based navigation
+- Removed Settings from navigation items
+
+**Before:**
+```javascript
+export const NAVIGATION_ITEMS = [
+  { href: "/dashboard", label: "🏠 Dashboard", icon: "🏠" },
+  { href: "/properties", label: "🏘️ Properties", icon: "🏘️" },
+  { href: "/expenses", label: "💡 Expenses", icon: "💡" },
+  { href: "/settings", label: "⚙️ Settings", icon: "⚙️" },  // REMOVED
+];
+```
+
+**After:**
+```javascript
+export const TAB_ITEMS = [
+  { id: "dashboard", label: "🏠 Dashboard", icon: "🏠" },
+  { id: "properties", label: "🏘️ Properties", icon: "🏘️" },
+  { id: "expenses", label: "💡 Expenses", icon: "💡" },
+];
+```
+
+### 11b. Sidebar Updates
+
+**Location:** `src/components/shared/Sidebar.js`  
+**Changes:**
+- Updated to use `TAB_ITEMS` instead of `NAVIGATION_ITEMS`
+- Changed from anchor links (`<a href>`) to button navigation with `router.push()`
+- Removed Settings button from sidebar
+- Settings remains accessible via profile dropdown in `PageHeader`
+
+**Before:**
+```javascript
+import { NAVIGATION_ITEMS } from "../../utils/constants";
+
+const NavigationContent = () => (
+  <VStack align="stretch" spacing={2}>
+    {NAVIGATION_ITEMS.map((item) => (
+      <Button
+        key={item.href}
+        as="a"
+        href={item.href}  // Direct navigation
+        // ...
+      >
+        {item.label}
+      </Button>
+    ))}
+  </VStack>
+);
+```
+
+**After:**
+```javascript
+import { TAB_ITEMS } from "../../utils/constants";
+import { useRouter, usePathname } from "next/navigation";
+
+const NavigationContent = () => (
+  <VStack align="stretch" spacing={2}>
+    {TAB_ITEMS.map((item) => (
+      <Button
+        key={item.id}
+        onClick={() => router.push(`/${item.id}`)}  // Router navigation
+        // ...
+      >
+        {item.label}
+      </Button>
+    ))}
+  </VStack>
+);
+```
+
+### 11c. Tab-Based Layout Implementation
+
+**Components Consolidated (December 2024):**
+- `src/components/shared/MainTabs.js` - **REMOVED** (merged into dashboard/page.js)
+- `src/components/shared/DashboardContent.js` - **REMOVED** (inlined into dashboard/page.js)
+- `src/components/shared/PropertiesContent.js` - **REMOVED** (inlined into dashboard/page.js)
+- `src/components/shared/ExpensesContent.js` - **REMOVED** (inlined into dashboard/page.js)
+
+**Location:** `src/app/dashboard/page.js`  
+**Changes:**
+- All tab content logic consolidated into single `dashboard/page.js` file
+- Tab switching handled by `TabContent` component within dashboard page
+- Removed separate page routes (`/properties`, `/expenses`) - now tabs only
+- Removed empty folders (`src/app/properties/`, `src/app/expenses/`)
+- Removed unused route constants (`ROUTES.properties`, `ROUTES.expenses`)
+
+**Before:**
+```javascript
+// Separate components for each tab
+// MainTabs.js, DashboardContent.js, PropertiesContent.js, ExpensesContent.js
+export default function Dashboard() {
+  return (
+    <PageLayout title="Dashboard" currentPage="/dashboard">
+      <MainTabs onTitleChange={setPageTitle} />
+    </PageLayout>
+  );
+}
+```
+
+**After:**
+```javascript
+// All tab logic consolidated in dashboard/page.js
+function TabContent({ onTitleChange }) {
+  const { activeTab, getTabTitle } = useTab();
+  // ... tab switching logic inline
+  switch (activeTab) {
+    case 0: return <DashboardStats ... />;
+    case 1: return <UniversalPage dataType="properties" ... />;
+    case 2: return <UniversalPage dataType="expenses" ... />;
+  }
+}
+
+export default function Dashboard() {
+  return (
+    <TabProvider>
+      <PageLayout title={pageTitle}>
+        <TabContent onTitleChange={setPageTitle} />
+      </PageLayout>
+    </TabProvider>
+  );
+}
+```
+
+### 11d. Impact
+
+**Sidebar:**
+- Settings button removed from sidebar navigation
+- Cleaner sidebar with only Dashboard, Properties, Expenses
+- Settings still accessible via profile dropdown menu
+
+**Navigation:**
+- Dashboard, Properties, Expenses are now tabs instead of separate pages
+- Single route (`/dashboard`) with client-side tab switching
+- Sidebar navigation switches tabs instantly (no page reload)
+- No separate routes for `/properties` or `/expenses` (removed)
+
+**User Experience:**
+- Faster navigation between sections (no page reload)
+- Consistent layout across all main sections
+- Settings moved to more appropriate location (profile menu)
+
+**Backend/Database:**
+- No backend changes required
+- No database changes required
+- Only `/dashboard` route exists (tabs are client-side only)
+
+### 11e. Restoration Instructions
+
+To restore Settings to sidebar:
+
+1. **Update constants:**
+   ```javascript
+   export const TAB_ITEMS = [
+     { id: "dashboard", label: "🏠 Dashboard", icon: "🏠" },
+     { id: "properties", label: "🏘️ Properties", icon: "🏘️" },
+     { id: "expenses", label: "💡 Expenses", icon: "💡" },
+     { id: "settings", label: "⚙️ Settings", icon: "⚙️" },  // Add back
+   ];
+   ```
+
+2. **Update Sidebar:**
+   - Add Settings button back to navigation
+   - Ensure Settings page route is accessible
+
+**Note:** Settings is still fully functional and accessible via the profile dropdown menu in the page header.
+
+---
+
+## 12. Component Consolidation - December 2024
+
+**Location:** `src/components/shared/`, `src/app/`  
+**Status:** ✅ CONSOLIDATED (4 component files removed, logic merged into dashboard page)
+
+**Reason for Consolidation:** Reduced file count by consolidating thin wrapper components into the main dashboard page. Simplified architecture with fewer files to maintain.
+
+### 12a. Components Removed
+
+**Files Deleted:**
+- `src/components/shared/MainTabs.js` - Merged into `dashboard/page.js`
+- `src/components/shared/DashboardContent.js` - Inlined into `dashboard/page.js`
+- `src/components/shared/PropertiesContent.js` - Inlined into `dashboard/page.js`
+- `src/components/shared/ExpensesContent.js` - Inlined into `dashboard/page.js`
+
+**Empty Folders Removed:**
+- `src/app/properties/` - Empty folder after removing redirect page
+- `src/app/expenses/` - Empty folder after removing redirect page
+
+**Unused Constants Removed:**
+- `ROUTES.properties` - Removed from `src/constants/app.js`
+- `ROUTES.expenses` - Removed from `src/constants/app.js`
+
+### 12b. Consolidation Details
+
+**Before:**
+```
+src/components/shared/
+├── MainTabs.js (36 lines) - Tab container
+├── DashboardContent.js (37 lines) - Dashboard wrapper
+├── PropertiesContent.js (15 lines) - Properties wrapper
+└── ExpensesContent.js (15 lines) - Expenses wrapper
+
+src/app/
+├── dashboard/page.js (25 lines)
+├── properties/ (empty folder)
+└── expenses/ (empty folder)
+```
+
+**After:**
+```
+src/components/shared/
+└── (4 files removed)
+
+src/app/
+└── dashboard/page.js (94 lines) - All tab logic consolidated here
+```
+
+### 12c. Implementation
+
+**Location:** `src/app/dashboard/page.js`  
+**Changes:**
+- Created `TabContent` component within dashboard page
+- Inlined all tab rendering logic (Dashboard, Properties, Expenses)
+- Removed dependency on separate content components
+- Single file contains all tab switching logic
+
+**Code Structure:**
+```javascript
+function TabContent({ onTitleChange }) {
+  const { activeTab, getTabTitle } = useTab();
+  // Dashboard data fetching
+  const { stats, activities, loading, error } = useDashboardData(user?.id);
+  
+  // Tab switching logic
+  switch (activeTab) {
+    case 0: return <DashboardStats ... />;
+    case 1: return <UniversalPage dataType="properties" ... />;
+    case 2: return <UniversalPage dataType="expenses" ... />;
+  }
+}
+
+export default function Dashboard() {
+  return (
+    <TabProvider>
+      <PageLayout title={pageTitle}>
+        <TabContent onTitleChange={setPageTitle} />
+      </PageLayout>
+    </TabProvider>
+  );
+}
+```
+
+### 12d. Impact
+
+**File Reduction:**
+- Removed 4 component files (103 lines total)
+- Removed 2 empty folders
+- Removed 2 unused route constants
+- Consolidated logic into single dashboard page (94 lines)
+
+**Benefits:**
+- Fewer files to maintain
+- All tab logic in one place (easier to understand)
+- Reduced component hierarchy depth
+- Faster development (no need to jump between files)
+
+**Functionality:**
+- All features remain unchanged
+- Tab switching still works instantly
+- No breaking changes to user experience
+
+### 12e. Restoration Instructions
+
+To restore separate component files:
+
+1. **Create MainTabs.js:**
+   ```javascript
+   // Extract TabContent component from dashboard/page.js
+   // Move to src/components/shared/MainTabs.js
+   ```
+
+2. **Create Content Components:**
+   ```javascript
+   // Extract each case from switch statement
+   // Create DashboardContent.js, PropertiesContent.js, ExpensesContent.js
+   ```
+
+3. **Update dashboard/page.js:**
+   ```javascript
+   import MainTabs from "../../components/shared/MainTabs";
+   // Use MainTabs component instead of TabContent
+   ```
+
+**Note:** Current consolidated approach is recommended for simpler maintenance.

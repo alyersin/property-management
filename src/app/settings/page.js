@@ -143,7 +143,7 @@ export default function Settings() {
 
   return (
     <ProtectedRoute>
-      <PageLayout title="Settings" currentPage="/settings">
+      <PageLayout title="Settings">
         <VStack spacing={6} align="stretch">
           {/* User Profile Section */}
           <Card>

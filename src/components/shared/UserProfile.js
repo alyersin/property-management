@@ -149,7 +149,7 @@ const UserProfile = ({ userId, onClose }) => {
                 onChange={(e) =>
                   setFormData({ ...formData, phone: e.target.value })
                 }
-                placeholder="(555) 123-4567"
+                placeholder="0722 123 456"
               />
             </Box>
 

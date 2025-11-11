@@ -38,16 +38,25 @@ Documentation of features and code that have been removed from the application.
 
 ### 📊 Recent Updates (December 2024)
 
-**Form Simplification:**
-- Simplified property and tenant forms for exam presentation
-- Removed fields: state, zip, sqft, emergency contact/phone from properties, tenants, and user profiles
-- Updated database schema to match simplified forms
-- Legacy migration script lives in Git history (`src/database/migration_remove_simplified_fields.sql`)
+**Major Refactoring:**
+- **Database-Only Architecture**: Removed `dataService.js` mock data, app now uses PostgreSQL exclusively
+- **Generic CRUD Factory**: API routes use `createCrudRoutes()` helper, reducing code from ~50 lines to ~8 lines per route
+- **Database CRUD Helpers**: Extracted generic helpers (`createGetAll`, `createUpdate`, `createDelete`) in `dbHelpers.js`
+- **Form Field Components**: Extracted `DynamicForm` field rendering into reusable components (`TextField`, `NumberField`, `SelectField`, `TextareaField`)
+- **Tab-Based Navigation**: Consolidated Dashboard, Properties, Expenses into single `/dashboard` route with client-side tabs
+- **Component Consolidation**: Merged `MainTabs`, `DashboardContent`, `PropertiesContent`, `ExpensesContent` into `dashboard/page.js`
+- **Code Cleanup**: Removed unused utilities, constants, hooks, empty folders, and route constants
+- **Schema Simplification**: Removed fields from `user_profiles` (bio, avatar_url, date_of_birth) and `properties` (address, rent)
+- **CI/CD Optimization**: Updated deployment workflow to use `git pull` strategy for less disruptive deployments
 
-**Documentation:**
-- **[FINANCES_EXPENSES_EXPLANATION.md](./FINANCES_EXPENSES_EXPLANATION.md)** - Explanation of Finances vs Expenses pages
-- **[MIGRATION_INSTRUCTIONS.md](./MIGRATION_INSTRUCTIONS.md)** - Guide for running database migrations
-- **[VERIFY_MIGRATION.sql](./VERIFY_MIGRATION.sql)** - SQL queries to verify migration success
+**Architecture Improvements:**
+- API routes reduced by 84% in code size
+- Database service reduced from 308 to ~250 lines
+- DynamicForm reduced from 221 to 95 lines
+- Removed 4 component files (consolidated into dashboard page)
+- Removed 2 empty route folders (`/properties`, `/expenses`)
+- Zero code duplication with universal components and generic helpers
+- Single route architecture (`/dashboard`) with instant tab switching
 
 ---
 
@@ -71,7 +80,11 @@ Documentation of features and code that have been removed from the application.
 **Last Updated:** December 2024
 
 **Recent Changes:**
-- Form simplification for exam presentation
-- Database schema updated (removed state, zip, sqft, emergency contact fields)
-- All documentation updated to reflect current state
+- Database-only architecture (PostgreSQL exclusively)
+- Generic CRUD factory pattern for API routes
+- Extracted form field components
+- Code refactoring and optimization
+- Schema simplification (removed unused fields)
+- CI/CD workflow improvements
+- All documentation updated to reflect current architecture
 

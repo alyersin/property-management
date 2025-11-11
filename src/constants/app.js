@@ -11,8 +11,6 @@ export const ROUTES = {
   login: "/login",
   register: "/register",
   dashboard: "/dashboard",
-  properties: "/properties",
-  expenses: "/expenses",
   settings: "/settings"
 };
 

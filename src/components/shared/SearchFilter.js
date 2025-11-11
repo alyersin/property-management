@@ -4,10 +4,6 @@ import {
   Card,
   CardBody,
   Flex,
-  Input,
-  InputGroup,
-  InputLeftElement,
-  Icon,
   Menu,
   MenuButton,
   MenuList,
@@ -17,24 +13,14 @@ import {
   Text,
   HStack,
 } from "@chakra-ui/react";
-import { SearchIcon } from "@chakra-ui/icons";
 import { ChevronDownIcon, CheckIcon } from "@chakra-ui/icons";
 
 export default function SearchFilter({
-  searchTerm = "",
-  onSearchChange,
-  searchPlaceholder = "Search...",
   filterValue = "all",
   onFilterChange,
   filterOptions = [],
   filterPlaceholder = "All",
 }) {
-  const handleSearchChange = (value) => {
-    if (typeof onSearchChange === 'function') {
-      onSearchChange(value);
-    }
-  };
-
   const handleFilterChange = (value) => {
     if (typeof onFilterChange === 'function') {
       onFilterChange(value);
@@ -45,6 +31,11 @@ export default function SearchFilter({
     ? filterOptions.find((option) => option.value === filterValue)
     : null;
 
+  // Only render if filter options exist
+  if (!Array.isArray(filterOptions) || filterOptions.length === 0) {
+    return null;
+  }
+
   return (
     <Card
       mb={6}
@@ -53,21 +44,6 @@ export default function SearchFilter({
     >
       <CardBody>
         <Flex gap={4} align="center" flexWrap="wrap">
-          <InputGroup maxW="360px" bg="bg.surface" borderRadius="lg">
-            <InputLeftElement pointerEvents="none" color="text.muted">
-              <Icon as={SearchIcon} />
-            </InputLeftElement>
-            <Input
-              placeholder={searchPlaceholder}
-              value={searchTerm || ""}
-              onChange={(e) => handleSearchChange(e.target.value)}
-              border="none"
-              _focusVisible={{
-                border: "none",
-                boxShadow: "0 0 0 1px var(--chakra-colors-accent-default)",
-              }}
-            />
-          </InputGroup>
           {Array.isArray(filterOptions) && filterOptions.length > 0 && (
             <Menu>
               <MenuButton

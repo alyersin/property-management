@@ -188,17 +188,13 @@ Configuration Files
 
 ## 📁 File Organization
 
-### **Pages (15-20 lines each)**
+### **Pages**
 ```
 app/
-├── dashboard/page.js      # Uses DashboardStats
-├── properties/page.js     # Uses UniversalPage
-├── tenants/page.js       # Uses UniversalPage
-├── finances/page.js      # Uses UniversalPage
-├── expenses/page.js      # Uses UniversalPage
-├── settings/page.js      # Custom settings form
-├── login/page.js         # Styled login form
-└── register/page.js      # Styled register form
+├── dashboard/page.js      # Main app with tabs (Dashboard, Properties, Expenses)
+├── settings/page.js        # Custom settings form
+├── login/page.js           # Styled login form
+└── register/page.js        # Styled register form
 ```
 
 ### **Backend API Routes**

@@ -260,17 +260,13 @@ export async function POST(request) {
 
 ## 🧩 Component Hierarchy
 
-### **Page Components (Minimal)**
+### **Page Components**
 ```
 app/
-├── dashboard/page.js          # 43 lines - Uses DashboardStats
-├── properties/page.js          # 17 lines - Uses UniversalPage
-├── tenants/page.js           # 17 lines - Uses UniversalPage
-├── finances/page.js          # 21 lines - Uses UniversalPage
-├── expenses/page.js          # 17 lines - Uses UniversalPage
-├── settings/page.js          # 120 lines - Custom settings form
-├── login/page.js             # 151 lines - Styled login form
-└── register/page.js          # 156 lines - Styled register form
+├── dashboard/page.js          # 94 lines - Main app with tabs (Dashboard, Properties, Expenses)
+├── settings/page.js           # 120 lines - Custom settings form
+├── login/page.js              # 151 lines - Styled login form
+└── register/page.js           # 156 lines - Styled register form
 ```
 
 ### **Backend API Components**

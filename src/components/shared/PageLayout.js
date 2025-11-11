@@ -8,16 +8,15 @@ export default function PageLayout({
   title,
   actions = [],
   children,
-  currentPage,
 }) {
   const isMobile = useBreakpointValue({ base: true, md: false });
 
   return (
     <Box minH="100vh" bg="bg.body">
-      {isMobile && <Sidebar currentPage={currentPage} />}
+      {isMobile && <Sidebar />}
       <PageHeader title={title} actions={actions} />
       <Flex align="flex-start">
-        {!isMobile && <Sidebar currentPage={currentPage} />}
+        {!isMobile && <Sidebar />}
         <Box
           flex="1"
           color="text.primary"

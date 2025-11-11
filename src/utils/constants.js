@@ -1,9 +1,8 @@
-// Navigation items for sidebar
-export const NAVIGATION_ITEMS = [
-  { href: "/dashboard", label: "🏠 Dashboard", icon: "🏠" },
-  { href: "/properties", label: "🏘️ Properties", icon: "🏘️" },
-  { href: "/expenses", label: "💡 Expenses", icon: "💡" },
-  { href: "/settings", label: "⚙️ Settings", icon: "⚙️" },
+// Tab items for main application (Dashboard, Properties, Expenses)
+export const TAB_ITEMS = [
+  { id: "dashboard", label: "🏠 Dashboard" },
+  { id: "properties", label: "🏘️ Properties" },
+  { id: "expenses", label: "💡 Expenses" },
 ];
 
 // Filter options for different pages

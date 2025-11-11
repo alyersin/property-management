@@ -1,11 +1,10 @@
-// Database service that can work with JSON files (development) or PostgreSQL (production)
-import dataService from './dataService';
+// Database service for PostgreSQL-backed persistence
 import { Pool } from 'pg';
 import bcrypt from 'bcryptjs';
+import { createGetAll, createGetById, createUpdate, createDelete } from './dbHelpers';
 
 class DatabaseService {
   constructor() {
-    this.isProduction = process.env.NODE_ENV === 'production';
     this.useDatabase = process.env.USE_DATABASE === 'true';
     
     // Initialize PostgreSQL connection pool if using database
@@ -36,33 +35,21 @@ class DatabaseService {
 
   // User operations
   async getUsers() {
-    if (this.useDatabase) {
       const result = await this.query('SELECT * FROM users');
       return result.rows;
-    }
-    return dataService.getUsers();
   }
 
   async getUserById(id) {
-    if (this.useDatabase) {
       const result = await this.query('SELECT * FROM users WHERE id = $1', [id]);
       const user = result.rows[0];
-      if (!user) return null;
-      const { password: _, ...userWithoutPassword } = user;
-      return userWithoutPassword;
-    }
-    const user = dataService.getUserById(id);
     if (!user) return null;
     const { password: _, ...userWithoutPassword } = user;
     return userWithoutPassword;
   }
 
   async getUserByEmail(email) {
-    if (this.useDatabase) {
       const result = await this.query('SELECT * FROM users WHERE email = $1', [email]);
       return result.rows[0];
-    }
-    return dataService.getUserByEmail(email);
   }
 
   async validateCredentials(email, password) {
@@ -81,7 +68,6 @@ class DatabaseService {
   }
 
   async createUser(userData) {
-    if (this.useDatabase) {
       const { email, password, name, role = 'user' } = userData;
       const result = await this.query(`
         INSERT INTO users (email, password, name, role)
@@ -89,12 +75,9 @@ class DatabaseService {
         RETURNING id, email, name, role, created_at
       `, [email, password, name, role]);
       return result.rows[0];
-    }
-    return dataService.createUser(userData);
   }
 
   async updateUser(id, updates) {
-    if (this.useDatabase) {
       const fields = Object.keys(updates);
       if (fields.length === 0) return this.getUserById(id);
 
@@ -116,46 +99,28 @@ class DatabaseService {
       if (!updatedUser) return null;
       const { password: _, ...userWithoutPassword } = updatedUser;
       return userWithoutPassword;
-    }
-    const updatesCopy = { ...updates };
-    if (updatesCopy.password) {
-      updatesCopy.password = await bcrypt.hash(updatesCopy.password, 12);
-    }
-    return dataService.updateUser(id, updatesCopy);
   }
 
   // User Profile operations (One-to-One relationship)
   async getUserProfile(userId) {
-    if (this.useDatabase) {
       const result = await this.query('SELECT * FROM user_profiles WHERE user_id = $1', [userId]);
       return result.rows[0];
-    }
-    return {
-      id: 1,
-      user_id: userId,
-      phone: null
-    };
   }
 
   async createUserProfile(userId, profileData) {
-    if (this.useDatabase) {
-      // Note: emergency_contact and emergency_phone fields removed from database schema
       const result = await this.query(`
-        INSERT INTO user_profiles (user_id, phone)
-        VALUES ($1, $2)
+      INSERT INTO user_profiles (user_id, phone)
+      VALUES ($1, $2)
         RETURNING *
-      `, [userId, profileData.phone ?? null]);
+    `, [userId, profileData.phone ?? null]);
       return result.rows[0];
-    }
-    return { id: Date.now(), user_id: userId, ...profileData };
   }
 
   async updateUserProfile(userId, updates) {
-    if (this.useDatabase) {
-      if (!updates || Object.keys(updates).length === 0) {
-        const existing = await this.getUserProfile(userId);
-        return existing;
-      }
+    if (!updates || Object.keys(updates).length === 0) {
+      const existing = await this.getUserProfile(userId);
+      return existing;
+    }
       const setClause = Object.keys(updates).map((key, index) => `${key} = $${index + 2}`).join(', ');
       const values = [userId, ...Object.values(updates)];
       const result = await this.query(`
@@ -163,100 +128,43 @@ class DatabaseService {
         WHERE user_id = $1 RETURNING *
       `, values);
       return result.rows[0];
-    }
-    return { user_id: userId, ...updates };
   }
 
   // Property operations with user_id filtering
-  async getProperties(userId = null) {
-    if (this.useDatabase) {
-      if (!userId) {
-        throw new Error('userId is required for getProperties');
-      }
-      const result = await this.query(`
-        SELECT p.*
-        FROM properties p
-        WHERE p.user_id = $1
-        ORDER BY p.created_at DESC
-      `, [userId]);
-      return result.rows;
-    }
-    return dataService.getProperties();
+  async getProperties(userId) {
+    return createGetAll(this.query.bind(this), 'properties', 'created_at DESC')(userId);
   }
 
-  async getPropertyById(id, userId = null) {
-    if (this.useDatabase) {
-      if (!userId) {
-        throw new Error('userId is required for getPropertyById');
-      }
-      const result = await this.query('SELECT * FROM properties WHERE id = $1 AND user_id = $2', [id, userId]);
-      return result.rows[0];
-    }
-    return dataService.getPropertyById(id);
+  async getPropertyById(id, userId) {
+    return createGetById(this.query.bind(this), 'properties')(id, userId);
   }
 
-  async addProperty(property, userId = null) {
-    if (this.useDatabase) {
+  async addProperty(property, userId) {
       if (!userId) {
         throw new Error('userId is required for addProperty');
       }
-      // Note: state, zip, and sqft fields removed from database schema
       const result = await this.query(`
-        INSERT INTO properties (user_id, city, bedrooms, bathrooms, status, notes)
-        VALUES ($1, $2, $3, $4, $5, $6)
+      INSERT INTO properties (user_id, city, bedrooms, bathrooms, status, notes)
+      VALUES ($1, $2, $3, $4, $5, $6)
         RETURNING *
-      `, [userId, property.city, property.bedrooms, property.bathrooms, property.status, property.notes]);
+    `, [userId, property.city, property.bedrooms, property.bathrooms, property.status, property.notes]);
       return result.rows[0];
     }
-    return dataService.addProperty(property);
+
+  async updateProperty(id, updates, userId) {
+    return createUpdate(this.query.bind(this), 'properties')(id, updates, userId);
   }
 
-  async updateProperty(id, updates, userId = null) {
-    if (this.useDatabase) {
-      if (!userId) {
-        throw new Error('userId is required for updateProperty');
-      }
-      const setClause = Object.keys(updates).map((key, index) => `${key} = $${index + 3}`).join(', ');
-      const values = [id, userId, ...Object.values(updates)];
-      const result = await this.query(`
-        UPDATE properties SET ${setClause}, updated_at = CURRENT_TIMESTAMP
-        WHERE id = $1 AND user_id = $2 RETURNING *
-      `, values);
-      return result.rows[0];
-    }
-    return dataService.updateProperty(id, updates);
-  }
-
-  async deleteProperty(id, userId = null) {
-    if (this.useDatabase) {
-      if (!userId) {
-        throw new Error('userId is required for deleteProperty');
-      }
-      const result = await this.query('DELETE FROM properties WHERE id = $1 AND user_id = $2 RETURNING *', [id, userId]);
-      return result.rows[0];
-    }
-    return dataService.deleteProperty(id);
+  async deleteProperty(id, userId) {
+    return createDelete(this.query.bind(this), 'properties')(id, userId);
   }
 
   // Expense operations with user_id filtering
-  async getExpenses(userId = null) {
-    if (this.useDatabase) {
-      if (!userId) {
-        throw new Error('userId is required for getExpenses');
-      }
-      const result = await this.query(`
-        SELECT e.*
-        FROM expenses e
-        WHERE e.user_id = $1
-        ORDER BY e.date DESC
-      `, [userId]);
-      return result.rows;
-    }
-    return dataService.getExpenses();
+  async getExpenses(userId) {
+    return createGetAll(this.query.bind(this), 'expenses', 'date DESC')(userId);
   }
 
-  async addExpenses(expense, userId = null) {
-    if (this.useDatabase) {
+  async addExpenses(expense, userId) {
       if (!userId) {
         throw new Error('userId is required for addExpenses');
       }
@@ -267,39 +175,17 @@ class DatabaseService {
       `, [userId, expense.description, expense.amount, expense.date, expense.notes]);
       return result.rows[0];
     }
-    return dataService.addExpenses(expense);
+
+  async updateExpenses(id, updates, userId) {
+    return createUpdate(this.query.bind(this), 'expenses')(id, updates, userId);
   }
 
-  async updateExpenses(id, updates, userId = null) {
-    if (this.useDatabase) {
-      if (!userId) {
-        throw new Error('userId is required for updateExpenses');
-      }
-      const setClause = Object.keys(updates).map((key, index) => `${key} = $${index + 3}`).join(', ');
-      const values = [id, userId, ...Object.values(updates)];
-      const result = await this.query(`
-        UPDATE expenses SET ${setClause}, updated_at = CURRENT_TIMESTAMP
-        WHERE id = $1 AND user_id = $2 RETURNING *
-      `, values);
-      return result.rows[0];
-    }
-    return dataService.updateExpenses(id, updates);
-  }
-
-  async deleteExpenses(id, userId = null) {
-    if (this.useDatabase) {
-      if (!userId) {
-        throw new Error('userId is required for deleteExpenses');
-      }
-      const result = await this.query('DELETE FROM expenses WHERE id = $1 AND user_id = $2 RETURNING *', [id, userId]);
-      return result.rows[0];
-    }
-    return dataService.deleteExpenses(id);
+  async deleteExpenses(id, userId) {
+    return createDelete(this.query.bind(this), 'expenses')(id, userId);
       }
 
   // Dashboard operations
   async getDashboardStats(userId = null) {
-    if (this.useDatabase) {
       if (!userId) {
         throw new Error('userId is required for getDashboardStats');
       }
@@ -323,23 +209,19 @@ class DatabaseService {
         monthlyExpenses: parseFloat(expensesResult.rows[0].expenses || 0),
         occupancyRate: propertiesResult.rows[0].total > 0 
           ? Math.round((parseInt(propertiesResult.rows[0].occupied) / parseInt(propertiesResult.rows[0].total)) * 100)
-          : 0,
-        availableProperties: propertiesResult.rows[0].total > 0
-          ? parseInt(propertiesResult.rows[0].total) - parseInt(propertiesResult.rows[0].occupied)
+        : 0,
+      availableProperties: propertiesResult.rows[0].total > 0
+        ? parseInt(propertiesResult.rows[0].total) - parseInt(propertiesResult.rows[0].occupied)
           : 0
       };
       return stats;
-    }
-    return dataService.getDashboardStats();
   }
 
   async getRecentActivities(userId = null) {
-    if (this.useDatabase) {
       if (!userId) {
         throw new Error('userId is required for getRecentActivities');
       }
       
-      // This is a simplified version - you may want to make it more sophisticated
       const result = await this.query(`
         SELECT id, description as message, created_at, amount
         FROM expenses
@@ -355,8 +237,6 @@ class DatabaseService {
         time: this.getTimeAgo(row.created_at),
         amount: row.amount
       }));
-    }
-    return dataService.getRecentActivities();
   }
 
   getTimeAgo(dateString) {

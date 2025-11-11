@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useDisclosure } from "@chakra-ui/react";
+import { useDisclosure, Box, Flex, Heading, HStack, Button, Icon } from "@chakra-ui/react";
 import { AddIcon } from "@chakra-ui/icons";
 
 import PageLayout from "./PageLayout";
@@ -13,33 +13,33 @@ import { useAppData } from "../../hooks/useAppData";
 import usePersistentState from "../../hooks/usePersistentState";
 import { getFieldsByType } from "../../config/formFields";
 import { FILTER_OPTIONS } from "../../utils/constants";
-import { itemMatchesSearch, itemMatchesStatus } from "../../utils/helpers";
+import { itemMatchesStatus } from "../../utils/helpers";
 import ProtectedRoute from "../auth/ProtectedRoute";
 import logger from "../../utils/logger";
 import { STORAGE_KEYS } from "../../constants/app";
+import { useAuth } from "../../contexts/AuthContext";
 
 const UniversalPage = ({ 
   dataType, 
   title, 
-  currentPage,
-  searchFields = [],
   filterOptions = [],
   columns = [],
   actions = [],
-  emptyMessage = "No data available"
+  emptyMessage = "No data available",
+  hidePageLayout = false
 }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [editingItem, setEditingItem] = useState(null);
+  const { user } = useAuth();
 
   // Load page preferences from localStorage
   const storageKey = `${STORAGE_KEYS.preferences}_${dataType}`;
   const [preferences, setPreferences] = usePersistentState(storageKey, {
-    searchTerm: "",
     filterValue: "all",
     lastUpdated: null,
   });
 
-  const { searchTerm = "", filterValue = "all" } = preferences;
+  const { filterValue = "all" } = preferences;
 
   const updatePreferences = (updates) =>
     setPreferences((prev) => ({
@@ -48,15 +48,14 @@ const UniversalPage = ({
       lastUpdated: new Date().toISOString(),
     }));
   
-  const { data, loading, error, create, update, remove } = useAppData(dataType);
+  const { data, loading, error, create, update, remove } = useAppData(dataType, user?.id);
   const fields = getFieldsByType(dataType);
 
   // Ensure data is always an array
   const safeData = Array.isArray(data) ? data : [];
 
-  // Filter data
+  // Filter data by status only
   const filteredData = safeData.filter(item => 
-    itemMatchesSearch(item, searchTerm, searchFields) && 
     itemMatchesStatus(item, filterValue)
   );
 
@@ -114,6 +113,80 @@ const UniversalPage = ({
     expenses: 'expenses'
   }[dataType] || dataType.replace(/([A-Z])/g, ' $1').toLowerCase().trim();
 
+  const content = (
+    <>
+      {availableFilterOptions.length > 0 && (
+        <SearchFilter
+          filterValue={filterValue}
+          onFilterChange={(value) => updatePreferences({ filterValue: value })}
+          filterOptions={availableFilterOptions}
+        />
+      )}
+
+      <DataTable
+        data={filteredData}
+        columns={columns}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+        isLoading={loading}
+        emptyMessage={emptyMessage}
+      />
+
+      <FormModal
+        isOpen={isOpen}
+        onClose={handleClose}
+        title={editingItem ? `Edit ${singularForm}` : `Add ${singularForm}`}
+        onSubmit={handleSubmit}
+      >
+        <DynamicForm
+          fields={fields}
+          values={editingItem || {}}
+          onChange={() => {}} // Handled by DynamicForm internally
+          onSubmit={handleSubmit}
+          onCancel={handleClose}
+          submitLabel={editingItem ? "Update" : "Create"}
+          cancelLabel="Cancel"
+          isLoading={loading}
+        />
+      </FormModal>
+    </>
+  );
+
+  if (hidePageLayout) {
+    return (
+      <ProtectedRoute>
+        <Box>
+          <Flex justify="space-between" align="center" mb={6}>
+            <Heading size="lg" color="accent.emphasis" fontWeight="700">
+              {title}
+            </Heading>
+            <HStack spacing={4}>
+              <Button
+                size="sm"
+                leftIcon={<AddIcon />}
+                onClick={handleAdd}
+              >
+                Add {singularForm}
+              </Button>
+              {actions.map((action, index) => (
+                <Button
+                  key={index}
+                  size="sm"
+                  variant={action.variant || "outline"}
+                  leftIcon={action.icon ? <Icon as={action.icon} boxSize={4} /> : undefined}
+                  onClick={action.onClick}
+                >
+                  {action.label}
+                </Button>
+              ))}
+            </HStack>
+          </Flex>
+          {content}
+        </Box>
+      </ProtectedRoute>
+    );
+  }
+
   return (
     <ProtectedRoute>
       <PageLayout
@@ -122,43 +195,8 @@ const UniversalPage = ({
           { label: `Add ${singularForm}`, icon: AddIcon, onClick: handleAdd },
           ...actions
         ]}
-        currentPage={currentPage}
       >
-        <SearchFilter
-          searchTerm={searchTerm}
-          onSearchChange={(value) => updatePreferences({ searchTerm: value })}
-          filterValue={filterValue}
-          onFilterChange={(value) => updatePreferences({ filterValue: value })}
-          filterOptions={availableFilterOptions}
-          placeholder={`Search ${displayName}...`}
-        />
-
-        <DataTable
-          data={filteredData}
-          columns={columns}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-          isLoading={loading}
-          emptyMessage={emptyMessage}
-        />
-
-        <FormModal
-          isOpen={isOpen}
-          onClose={handleClose}
-          title={editingItem ? `Edit ${singularForm}` : `Add ${singularForm}`}
-          onSubmit={handleSubmit}
-        >
-          <DynamicForm
-            fields={fields}
-            values={editingItem || {}}
-            onChange={() => {}} // Handled by DynamicForm internally
-            onSubmit={handleSubmit}
-            onCancel={handleClose}
-            submitLabel={editingItem ? "Update" : "Create"}
-            cancelLabel="Cancel"
-            isLoading={loading}
-          />
-        </FormModal>
+        {content}
       </PageLayout>
     </ProtectedRoute>
   );

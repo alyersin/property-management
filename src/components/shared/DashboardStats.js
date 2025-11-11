@@ -15,7 +15,17 @@ import {
 } from "@chakra-ui/react";
 import StatCard from "./StatCard";
 
+const EMPTY_STATS = {
+  totalProperties: 0,
+  occupiedProperties: 0,
+  monthlyExpenses: 0,
+  availableProperties: 0,
+  occupancyRate: 0,
+};
+
 const DashboardStats = ({ stats, recentActivities = [] }) => {
+  const safeStats = stats ?? EMPTY_STATS;
+
   const getActivityIcon = (type) => {
     const icons = {
       payment: "💰",
@@ -37,12 +47,12 @@ const DashboardStats = ({ stats, recentActivities = [] }) => {
   };
 
   const available =
-    stats.totalProperties > 0
-      ? stats.availableProperties ?? (stats.totalProperties - stats.occupiedProperties)
+    safeStats.totalProperties > 0
+      ? safeStats.availableProperties ?? (safeStats.totalProperties - safeStats.occupiedProperties)
       : 0;
   const availablePercentage =
-    stats.totalProperties > 0
-      ? (available / stats.totalProperties) * 100
+    safeStats.totalProperties > 0
+      ? (available / safeStats.totalProperties) * 100
       : 0;
 
   return (
@@ -51,21 +61,21 @@ const DashboardStats = ({ stats, recentActivities = [] }) => {
       <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} spacing={6}>
         <StatCard
           label="Total Properties"
-          value={stats.totalProperties}
-          helpText={`${stats.occupiedProperties} occupied`}
+          value={safeStats.totalProperties}
+          helpText={`${safeStats.occupiedProperties} occupied`}
           color="accent.emphasis"
           arrowType="increase"
         />
         <StatCard
           label="Occupied Properties"
-          value={stats.occupiedProperties}
-          helpText={`of ${stats.totalProperties}`}
+          value={safeStats.occupiedProperties}
+          helpText={`of ${safeStats.totalProperties}`}
           color="accent.default"
           arrowType="increase"
         />
         <StatCard
           label="Monthly Expenses"
-          value={`$${stats.monthlyExpenses.toLocaleString()}`}
+          value={`$${safeStats.monthlyExpenses.toLocaleString()}`}
           helpText="This month"
           color="danger.default"
           arrowType="decrease"
@@ -95,10 +105,10 @@ const DashboardStats = ({ stats, recentActivities = [] }) => {
             <Flex justify="space-between" mb={2}>
               <Text color="text.muted">Occupancy Rate</Text>
               <Text fontWeight="bold" color="text.primary">
-                {stats.occupancyRate}%
+                {safeStats.occupancyRate}%
               </Text>
             </Flex>
-            <Progress value={stats.occupancyRate} size="lg" />
+            <Progress value={safeStats.occupancyRate} size="lg" />
           </Box>
           <Box>
             <Flex justify="space-between" mb={2}>

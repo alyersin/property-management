@@ -15,35 +15,41 @@ import {
   useBreakpointValue,
 } from "@chakra-ui/react";
 import { HamburgerIcon } from "@chakra-ui/icons";
-import { NAVIGATION_ITEMS } from "../../utils/constants";
+import { useTab } from "../../contexts/TabContext";
+import { TAB_ITEMS } from "../../utils/constants";
 
-export default function Sidebar({ currentPage }) {
+export default function Sidebar() {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const isMobile = useBreakpointValue({ base: true, md: false });
+  const { activeTab, switchTab } = useTab();
 
   const NavigationContent = () => (
     <VStack align="stretch" spacing={2}>
-      {NAVIGATION_ITEMS.map((item) => (
-        <Button
-          key={item.href}
-          as="a"
-          href={item.href}
-          variant="ghost"
-          justifyContent="flex-start"
-          height="48px"
-          px={4}
-          fontWeight="500"
-          bg={currentPage === item.href ? "accent.subtle" : "transparent"}
-          color={currentPage === item.href ? "accent.emphasis" : "text.muted"}
-          _hover={{
-            bg: "accent.subtle",
-            color: "accent.emphasis",
-          }}
-          onClick={isMobile ? onClose : undefined}
-        >
-          {item.label}
-        </Button>
-      ))}
+      {TAB_ITEMS.map((item, index) => {
+        const isActive = activeTab === index;
+        return (
+          <Button
+            key={item.id}
+            onClick={() => {
+              switchTab(index);
+              if (isMobile) onClose();
+            }}
+            variant="ghost"
+            justifyContent="flex-start"
+            height="48px"
+            px={4}
+            fontWeight="500"
+            bg={isActive ? "accent.subtle" : "transparent"}
+            color={isActive ? "accent.emphasis" : "text.muted"}
+            _hover={{
+              bg: "accent.subtle",
+              color: "accent.emphasis",
+            }}
+          >
+            {item.label}
+          </Button>
+        );
+      })}
     </VStack>
   );
 
