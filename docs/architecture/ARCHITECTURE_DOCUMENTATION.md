@@ -43,9 +43,9 @@ The Home Admin application is a **Next.js 15** property management system built 
 │  │                 │    │                 │    │              │ │
 │  │ • Dashboard     │◄───┤ • UniversalPage │◄───┤ • useAppData │ │
 │  │ • Properties    │    │ • DynamicForm   │    │ • useForm    │ │
-│  │ • Tenants       │    │ • DataTable     │    │              │ │
-│  │ • Finances      │    │ • DashboardStats│    │              │ │
-│  │ • Expenses      │    │ • PageLayout    │    │              │ │
+│  │ • Expenses      │    │ • DataTable     │    │              │ │
+│  │ • Settings      │    │ • DashboardStats│    │              │ │
+│  │ • Login/Register│    │ • PageLayout    │    │              │ │
 │  │ • Settings      │    │ • SearchFilter  │    │              │ │
 │  │ • Login/Register│    │ • FormModal     │    │              │ │
 │  └─────────────────┘    └─────────────────┘    └──────────────┘ │
@@ -101,8 +101,6 @@ src/
 │   │       └── register/route.js # Register API (51 lines)
 │   ├── dashboard/page.js          # Dashboard (43 lines)
 │   ├── properties/page.js         # Properties (17 lines)
-│   ├── tenants/page.js           # Tenants (17 lines)
-│   ├── finances/page.js          # Finances (21 lines)
 │   ├── expenses/page.js          # Expenses (17 lines)
 │   ├── settings/page.js          # Settings (120 lines)
 │   ├── login/page.js             # Login (151 lines)
@@ -622,17 +620,13 @@ CREATE TABLE transactions (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Expenses table (One-to-Many from properties)
+-- Expenses table (tied to users)
 CREATE TABLE expenses (
     id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     description VARCHAR(255) NOT NULL,
     amount DECIMAL(10,2) NOT NULL,
     date DATE NOT NULL,
-    category VARCHAR(100) NOT NULL,
-    property_id INTEGER REFERENCES properties(id),
-    vendor VARCHAR(255),
-    status VARCHAR(50) DEFAULT 'Paid',
-    receipt VARCHAR(255),
     notes TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP

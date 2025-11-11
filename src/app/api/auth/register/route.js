@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import bcrypt from 'bcryptjs';
 import logger from '../../../../utils/logger';
 import databaseService from '../../../../services/databaseService';
 
@@ -36,10 +37,12 @@ export async function POST(request) {
       );
     }
 
+    const hashedPassword = await bcrypt.hash(password, 12);
+
     // Create user in database
     const newUser = await databaseService.createUser({
       email,
-      password,
+      password: hashedPassword,
       name,
       role: 'user'
     });

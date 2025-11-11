@@ -7,10 +7,10 @@
 SELECT
     COUNT(*) = 0 AS tenants_tables_absent
 FROM information_schema.tables
-WHERE table_name IN ('tenants', 'property_tenants', 'transactions', 'expenses');
+WHERE table_name IN ('tenants', 'property_tenants', 'transactions');
 
 -- ============================================
--- Inspect financial_records columns
+-- Inspect expenses columns
 -- ============================================
 SELECT
     column_name,
@@ -18,40 +18,38 @@ SELECT
     is_nullable,
     column_default
 FROM information_schema.columns
-WHERE table_name = 'financial_records'
+WHERE table_name = 'expenses'
 ORDER BY ordinal_position;
 
 -- Expected columns:
--- id, user_id, type, description, amount, date, category, status, vendor,
--- receipt, notes, created_at, updated_at
+-- id, user_id, description, amount, date, notes, created_at, updated_at
 
 -- ============================================
--- Check financial_records indexes
+-- Check expenses indexes
 -- ============================================
 SELECT
     indexname,
     indexdef
 FROM pg_indexes
-WHERE tablename = 'financial_records'
+WHERE tablename = 'expenses'
 ORDER BY indexname;
 
 -- Expected indexes:
--- idx_financial_records_user, idx_financial_records_date,
--- idx_financial_records_type, idx_financial_records_status
+-- idx_expenses_user, idx_expenses_date
 
 -- ============================================
 -- Quick PASS/FAIL summary
 -- ============================================
 SELECT
-    'financial_records columns' AS check_type,
+    'expenses columns' AS check_type,
     CASE
-        WHEN COUNT(*) FILTER (WHERE column_name IN ('type','status','vendor','receipt')) = 4
-         AND COUNT(*) = 13
-        THEN '✅ PASS - financial_records schema matches expected columns'
-        ELSE '❌ FAIL - Review financial_records schema'
+        WHEN COUNT(*) FILTER (WHERE column_name = 'notes') = 1
+         AND COUNT(*) = 8
+        THEN '✅ PASS - expenses schema matches expected columns'
+        ELSE '❌ FAIL - Review expenses schema'
     END AS result
 FROM information_schema.columns
-WHERE table_name = 'financial_records'
+WHERE table_name = 'expenses'
 UNION ALL
 SELECT
     'legacy tables removed' AS check_type,
@@ -60,5 +58,5 @@ SELECT
         ELSE '❌ FAIL - drop legacy tables'
     END AS result
 FROM information_schema.tables
-WHERE table_name IN ('tenants', 'property_tenants', 'transactions', 'expenses');
+WHERE table_name IN ('tenants', 'property_tenants', 'transactions');
 

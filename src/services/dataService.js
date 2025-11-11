@@ -8,7 +8,7 @@ class DataService {
     this.data = {
       users: [], // SECURITY: No user data in client-side code
       properties: [],
-      financialRecords: []
+      expenses: []
     };
   }
 
@@ -17,7 +17,7 @@ class DataService {
     try {
       const dataToSave = {
         properties: this.data.properties,
-        financialRecords: this.data.financialRecords,
+        expenses: this.data.expenses,
         lastSaved: new Date().toISOString()
       };
       localStorage.setItem(this.storageKey, JSON.stringify(dataToSave));
@@ -32,7 +32,7 @@ class DataService {
       if (saved) {
         const parsedData = JSON.parse(saved);
         this.data.properties = parsedData.properties || this.data.properties;
-        this.data.financialRecords = parsedData.financialRecords || this.data.financialRecords;
+        this.data.expenses = parsedData.expenses || this.data.expenses;
       }
     } catch (error) {
       console.warn('Failed to load data from localStorage:', error);
@@ -83,12 +83,13 @@ class DataService {
       email: userData.email,
       name: userData.name,
       role: userData.role || 'user',
-      password: userData.password, // Note: In production, password should be hashed
+      password: userData.password,
       createdAt: new Date().toISOString()
     };
     this.data.users.push(newUser);
     // Note: users array is not persisted to localStorage for security
-    return newUser;
+    const { password, ...userWithoutPassword } = newUser;
+    return userWithoutPassword;
   }
 
   updateUser(id, updates) {
@@ -99,7 +100,8 @@ class DataService {
         ...updates,
         updatedAt: new Date().toISOString()
       };
-      return this.data.users[index];
+      const { password, ...userWithoutPassword } = this.data.users[index];
+      return userWithoutPassword;
     }
     return null;
   }
@@ -149,45 +151,45 @@ class DataService {
     return null;
   }
 
-  // Financial record operations
-  getFinancialRecords() {
-    return this.data.financialRecords;
+  // Expense operations
+  getExpenses() {
+    return this.data.expenses;
   }
 
-  getFinancialRecordById(id) {
-    return this.data.financialRecords.find(record => record.id === parseInt(id));
+  getExpenseById(id) {
+    return this.data.expenses.find(expense => expense.id === parseInt(id));
   }
 
-  addFinancialRecords(record) {
-    const newRecord = {
-      ...record,
-      id: Math.max(...this.data.financialRecords.map(r => r.id), 0) + 1,
+  addExpenses(expense) {
+    const newExpense = {
+      ...expense,
+      id: Math.max(...this.data.expenses.map(r => r.id), 0) + 1,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
-    this.data.financialRecords.push(newRecord);
+    this.data.expenses.push(newExpense);
     this.saveToStorage();
-    return newRecord;
+    return newExpense;
   }
 
-  updateFinancialRecords(id, updates) {
-    const index = this.data.financialRecords.findIndex(r => r.id === parseInt(id));
+  updateExpenses(id, updates) {
+    const index = this.data.expenses.findIndex(r => r.id === parseInt(id));
     if (index !== -1) {
-      this.data.financialRecords[index] = {
-        ...this.data.financialRecords[index],
+      this.data.expenses[index] = {
+        ...this.data.expenses[index],
         ...updates,
         updatedAt: new Date().toISOString()
       };
       this.saveToStorage();
-      return this.data.financialRecords[index];
+      return this.data.expenses[index];
     }
     return null;
   }
 
-  deleteFinancialRecords(id) {
-    const index = this.data.financialRecords.findIndex(r => r.id === parseInt(id));
+  deleteExpenses(id) {
+    const index = this.data.expenses.findIndex(r => r.id === parseInt(id));
     if (index !== -1) {
-      const deleted = this.data.financialRecords.splice(index, 1)[0];
+      const deleted = this.data.expenses.splice(index, 1)[0];
       this.saveToStorage();
       return deleted;
     }
@@ -197,23 +199,19 @@ class DataService {
   // Dashboard statistics
   getDashboardStats() {
     const properties = this.getProperties();
-    const financialRecords = this.getFinancialRecords();
+    const expenses = this.getExpenses();
     
     const totalProperties = properties.length;
     const occupiedProperties = properties.filter(p => p.status === 'Occupied').length;
     
+    const monthlyIncome = properties
+      .filter(p => p.status === 'Occupied')
+      .reduce((sum, p) => sum + Number(p.rent || 0), 0);
+    
     const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
-    const monthlyRecords = financialRecords.filter(t => 
-      t.date.startsWith(currentMonth)
-    );
-    
-    const monthlyIncome = monthlyRecords
-      .filter(t => t.type === 'Income')
-      .reduce((sum, t) => sum + Number(t.amount), 0);
-    
-    const monthlyExpenses = Math.abs(monthlyRecords
-      .filter(t => t.type === 'Expense')
-      .reduce((sum, t) => sum + Number(t.amount), 0));
+    const monthlyExpenses = expenses
+      .filter(expense => expense.date && expense.date.startsWith(currentMonth))
+      .reduce((sum, expense) => sum + Number(expense.amount || 0), 0);
     
     const netIncome = monthlyIncome - monthlyExpenses;
     
@@ -229,7 +227,16 @@ class DataService {
 
   // Recent activities
   getRecentActivities() {
-    return [];
+    return [...this.data.expenses]
+      .sort((a, b) => new Date(b.updatedAt || b.date) - new Date(a.updatedAt || a.date))
+      .slice(0, 5)
+      .map((expense) => ({
+        id: `expense-${expense.id}`,
+        type: 'expense',
+        message: expense.description,
+        time: this.getTimeAgo(expense.updatedAt || expense.date),
+        amount: expense.amount
+      }));
   }
 
   getTimeAgo(dateString) {

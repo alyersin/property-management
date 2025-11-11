@@ -1,7 +1,7 @@
 # Home Admin Project - Complete Setup Guide
 
 > **Update – November 2025**  
-> Tenant-related features were removed and the Finances and Expenses pages were merged. Fresh databases only need `src/database/schema.sql` applied during setup.
+> Tenant-related features were removed and the Finances tab was replaced with a utility-focused Expenses page. Fresh databases only need `src/database/schema.sql` applied during setup.
 
 This guide will walk you through setting up the Home Admin project from scratch on any machine (Windows, Mac, or Linux).
 
@@ -77,14 +77,14 @@ docker exec -i home-admin-postgres psql -U postgres -d home_admin -c "\dt"
 # Check sample data
 docker exec -i home-admin-postgres psql -U postgres -d home_admin -c "SELECT COUNT(*) FROM users;"
 docker exec -i home-admin-postgres psql -U postgres -d home_admin -c "SELECT COUNT(*) FROM properties;"
-docker exec -i home-admin-postgres psql -U postgres -d home_admin -c "SELECT COUNT(*) FROM financial_records;"
+docker exec -i home-admin-postgres psql -U postgres -d home_admin -c "SELECT COUNT(*) FROM expenses;"
 ```
 
 Expected output should show:
-- 4 tables created (`users`, `user_profiles`, `properties`, `financial_records`)
+- 4 tables created (`users`, `user_profiles`, `properties`, `expenses`)
 - 0 users (create accounts through the app)
 - 0 properties  
-- 0 financial records (ready for user input)
+- 0 expenses (ready for user input)
 
 ## Step 6: Set Up VS Code Database Extension
 
@@ -127,7 +127,7 @@ The application will be available at: http://localhost:3000
 2. **Explore Features**:
    - Dashboard with statistics
    - Properties management
-   - Finances & Expenses management
+   - Expenses management
    - Settings with user profiles
 
 ## Database Schema Overview
@@ -139,7 +139,7 @@ The project includes all three types of SQL relationships:
 
 ### One-to-Many (1:N)
 - `users` → `properties`
-- `users` → `financial_records`
+- `users` → `expenses`
 
 ### Many-to-Many (M:N)
 - _None (amenities and tenants features removed)_

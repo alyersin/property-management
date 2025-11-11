@@ -1,7 +1,7 @@
 ## Tenant Management Removal - November 2025
 
 ### Overview
-To simplify the Home Admin walkthrough we removed every tenant-specific feature and merged all financial tracking into a single Finances & Expenses experience.
+To simplify the Home Admin walkthrough we removed every tenant-specific feature and ultimately focused financial tracking on a single utility expenses experience.
 
 ### Elements Removed
 - **Navigation item** – `src/utils/constants.js`
@@ -11,7 +11,7 @@ To simplify the Home Admin walkthrough we removed every tenant-specific feature 
 { href: "/expenses", label: "💸 Expenses", icon: "💸" },
 
 // After
-{ href: "/finances", label: "💰 Finances & Expenses", icon: "💰" },
+{ href: "/expenses", label: "💡 Expenses", icon: "💡" },
 ```
 - **Tenants page** – `src/app/tenants/page.js` (entire file deleted)
 - **Property tenant management modal** – `src/components/shared/PropertyTenantManagement.js` (entire file deleted)
@@ -19,42 +19,42 @@ To simplify the Home Admin walkthrough we removed every tenant-specific feature 
   - `src/app/api/tenants/route.js`
   - `src/app/api/tenants/[tenantId]/properties/route.js`
   - `src/app/api/properties/[propertyId]/tenants/route.js`
-- **Database tables** – removed `tenants`, `property_tenants`, `transactions`, `expenses`; introduced `financial_records`
+- **Database tables** – removed `tenants`, `property_tenants`, `transactions`, `expenses`; introduced the consolidated `expenses` table
 ```sql
--- New consolidated table
-CREATE TABLE financial_records (
+-- Current consolidated expenses table
+CREATE TABLE expenses (
     id SERIAL PRIMARY KEY,
     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    type VARCHAR(50) NOT NULL,
     description VARCHAR(255) NOT NULL,
     amount DECIMAL(10,2) NOT NULL,
     date DATE NOT NULL,
-    category VARCHAR(100) NOT NULL,
-    status VARCHAR(50) DEFAULT 'Completed',
-    vendor VARCHAR(255),
-    receipt VARCHAR(255),
     notes TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 ```
+- **Utility metadata** – removed the expense category dropdown, status colors, and related helpers to keep tracking free-form
+  - `src/config/formFields.js` (removed the `category` select)
+  - `src/config/tableColumns.js` (removed the utility column)
+  - `src/utils/helpers.js` / `src/utils/constants.js` (dropped status/category color helpers)
+  - `src/database/schema.sql`, `src/services/dataService.js`, `src/services/databaseService.js` (simplified persistence and reporting)
 - **UI integrations**
   - Removed tenant-specific custom actions from `src/app/properties/page.js`
   - Updated `src/components/shared/UniversalPage.js` singular names and filters
-  - Replaced transaction/expense columns with `FINANCIAL_RECORD_COLUMNS` in `src/config/tableColumns.js`
-  - Replaced transaction/expense form configs with `FINANCIAL_RECORD_FIELDS` in `src/config/formFields.js`
+  - Replaced transaction/expense columns with `EXPENSE_COLUMNS` in `src/config/tableColumns.js`
+  - Replaced transaction/expense form configs with `EXPENSE_FIELDS` in `src/config/formFields.js`
 - **Service layer**
-  - Simplified `src/services/dataService.js` to manage `financialRecords` only
-  - Replaced tenant, transaction, and expense handlers in `src/services/databaseService.js` with `financial_records` equivalents
+  - Simplified `src/services/dataService.js` to manage utility `expenses` only
+  - Replaced tenant, transaction, and legacy expense handlers in `src/services/databaseService.js` with `expenses` equivalents
 
 ### Reason for Removal
 - Reduce cognitive load when demoing the app
 - Remove unused tenant flows that required additional explanations
-- Unify financial reporting to one page so “Finances” covers both incomes and expenses
+- Unify expense tracking to a single page so “Expenses” covers all utility bills
 
 ### Impact
-- UI now exposes four main tabs: Dashboard, Properties, Finances & Expenses, Settings
-- Local storage and mock data now exclude tenants, transactions, and expenses arrays
+- UI now exposes four main tabs: Dashboard, Properties, Expenses, Settings
+- Local storage and mock data now exclude tenants and transactions arrays (expenses remain for utility tracking)
 - Documentation updated (`docs/FINANCES_EXPENSES_EXPLANATION.md`, `docs/DATABASE_SCHEMA_VERIFICATION.md`)
 
 ### Migration
@@ -450,8 +450,8 @@ When documenting new removals, use this template:
         <Button as="a" href="/tenants" leftIcon={<Icon as={UsersIcon} />} colorScheme="green" variant="outline">
           Manage Tenants
         </Button>
-        <Button as="a" href="/finances" leftIcon={<Icon as={DollarIcon} />} colorScheme="purple" variant="outline">
-          View Finances
+        <Button as="a" href="/expenses" leftIcon={<Icon as={DollarIcon} />} colorScheme="purple" variant="outline">
+          View Expenses
         </Button>
         <Button as="a" href="/expenses" leftIcon={<Icon as={TrendingDownIcon} />} colorScheme="orange" variant="outline">
           Track Expenses
@@ -548,7 +548,7 @@ export const NAVIGATION_ITEMS = [
   { href: "/", label: "🏠 Dashboard", icon: "🏠" },
   { href: "/properties", label: "🏘️ Properties", icon: "🏘️" },
   { href: "/tenants", label: "👥 Tenants", icon: "👥" },
-  { href: "/finances", label: "💰 Finances", icon: "💰" },
+  { href: "/expenses", label: "💡 Expenses", icon: "💡" },
   { href: "/expenses", label: "💸 Expenses", icon: "💸" },
   { href: "/maintenance", label: "🔧 Maintenance", icon: "🔧" }, // REMOVED
   { href: "/settings", label: "⚙️ Settings", icon: "⚙️" },
@@ -556,7 +556,7 @@ export const NAVIGATION_ITEMS = [
 ```
 
 ### 2. Hardcoded Sidebar Navigation
-**Location:** `src/app/finances/page.js` and `src/app/expenses/page.js`
+**Location:** `src/app/expenses/page.js`
 **Status:** ❌ REPLACED with PageLayout
 **Original Implementation:**
 ```javascript
@@ -566,7 +566,7 @@ export const NAVIGATION_ITEMS = [
     <Button as="a" href="/" variant="ghost" justifyContent="flex-start">🏠 Dashboard</Button>
     <Button as="a" href="/properties" variant="ghost" justifyContent="flex-start">🏘️ Properties</Button>
     <Button as="a" href="/tenants" variant="ghost" justifyContent="flex-start">👥 Tenants</Button>
-    <Button variant="ghost" justifyContent="flex-start" colorScheme="blue">💰 Finances</Button>
+    <Button variant="ghost" justifyContent="flex-start" colorScheme="blue">💡 Expenses</Button>
     <Button as="a" href="/maintenance" variant="ghost" justifyContent="flex-start">🔧 Maintenance</Button>
   </VStack>
 </Box>
@@ -592,8 +592,8 @@ export const NAVIGATION_ITEMS = [
 <option value="Maintenance">Maintenance</option>
 ```
 
-### 3. Maintenance Category in Finances Page
-**Location:** `src/app/finances/page.js`
+### 3. Maintenance Category in Expenses Page
+**Location:** `src/app/expenses/page.js`
 **Status:** ❌ CHANGED to "Repair"
 **Original Implementation:**
 ```javascript

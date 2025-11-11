@@ -1,7 +1,7 @@
 # Migration Guide: Adding Multi-User Data Isolation
 
 > **Update – November 2025**  
-> Tenant management, transactions, and expenses tables were removed in favour of the unified `financial_records` table. The legacy guidance below is preserved for historical reference; new environments should apply `src/database/schema.sql`.
+> Tenant management, transactions, and expenses tables were removed in favour of the unified `expenses` table. The legacy guidance below is preserved for historical reference; new environments should apply `src/database/schema.sql`.
 
 This guide explains the database changes made to implement proper multi-user data isolation in the Home Admin application.
 

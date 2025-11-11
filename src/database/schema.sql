@@ -1,5 +1,5 @@
 -- PostgreSQL Database Schema for Home Admin Application
--- This schema supports multi-user data isolation where each user owns their properties and financial records.
+-- This schema supports multi-user data isolation where each user owns their properties and expenses.
 
 -- Users table
 CREATE TABLE users (
@@ -43,18 +43,13 @@ CREATE TABLE properties (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Financial Records table (combined finances and expenses)
-CREATE TABLE financial_records (
+-- Expenses table (utility tracking)
+CREATE TABLE expenses (
     id SERIAL PRIMARY KEY,
     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    type VARCHAR(50) NOT NULL, -- 'Income' or 'Expense'
     description VARCHAR(255) NOT NULL,
     amount DECIMAL(10,2) NOT NULL,
     date DATE NOT NULL,
-    category VARCHAR(100) NOT NULL,
-    status VARCHAR(50) DEFAULT 'Completed',
-    vendor VARCHAR(255),
-    receipt VARCHAR(255),
     notes TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -64,10 +59,8 @@ CREATE TABLE financial_records (
 CREATE INDEX idx_properties_user ON properties(user_id);
 CREATE INDEX idx_properties_status ON properties(status);
 CREATE INDEX idx_user_profiles_user ON user_profiles(user_id);
-CREATE INDEX idx_financial_records_user ON financial_records(user_id);
-CREATE INDEX idx_financial_records_date ON financial_records(date);
-CREATE INDEX idx_financial_records_type ON financial_records(type);
-CREATE INDEX idx_financial_records_status ON financial_records(status);
+CREATE INDEX idx_expenses_user ON expenses(user_id);
+CREATE INDEX idx_expenses_date ON expenses(date);
 
 
 -- No authentication users inserted - users are created via registration page
@@ -78,4 +71,4 @@ CREATE INDEX idx_financial_records_status ON financial_records(status);
 
 -- No sample properties - users will add their own properties
 
--- No sample financial records - users will add their own entries
+-- No sample expenses - users will add their own entries

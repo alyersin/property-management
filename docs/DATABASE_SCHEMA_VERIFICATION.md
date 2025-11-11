@@ -7,17 +7,17 @@ Fresh deployments only require `src/database/schema.sql`. Running it against a n
 - `users`
 - `user_profiles`
 - `properties`
-- `financial_records`
+- `expenses`
 
-No tenant-related tables remain (`tenants`, `property_tenants`, `transactions`, `expenses` are absent).
+No tenant-related tables remain (`tenants`, `property_tenants`, `transactions` are absent).
 
 ## Verification Checklist
 
 | Check | Command | Expectation |
 |-------|---------|-------------|
 | Tables created | `\dt` | The four tables listed above |
-| `financial_records` columns | see SQL below | `id, user_id, type, description, amount, date, category, status, vendor, receipt, notes, created_at, updated_at` |
-| Indexes | see SQL below | `idx_financial_records_user`, `idx_financial_records_date`, `idx_financial_records_type`, `idx_financial_records_status` |
+| `expenses` columns | see SQL below | `id, user_id, description, amount, date, notes, created_at, updated_at` |
+| Indexes | see SQL below | `idx_expenses_user`, `idx_expenses_date` |
 
 ## Useful SQL
 
@@ -25,16 +25,16 @@ No tenant-related tables remain (`tenants`, `property_tenants`, `transactions`, 
 -- list tables
 \dt
 
--- inspect financial_records columns
+-- inspect expenses columns
 SELECT column_name, data_type
 FROM information_schema.columns
-WHERE table_name = 'financial_records'
+WHERE table_name = 'expenses'
 ORDER BY ordinal_position;
 
--- inspect financial_records indexes
+-- inspect expenses indexes
 SELECT indexname, indexdef
 FROM pg_indexes
-WHERE tablename = 'financial_records'
+WHERE tablename = 'expenses'
 ORDER BY indexname;
 ```
 

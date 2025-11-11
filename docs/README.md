@@ -1,7 +1,7 @@
 # 📚 Home Admin Documentation
 
 > **Update – November 2025**  
-> Documentation has been refreshed to reflect the removal of tenant management and the new `financial_records` schema. Legacy guides remain for historical purposes and are annotated where applicable.
+> Documentation has been refreshed to reflect the removal of tenant management and the new utility-focused `expenses` schema. Legacy guides remain for historical purposes and are annotated where applicable.
 
 This directory contains all documentation for the Home Admin property management system, organized by category.
 

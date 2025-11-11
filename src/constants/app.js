@@ -19,7 +19,7 @@ export const ROUTES = {
   register: "/register",
   dashboard: "/dashboard",
   properties: "/properties",
-  finances: "/finances",
+  expenses: "/expenses",
   settings: "/settings"
 };
 
@@ -31,7 +31,7 @@ export const USER_ROLES = {
 
 export const DATA_TYPES = {
   properties: "properties",
-  financialRecords: "financialRecords"
+  expenses: "expenses"
 };
 
 export const STATUS_OPTIONS = {

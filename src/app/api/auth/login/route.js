@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import bcrypt from 'bcryptjs';
 import { getDemoUsers } from '../../../../config/env';
 import databaseService from '../../../../services/databaseService';
 import logger from '../../../../utils/logger';
@@ -28,7 +29,14 @@ export async function POST(request) {
 
     // If not found in demo users, check database for registered users
     if (!user) {
-      user = await databaseService.validateCredentials(email, password);
+      const dbUser = await databaseService.getUserByEmail(email);
+
+      if (dbUser && dbUser.password) {
+        const passwordMatches = await bcrypt.compare(password, dbUser.password);
+        if (passwordMatches) {
+          user = dbUser;
+        }
+      }
     }
 
     if (!user) {

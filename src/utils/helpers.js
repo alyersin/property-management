@@ -1,15 +1,3 @@
-import { STATUS_COLORS, CATEGORY_COLORS } from './constants';
-
-// Color utility functions
-export const getStatusColor = (status, type = 'property') => {
-  return STATUS_COLORS[type]?.[status] || "gray";
-};
-
-export const getCategoryColor = (category) => {
-  return CATEGORY_COLORS[category] || "gray";
-};
-
-
 // Filter utility functions
 export const filterBySearch = (items, searchTerm, searchFields) => {
   if (!searchTerm || !Array.isArray(items) || !Array.isArray(searchFields)) return items;

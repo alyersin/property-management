@@ -70,16 +70,14 @@ export const itemMatchesStatus = (item, filterValue, statusField = 'status') => 
 ## Pages Affected
 All pages using the UniversalPage component now have working filters:
 - **Properties**: Status filter (Occupied/Available)
-- **Tenants**: Status filter (Current/Moving Out/Past Due)
-- **Expenses**: Category filter (Water/Electricity/Heating/etc.)
-- **Finances**: Search and filter functionality
+- **Expenses**: Utility search support
 - **Dashboard**: All filter components
 
 ## Testing Results
 - ✅ Build successful with no errors
 - ✅ All filter functions working correctly
 - ✅ Search functionality operational
-- ✅ Status/category filters functional
+- ✅ Status filters functional
 - ✅ Mobile responsive filters working
 - ✅ Error handling prevents crashes
 
@@ -93,7 +91,7 @@ All pages using the UniversalPage component now have working filters:
 - `src/utils/helpers.js` - Core filter functions
 - `src/components/shared/UniversalPage.js` - Main page component
 - `src/components/shared/SearchFilter.js` - Filter UI component
-- `src/app/finances/page.js` - Icon import fix
+- `src/app/expenses/page.js` - Icon import fix
 
 ## Deployment Status
 ✅ **Ready for deployment** - All filter issues resolved and tested

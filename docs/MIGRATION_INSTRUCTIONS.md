@@ -1,7 +1,7 @@
 # Migration Instructions - Remove Simplified Fields
 
 > **Update – November 2025**  
-> This walkthrough remains for legacy column cleanup. For the latest schema (no tenants tables, consolidated `financial_records`), use `src/database/schema.sql`.
+> This walkthrough remains for legacy column cleanup. For the latest schema (no tenants tables, consolidated `expenses`), use `src/database/schema.sql`.
 
 ## Overview
 

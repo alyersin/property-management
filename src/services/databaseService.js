@@ -1,6 +1,7 @@
 // Database service that can work with JSON files (development) or PostgreSQL (production)
 import dataService from './dataService';
 import { Pool } from 'pg';
+import bcrypt from 'bcryptjs';
 
 class DatabaseService {
   constructor() {
@@ -45,9 +46,15 @@ class DatabaseService {
   async getUserById(id) {
     if (this.useDatabase) {
       const result = await this.query('SELECT * FROM users WHERE id = $1', [id]);
-      return result.rows[0];
+      const user = result.rows[0];
+      if (!user) return null;
+      const { password: _, ...userWithoutPassword } = user;
+      return userWithoutPassword;
     }
-    return dataService.getUserById(id);
+    const user = dataService.getUserById(id);
+    if (!user) return null;
+    const { password: _, ...userWithoutPassword } = user;
+    return userWithoutPassword;
   }
 
   async getUserByEmail(email) {
@@ -59,11 +66,18 @@ class DatabaseService {
   }
 
   async validateCredentials(email, password) {
-    if (this.useDatabase) {
-      const result = await this.query('SELECT * FROM users WHERE email = $1 AND password = $2', [email, password]);
-      return result.rows[0];
+    const user = await this.getUserByEmail(email);
+    if (!user || !user.password) {
+      return null;
     }
-    return dataService.validateCredentials(email, password);
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return null;
+    }
+
+    const { password: _, ...userWithoutPassword } = user;
+    return userWithoutPassword;
   }
 
   async createUser(userData) {
@@ -84,18 +98,30 @@ class DatabaseService {
       const fields = Object.keys(updates);
       if (fields.length === 0) return this.getUserById(id);
 
-      const setClause = fields
+      const updatesCopy = { ...updates };
+      if (updatesCopy.password) {
+        updatesCopy.password = await bcrypt.hash(updatesCopy.password, 12);
+      }
+
+      const setClause = Object.keys(updatesCopy)
         .map((field, index) => `${field} = $${index + 2}`)
         .join(', ');
-      const values = [id, ...fields.map((field) => updates[field])];
+      const values = [id, ...Object.values(updatesCopy)];
 
       const result = await this.query(
         `UPDATE users SET ${setClause}, updated_at = CURRENT_TIMESTAMP WHERE id = $1 RETURNING *`,
         values
       );
-      return result.rows[0];
+      const updatedUser = result.rows[0];
+      if (!updatedUser) return null;
+      const { password: _, ...userWithoutPassword } = updatedUser;
+      return userWithoutPassword;
     }
-    return dataService.updateUser(id, updates);
+    const updatesCopy = { ...updates };
+    if (updatesCopy.password) {
+      updatesCopy.password = await bcrypt.hash(updatesCopy.password, 12);
+    }
+    return dataService.updateUser(id, updatesCopy);
   }
 
   // User Profile operations (One-to-One relationship)
@@ -214,65 +240,64 @@ class DatabaseService {
     return dataService.deleteProperty(id);
   }
 
-  // Financial record operations with user_id filtering
-  async getFinancialRecords(userId = null) {
+  // Expense operations with user_id filtering
+  async getExpenses(userId = null) {
     if (this.useDatabase) {
       if (!userId) {
-        throw new Error('userId is required for getFinancialRecords');
+        throw new Error('userId is required for getExpenses');
       }
       const result = await this.query(`
-        SELECT fr.*
-        FROM financial_records fr
-        WHERE fr.user_id = $1
-        ORDER BY fr.date DESC
+        SELECT e.*
+        FROM expenses e
+        WHERE e.user_id = $1
+        ORDER BY e.date DESC
       `, [userId]);
       return result.rows;
     }
-    return dataService.getFinancialRecords();
+    return dataService.getExpenses();
   }
 
-  async addFinancialRecords(record, userId = null) {
+  async addExpenses(expense, userId = null) {
     if (this.useDatabase) {
       if (!userId) {
-        throw new Error('userId is required for addFinancialRecords');
+        throw new Error('userId is required for addExpenses');
       }
       const result = await this.query(`
-        INSERT INTO financial_records (user_id, type, description, amount, date, category, status, vendor, receipt, notes)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        INSERT INTO expenses (user_id, description, amount, date, notes)
+        VALUES ($1, $2, $3, $4, $5)
         RETURNING *
-      `, [userId, record.type, record.description, record.amount, record.date, record.category, record.status, record.vendor, record.receipt, record.notes]);
+      `, [userId, expense.description, expense.amount, expense.date, expense.notes]);
       return result.rows[0];
     }
-    return dataService.addFinancialRecords(record);
+    return dataService.addExpenses(expense);
   }
 
-  async updateFinancialRecords(id, updates, userId = null) {
+  async updateExpenses(id, updates, userId = null) {
     if (this.useDatabase) {
       if (!userId) {
-        throw new Error('userId is required for updateFinancialRecords');
+        throw new Error('userId is required for updateExpenses');
       }
       const setClause = Object.keys(updates).map((key, index) => `${key} = $${index + 3}`).join(', ');
       const values = [id, userId, ...Object.values(updates)];
       const result = await this.query(`
-        UPDATE financial_records SET ${setClause}, updated_at = CURRENT_TIMESTAMP
+        UPDATE expenses SET ${setClause}, updated_at = CURRENT_TIMESTAMP
         WHERE id = $1 AND user_id = $2 RETURNING *
       `, values);
       return result.rows[0];
     }
-    return dataService.updateFinancialRecords(id, updates);
+    return dataService.updateExpenses(id, updates);
   }
 
-  async deleteFinancialRecords(id, userId = null) {
+  async deleteExpenses(id, userId = null) {
     if (this.useDatabase) {
       if (!userId) {
-        throw new Error('userId is required for deleteFinancialRecords');
+        throw new Error('userId is required for deleteExpenses');
       }
-      const result = await this.query('DELETE FROM financial_records WHERE id = $1 AND user_id = $2 RETURNING *', [id, userId]);
+      const result = await this.query('DELETE FROM expenses WHERE id = $1 AND user_id = $2 RETURNING *', [id, userId]);
       return result.rows[0];
     }
-    return dataService.deleteFinancialRecords(id);
+    return dataService.deleteExpenses(id);
       }
-
 
   // Dashboard operations
   async getDashboardStats(userId = null) {
@@ -286,22 +311,27 @@ class DatabaseService {
          FROM properties WHERE user_id = $1`,
         [userId]
       );
-      
+
+      const rentResult = await this.query(
+        `SELECT COALESCE(SUM(rent), 0) as rent_total
+         FROM properties
+         WHERE user_id = $1 AND status = 'Occupied'`,
+        [userId]
+      );
+
       const currentMonth = new Date().toISOString().slice(0, 7);
-      const financialResult = await this.query(`
-        SELECT 
-          SUM(CASE WHEN type = 'Income' THEN amount ELSE 0 END) as income,
-          SUM(CASE WHEN type = 'Expense' THEN ABS(amount) ELSE 0 END) as expenses
-        FROM financial_records 
+      const expensesResult = await this.query(`
+        SELECT COALESCE(SUM(amount), 0) as expenses
+        FROM expenses 
         WHERE date >= $1 AND date < $2 AND user_id = $3
       `, [`${currentMonth}-01`, `${currentMonth}-32`, userId]);
       
       const stats = {
         totalProperties: parseInt(propertiesResult.rows[0].total),
         occupiedProperties: parseInt(propertiesResult.rows[0].occupied),
-        monthlyIncome: parseFloat(financialResult.rows[0].income || 0),
-        monthlyExpenses: parseFloat(financialResult.rows[0].expenses || 0),
-        netIncome: parseFloat(financialResult.rows[0].income || 0) - parseFloat(financialResult.rows[0].expenses || 0),
+        monthlyIncome: parseFloat(rentResult.rows[0].rent_total || 0),
+        monthlyExpenses: parseFloat(expensesResult.rows[0].expenses || 0),
+        netIncome: parseFloat(rentResult.rows[0].rent_total || 0) - parseFloat(expensesResult.rows[0].expenses || 0),
         occupancyRate: propertiesResult.rows[0].total > 0 
           ? Math.round((parseInt(propertiesResult.rows[0].occupied) / parseInt(propertiesResult.rows[0].total)) * 100)
           : 0
@@ -319,16 +349,16 @@ class DatabaseService {
       
       // This is a simplified version - you may want to make it more sophisticated
       const result = await this.query(`
-        SELECT id, type, description as message, created_at, amount
-        FROM financial_records
+        SELECT id, description as message, created_at, amount
+        FROM expenses
         WHERE user_id = $1
         ORDER BY created_at DESC
         LIMIT 5
       `, [userId]);
       
       return result.rows.map(row => ({
-        id: `financial-${row.id}`,
-        type: row.type === 'Income' ? 'payment' : 'expense',
+        id: `expense-${row.id}`,
+        type: 'expense',
         message: row.message,
         time: this.getTimeAgo(row.created_at),
         amount: row.amount

@@ -20,44 +20,34 @@ export const PROPERTY_FIELDS = [
   { name: 'notes', label: 'Notes', type: 'textarea', placeholder: 'Enter any additional notes' }
 ];
 
-export const FINANCIAL_RECORD_FIELDS = [
+export const EXPENSE_FIELDS = [
   {
-    name: 'type',
-    label: 'Type',
-    type: 'select',
+    name: 'description',
+    label: 'Description',
+    type: 'text',
     required: true,
-    options: [
-      { value: 'Income', label: 'Income' },
-      { value: 'Expense', label: 'Expense' }
-    ]
-  },
-  { name: 'description', label: 'Description', type: 'text', required: true, placeholder: 'Enter description' },
-  { name: 'amount', label: 'Amount', type: 'number', required: true, step: 0.01, placeholder: 'Enter amount' },
-  { name: 'date', label: 'Date', type: 'date', required: true },
-  {
-    name: 'category',
-    label: 'Category',
-    type: 'select',
-    required: true,
-    options: [
-      { value: 'Rent', label: 'Rent' },
-      { value: 'Utilities', label: 'Utilities' }
-    ]
+    placeholder: 'Enter expense description'
   },
   {
-    name: 'status',
-    label: 'Status',
-    type: 'select',
+    name: 'amount',
+    label: 'Amount',
+    type: 'number',
     required: true,
-    options: [
-      { value: 'Completed', label: 'Completed' },
-      { value: 'Pending', label: 'Pending' },
-      { value: 'Overdue', label: 'Overdue' }
-    ]
+    step: 0.01,
+    placeholder: 'Enter amount'
   },
-  { name: 'vendor', label: 'Vendor', type: 'text', placeholder: 'Enter vendor name (optional)' },
-  { name: 'receipt', label: 'Receipt Number', type: 'text', placeholder: 'Enter receipt (optional)' },
-  { name: 'notes', label: 'Notes', type: 'textarea', placeholder: 'Enter any additional notes' }
+  {
+    name: 'date',
+    label: 'Date',
+    type: 'date',
+    required: true
+  },
+  {
+    name: 'notes',
+    label: 'Notes',
+    type: 'textarea',
+    placeholder: 'Enter any additional notes'
+  }
 ];
 
 // Helper function to get field configuration by data type
@@ -65,8 +55,8 @@ export const getFieldsByType = (dataType) => {
   switch (dataType) {
     case 'properties':
       return PROPERTY_FIELDS;
-    case 'financialRecords':
-      return FINANCIAL_RECORD_FIELDS;
+    case 'expenses':
+      return EXPENSE_FIELDS;
     default:
       return [];
   }

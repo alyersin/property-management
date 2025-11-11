@@ -37,19 +37,7 @@ export const PROPERTY_COLUMNS = [
   }
 ];
 
-export const FINANCIAL_RECORD_COLUMNS = [
-  {
-    key: 'type',
-    label: 'Type',
-    render: (value) => (
-      <div style={{ 
-        fontWeight: 'bold', 
-        color: value === 'Income' ? '#22c55e' : '#ef4444' 
-      }}>
-        {value}
-      </div>
-    )
-  },
+export const EXPENSE_COLUMNS = [
   {
     key: 'description',
     label: 'Description'
@@ -59,12 +47,9 @@ export const FINANCIAL_RECORD_COLUMNS = [
     label: 'Amount',
     render: (value, item) => {
       const numericValue = Number(value);
-      const isIncome = item.type === 'Income';
-      const color = isIncome ? '#22c55e' : '#ef4444';
-      const prefix = isIncome ? '+' : '-';
       return (
-        <div style={{ fontWeight: 'bold', color }}>
-          {prefix}${Math.abs(numericValue).toLocaleString()}
+        <div style={{ fontWeight: 'bold', color: '#ef4444' }}>
+          -${Math.abs(numericValue).toLocaleString()}
         </div>
       );
     }
@@ -75,16 +60,9 @@ export const FINANCIAL_RECORD_COLUMNS = [
     render: (value) => new Date(value).toLocaleDateString()
   },
   {
-    key: 'category',
-    label: 'Category'
-  },
-  {
-    key: 'status',
-    label: 'Status'
-  },
-  {
-    key: 'vendor',
-    label: 'Vendor'
+    key: 'notes',
+    label: 'Notes',
+    render: (value) => value || '—'
   }
 ];
 
@@ -93,8 +71,8 @@ export const getColumnsByType = (dataType) => {
   switch (dataType) {
     case 'properties':
       return PROPERTY_COLUMNS;
-    case 'financialRecords':
-      return FINANCIAL_RECORD_COLUMNS;
+    case 'expenses':
+      return EXPENSE_COLUMNS;
     default:
       return [];
   }
