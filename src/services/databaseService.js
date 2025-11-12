@@ -109,10 +109,10 @@ class DatabaseService {
 
   async createUserProfile(userId, profileData) {
       const result = await this.query(`
-      INSERT INTO user_profiles (user_id, phone)
-      VALUES ($1, $2)
+      INSERT INTO user_profiles (user_id)
+      VALUES ($1)
         RETURNING *
-    `, [userId, profileData.phone ?? null]);
+    `, [userId]);
       return result.rows[0];
   }
 

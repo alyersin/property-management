@@ -5,22 +5,17 @@ import { useDisclosure, Box, Flex, Heading, HStack, Button, Icon } from "@chakra
 import { AddIcon } from "@chakra-ui/icons";
 
 import PageLayout from "./PageLayout";
-import SearchFilter from "./SearchFilter";
 import DataTable from "./DataTable";
 import FormModal from "./FormModal";
 import DynamicForm from "./DynamicForm";
 import { useAppData } from "../../hooks/useAppData";
-import usePersistentState from "../../hooks/usePersistentState";
 import { getFieldsByType } from "../../config/formFields";
-import { FILTER_OPTIONS } from "../../utils/constants";
 import ProtectedRoute from "../auth/ProtectedRoute";
-import { STORAGE_KEYS } from "../../constants/app";
 import { useAuth } from "../../contexts/AuthContext";
 
 const UniversalPage = ({ 
   dataType, 
   title, 
-  filterOptions = [],
   columns = [],
   actions = [],
   emptyMessage = "No data available",
@@ -29,34 +24,12 @@ const UniversalPage = ({
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [editingItem, setEditingItem] = useState(null);
   const { user } = useAuth();
-
-  // Load page preferences from localStorage
-  const storageKey = `${STORAGE_KEYS.preferences}_${dataType}`;
-  const [preferences, setPreferences] = usePersistentState(storageKey, {
-    filterValue: "all",
-    lastUpdated: null,
-  });
-
-  const { filterValue = "all" } = preferences;
-
-  const updatePreferences = (updates) =>
-    setPreferences((prev) => ({
-      ...prev,
-      ...updates,
-      lastUpdated: new Date().toISOString(),
-    }));
   
   const { data, loading, error, create, update, remove } = useAppData(dataType, user?.id);
   const fields = getFieldsByType(dataType);
 
-  // Ensure data is always an array
-  const safeData = Array.isArray(data) ? data : [];
-
-  // Filter data by status only
-  const filteredData = safeData.filter(item => {
-    if (filterValue === 'all' || !item || typeof item !== 'object') return true;
-    return item.status === filterValue;
-  });
+  // Ensure data is always an array - no filtering applied
+  const displayData = Array.isArray(data) ? data : [];
 
   const handleAdd = () => {
     setEditingItem(null);
@@ -98,11 +71,6 @@ const UniversalPage = ({
     setEditingItem(null);
   };
 
-  // Get filter options for this data type
-  const availableFilterOptions = filterOptions.length > 0 
-    ? filterOptions 
-    : FILTER_OPTIONS[dataType] || [];
-
   // Map data types to their singular forms
   const singularForm = {
     properties: 'property',
@@ -116,16 +84,8 @@ const UniversalPage = ({
 
   const content = (
     <>
-      {availableFilterOptions.length > 0 && (
-        <SearchFilter
-          filterValue={filterValue}
-          onFilterChange={(value) => updatePreferences({ filterValue: value })}
-          filterOptions={availableFilterOptions}
-        />
-      )}
-
       <DataTable
-        data={filteredData}
+        data={displayData}
         columns={columns}
         onEdit={handleEdit}
         onDelete={handleDelete}

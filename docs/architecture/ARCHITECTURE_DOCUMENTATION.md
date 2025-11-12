@@ -121,10 +121,8 @@ src/
 │       ├── PageLayout.js         # Page wrapper
 │       ├── PageHeader.js         # Page header
 │       ├── Sidebar.js            # Navigation sidebar
-│       ├── SearchFilter.js       # Search and filter
 │       ├── FormModal.js          # Modal wrapper
 │       ├── StatCard.js           # Statistics card
-│       ├── UserProfile.js        # User profile management (1:1)
 │       ├── Logo.js               # Application logo
 │       └── formFields/           # Form field components
 │           ├── TextField.js
@@ -150,7 +148,6 @@ src/
 │   └── dbHelpers.js              # Generic CRUD helper functions
 │
 ├── utils/                        # Utility Functions
-│   ├── constants.js              # Application constants (TAB_ITEMS, FILTER_OPTIONS)
 │   └── apiHelpers.js            # Generic CRUD route factory
 │
 └── database/                     # Database Schema
@@ -174,7 +171,6 @@ app/
 ```
 components/shared/
 ├── UniversalPage.js          # Handles all CRUD pages
-│   ├── SearchFilter          # Filtering (search optional, only if searchFields provided)
 │   ├── DataTable             # Data display
 │   ├── FormModal             # Form modal
 │   └── DynamicForm           # Dynamic form generation
@@ -589,11 +585,10 @@ CREATE TABLE users (
 );
 
 -- User Profiles table (One-to-One with users)
--- Simplified schema: only phone field retained
+-- Simplified schema: phone field removed for simplified form presentation
 CREATE TABLE user_profiles (
     id SERIAL PRIMARY KEY,
     user_id INTEGER UNIQUE REFERENCES users(id) ON DELETE CASCADE,
-    phone VARCHAR(50),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

@@ -211,7 +211,7 @@ const [formData, setFormData] = useState({
 **Impact:**
 - User profile form is simpler
 - Emergency contact information is no longer tracked in user profiles
-- User profiles now only contain: bio, phone, address, date_of_birth
+- User profiles now contain no fields (phone field also removed)
 
 ### 3. Property Table Columns Simplified
 **Location:** `src/config/tableColumns.js` - PROPERTY_COLUMNS array  
@@ -295,7 +295,7 @@ const [formData, setFormData] = useState({
 **Database Schema Updates:**
 - **Properties table**: Removed `state`, `zip`, `sqft` columns
 - **Tenants table**: Removed `emergency_contact`, `emergency_phone` columns
-- **User Profiles table**: Removed `emergency_contact`, `emergency_phone` columns
+- **User Profiles table**: Removed `emergency_contact`, `emergency_phone` columns, and `phone` column
 
 **Migration File Created (historical):**
 `src/database/migration_remove_simplified_fields.sql` *(removed from main branch; retrieve from Git history if you need to back-port the change)*
@@ -317,11 +317,11 @@ INSERT INTO tenants (user_id, name, email, phone, status, notes)
 VALUES ($1, $2, $3, $4, $5, $6)
 ```
 
-**User Profiles INSERT (line 98-107):**
+**User Profiles INSERT (line 110-115):**
 ```javascript
-// Updated: Removed emergency_contact, emergency_phone from INSERT statement
-INSERT INTO user_profiles (user_id, bio, phone, address, date_of_birth)
-VALUES ($1, $2, $3, $4, $5)
+// Updated: Removed emergency_contact, emergency_phone, and phone from INSERT statement
+INSERT INTO user_profiles (user_id)
+VALUES ($1)
 ```
 
 **Query Updates:**
@@ -2085,3 +2085,383 @@ if (hasTabContext) {
 **Code Quality:**
 - More robust component that handles both contexts gracefully
 - Better user experience (no errors, smooth navigation)
+
+---
+
+## Properties Filter Removal - December 2025
+
+### Overview
+Removed the filter dropdown functionality from the Properties page to simplify the UI. All properties are now displayed without status-based filtering.
+
+### Elements Removed
+
+#### 1. Properties Filter Options
+**Location:** `src/utils/constants.js`  
+**Status:** ✅ REMOVED
+
+**Before:**
+```javascript
+export const FILTER_OPTIONS = {
+  properties: [
+    { value: "Occupied", label: "Occupied" },
+    { value: "Available", label: "Available" },
+  ],
+};
+```
+
+**After:**
+```javascript
+// Filter options for different pages
+// Note: Properties filter removed - all properties are shown without filtering
+export const FILTER_OPTIONS = {};
+```
+
+#### 2. Filter Logic in UniversalPage
+**Location:** `src/components/shared/UniversalPage.js`  
+**Status:** ✅ REMOVED
+
+**Changes:**
+- Removed `filterOptions` prop from component
+- Removed `filterValue` from localStorage preferences
+- Removed filter logic that filtered by status
+- Removed SearchFilter component import and usage
+- Removed FILTER_OPTIONS import
+
+**Before:**
+```javascript
+const [preferences, setPreferences] = usePersistentState(storageKey, {
+  filterValue: "all",
+  lastUpdated: null,
+});
+
+const { filterValue = "all" } = preferences;
+
+const filteredData = safeData.filter(item => {
+  if (filterValue === 'all' || !item || typeof item !== 'object') return true;
+  return item.status === filterValue;
+});
+
+{availableFilterOptions.length > 0 && (
+  <SearchFilter
+    filterValue={filterValue}
+    onFilterChange={(value) => updatePreferences({ filterValue: value })}
+    filterOptions={availableFilterOptions}
+  />
+)}
+```
+
+**After:**
+```javascript
+const [preferences, setPreferences] = usePersistentState(storageKey, {
+  lastUpdated: null,
+});
+
+// Ensure data is always an array - no filtering applied
+const filteredData = Array.isArray(data) ? data : [];
+
+// SearchFilter component removed - no filter dropdown displayed
+```
+
+#### 3. Component Props
+**Location:** `src/components/shared/UniversalPage.js`  
+**Status:** ✅ REMOVED
+
+**Removed Props:**
+- `filterOptions` - No longer accepts filter options as prop
+
+**Impact:**
+- Properties page now shows all properties regardless of status
+- No filter dropdown displayed on properties page
+- Simpler UI with less complexity
+- Filter functionality can be restored by adding filterOptions back to FILTER_OPTIONS
+
+### Reason for Removal
+Simplify the properties page UI by removing the status filter dropdown. All properties are displayed in a single list without filtering options.
+
+### Impact
+- Properties page is simpler and cleaner
+- No filter dropdown on properties page
+- All properties displayed regardless of status
+- Filter functionality can be restored if needed in the future
+
+---
+
+## Code Cleanup - Unused Components and File Consolidation - December 2025
+
+### Overview
+Removed unused components and consolidated small utility files to reduce codebase complexity and file count.
+
+### Elements Removed
+
+#### 1. UserProfile Component
+**Location:** `src/components/shared/UserProfile.js`  
+**Status:** ✅ DELETED
+
+**Reason:** Component was no longer used after removing the "Manage Profile" button from settings page. The component only displayed "No profile fields available" since phone field was removed.
+
+**Impact:**
+- Removed 164 lines of unused code
+- Settings page simplified (no modal component needed)
+- User profile management handled directly in settings page
+
+#### 2. SearchFilter Component
+**Location:** `src/components/shared/SearchFilter.js`  
+**Status:** ✅ DELETED
+
+**Reason:** Component was no longer used after removing filter functionality from properties page. The filter dropdown was removed to simplify the UI.
+
+**Impact:**
+- Removed 102 lines of unused code
+- No filter dropdown components in codebase
+- Simpler UniversalPage component
+
+#### 3. Constants File Consolidation
+**Location:** `src/utils/constants.js`  
+**Status:** ✅ DELETED (consolidated into `src/constants/app.js`)
+
+**Changes:**
+- Moved `TAB_ITEMS` from `src/utils/constants.js` → `src/constants/app.js`
+- Removed empty `FILTER_OPTIONS` export
+- Deleted `src/utils/constants.js` file entirely
+- Updated `Sidebar.js` import to use `constants/app.js`
+
+**Before:**
+```javascript
+// src/utils/constants.js
+export const TAB_ITEMS = [...];
+export const FILTER_OPTIONS = {};
+
+// src/components/shared/Sidebar.js
+import { TAB_ITEMS } from "../../utils/constants";
+```
+
+**After:**
+```javascript
+// src/constants/app.js
+export const TAB_ITEMS = [...];
+
+// src/components/shared/Sidebar.js
+import { TAB_ITEMS, ROUTES } from "../../constants/app";
+```
+
+**Impact:**
+- Reduced file count by 1
+- All constants now in single location (`src/constants/app.js`)
+- Better organization and easier to maintain
+- Removed empty/unused exports
+
+### Files Deleted
+1. `src/components/shared/UserProfile.js` (164 lines)
+2. `src/components/shared/SearchFilter.js` (102 lines)
+3. `src/utils/constants.js` (11 lines)
+
+### Files Modified
+1. `src/constants/app.js` - Added TAB_ITEMS export
+2. `src/components/shared/Sidebar.js` - Updated import path
+
+### Total Code Reduction
+- **3 files deleted**
+- **~277 lines of code removed**
+- **1 file consolidated**
+- **Cleaner, more maintainable codebase**
+
+---
+
+## Code Optimization - Redundant Code Removal - December 2025
+
+### Overview
+Removed redundant code, unused storage operations, and deprecated references to improve codebase efficiency and maintainability.
+
+### Elements Removed/Optimized
+
+#### 1. Unused Preferences Storage in UniversalPage
+**Location:** `src/components/shared/UniversalPage.js`  
+**Status:** ✅ REMOVED
+
+**Changes:**
+- Removed unused `usePersistentState` hook import
+- Removed unused `STORAGE_KEYS` import
+- Removed `preferences` state and `updatePreferences` function
+- Removed localStorage operations that were never read
+
+**Before:**
+```javascript
+import usePersistentState from "../../hooks/usePersistentState";
+import { STORAGE_KEYS } from "../../constants/app";
+
+const storageKey = `${STORAGE_KEYS.preferences}_${dataType}`;
+const [preferences, setPreferences] = usePersistentState(storageKey, {
+  lastUpdated: null,
+});
+
+const updatePreferences = (updates) =>
+  setPreferences((prev) => ({
+    ...prev,
+    ...updates,
+    lastUpdated: new Date().toISOString(),
+  }));
+```
+
+**After:**
+```javascript
+// Preferences storage removed - was never used
+```
+
+**Impact:**
+- Removed unnecessary localStorage operations
+- Reduced component complexity
+- Improved performance (no localStorage reads/writes)
+
+#### 2. Unused Activity Type Mappings
+**Location:** `src/components/shared/DashboardStats.js`  
+**Status:** ✅ REMOVED
+
+**Changes:**
+- Removed `payment` and `tenant` types from `getActivityIcon` function
+- Removed `getActivityColor` function entirely (was never used)
+- Only kept `expense` and `property` types that are actually used
+
+**Before:**
+```javascript
+const getActivityIcon = (type) => {
+  const icons = {
+    payment: "💰",
+    tenant: "👥",
+    expense: "💸",
+    property: "🏠",
+  };
+  return icons[type] || "📊";
+};
+
+const getActivityColor = (type) => {
+  const colors = {
+    payment: "green",
+    tenant: "blue",
+    expense: "orange",
+    property: "purple",
+  };
+  return colors[type] || "gray";
+};
+```
+
+**After:**
+```javascript
+const getActivityIcon = (type) => {
+  const icons = {
+    expense: "💸",
+    property: "🏠",
+  };
+  return icons[type] || "📊";
+};
+```
+
+**Impact:**
+- Removed dead code for deprecated features (tenants, payments)
+- Cleaner, more focused code
+- Only includes types that are actually used
+
+#### 3. Redundant UserId Validation
+**Location:** `src/app/api/user-profiles/[userId]/route.js` (PUT handler)  
+**Status:** ✅ FIXED
+
+**Changes:**
+- Removed duplicate `userId` validation (was checked twice)
+- Simplified empty profile update logic
+- Removed unnecessary empty `updates` object creation
+
+**Before:**
+```javascript
+export async function PUT(request, { params }) {
+  const { userId } = params;
+  const body = await request.json();
+  const updates = {};
+
+  if (Object.keys(updates).length === 0 && Object.keys(body).length > 0) {
+    const existing = await databaseService.getUserProfile(userId);
+    return NextResponse.json(existing || {});
+  }
+  
+  if (!userId) {  // Duplicate check
+    return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
+  }
+
+  const profile = await databaseService.updateUserProfile(userId, updates);
+  return NextResponse.json(profile || {});
+}
+```
+
+**After:**
+```javascript
+export async function PUT(request, { params }) {
+  const { userId } = params;
+  
+  if (!userId) {
+    return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
+  }
+
+  // Currently no profile fields to update, but keeping structure for future fields
+  const existing = await databaseService.getUserProfile(userId);
+  return NextResponse.json(existing || {});
+}
+```
+
+**Impact:**
+- Removed duplicate validation
+- Simplified logic flow
+- More efficient code execution
+
+#### 4. Variable Naming Improvement
+**Location:** `src/components/shared/UniversalPage.js`  
+**Status:** ✅ RENAMED
+
+**Changes:**
+- Renamed `filteredData` to `displayData` for clarity
+- Variable name now accurately reflects that no filtering is applied
+
+**Before:**
+```javascript
+const filteredData = Array.isArray(data) ? data : [];
+```
+
+**After:**
+```javascript
+const displayData = Array.isArray(data) ? data : [];
+```
+
+**Impact:**
+- More accurate variable naming
+- Better code readability
+- Prevents confusion about filtering logic
+
+#### 5. Updated Text References
+**Location:** `src/components/shared/DashboardStats.js`  
+**Status:** ✅ UPDATED
+
+**Changes:**
+- Updated "Ready for tenants" to "Available" to reflect removal of tenant feature
+
+**Before:**
+```javascript
+helpText="Ready for tenants"
+```
+
+**After:**
+```javascript
+helpText="Available"
+```
+
+**Impact:**
+- Updated UI text to match current functionality
+- Removed references to deprecated tenant feature
+
+### Files Modified
+1. `src/components/shared/UniversalPage.js` - Removed preferences storage, renamed variable
+2. `src/components/shared/DashboardStats.js` - Removed unused activity types, updated text
+3. `src/app/api/user-profiles/[userId]/route.js` - Fixed redundant validation, simplified logic
+
+### Total Optimization
+- **Removed ~15 lines of unused code**
+- **Eliminated unnecessary localStorage operations**
+- **Removed dead code for deprecated features**
+- **Fixed redundant validation logic**
+- **Improved code clarity and maintainability**

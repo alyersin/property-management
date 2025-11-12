@@ -36,10 +36,6 @@ export async function GET(request, { params }) {
 export async function POST(request, { params }) {
   try {
     const { userId } = params;
-    const body = await request.json();
-    const profileData = {
-      phone: body.phone ?? null,
-    };
     
     if (!userId) {
       return NextResponse.json(
@@ -48,7 +44,7 @@ export async function POST(request, { params }) {
       );
     }
 
-    const profile = await databaseService.createUserProfile(userId, profileData);
+    const profile = await databaseService.createUserProfile(userId, {});
     
     return NextResponse.json(profile, { status: 201 });
   } catch (error) {
@@ -64,18 +60,6 @@ export async function POST(request, { params }) {
 export async function PUT(request, { params }) {
   try {
     const { userId } = params;
-    const body = await request.json();
-    const updates = {};
-    if (body.hasOwnProperty('phone')) {
-      updates.phone = body.phone;
-    }
-
-    if (Object.keys(updates).length === 0) {
-      return NextResponse.json(
-        { error: 'No valid fields provided for update' },
-        { status: 400 }
-      );
-    }
     
     if (!userId) {
       return NextResponse.json(
@@ -84,9 +68,10 @@ export async function PUT(request, { params }) {
       );
     }
 
-    const profile = await databaseService.updateUserProfile(userId, updates);
-    
-    return NextResponse.json(profile);
+    // Currently no profile fields to update, but keeping structure for future fields
+    // Return existing profile if it exists, otherwise return empty object
+    const existing = await databaseService.getUserProfile(userId);
+    return NextResponse.json(existing || {});
   } catch (error) {
     console.error('Error updating user profile:', error);
     return NextResponse.json(

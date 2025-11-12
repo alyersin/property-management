@@ -14,11 +14,10 @@ CREATE TABLE users (
 );
 
 -- User Profiles table (One-to-One with users)
--- Note: emergency_contact and emergency_phone fields removed for simplified form presentation
+-- Note: phone field removed for simplified form presentation
 CREATE TABLE user_profiles (
     id SERIAL PRIMARY KEY,
     user_id INTEGER UNIQUE REFERENCES users(id) ON DELETE CASCADE,
-    phone VARCHAR(50),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

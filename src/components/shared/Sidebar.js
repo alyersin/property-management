@@ -18,8 +18,7 @@ import { HamburgerIcon } from "@chakra-ui/icons";
 import { useContext } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { TabContext } from "../../contexts/TabContext";
-import { TAB_ITEMS } from "../../utils/constants";
-import { ROUTES } from "../../constants/app";
+import { TAB_ITEMS, ROUTES } from "../../constants/app";
 
 export default function Sidebar() {
   const { isOpen, onOpen, onClose } = useDisclosure();

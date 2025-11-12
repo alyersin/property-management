@@ -28,22 +28,10 @@ const DashboardStats = ({ stats, recentActivities = [] }) => {
 
   const getActivityIcon = (type) => {
     const icons = {
-      payment: "💰",
-      tenant: "👥",
       expense: "💸",
       property: "🏠",
     };
     return icons[type] || "📊";
-  };
-
-  const getActivityColor = (type) => {
-    const colors = {
-      payment: "green",
-      tenant: "blue",
-      expense: "orange",
-      property: "purple",
-    };
-    return colors[type] || "gray";
   };
 
   const available =
@@ -83,7 +71,7 @@ const DashboardStats = ({ stats, recentActivities = [] }) => {
         <StatCard
           label="Available Properties"
           value={available}
-          helpText="Ready for tenants"
+          helpText="Available"
           color="success.default"
           arrowType="increase"
         />

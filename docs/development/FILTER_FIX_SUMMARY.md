@@ -69,7 +69,7 @@ export const itemMatchesStatus = (item, filterValue, statusField = 'status') => 
 
 ## Pages Affected
 All pages using the UniversalPage component now have working filters:
-- **Properties**: Status filter (Occupied/Available)
+- **Properties**: Status filter (Occupied/Available) - **NOTE: Filter removed in December 2025**
 - **Expenses**: Utility search support
 - **Dashboard**: All filter components
 

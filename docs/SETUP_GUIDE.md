@@ -135,14 +135,14 @@ The application will be available at: http://localhost:3000
 The project uses a simplified schema focused on core features:
 
 ### One-to-One (1:1)
-- `users` ↔ `user_profiles` (phone information)
+- `users` ↔ `user_profiles` (currently empty, reserved for future profile fields)
 
 ### One-to-Many (1:N)
 - `users` → `properties` (city, bedrooms, bathrooms, status, notes)
 - `users` → `expenses` (description, amount, date, notes)
 
 ### Schema Simplification
-- **User Profiles**: Only `phone` field retained (removed: bio, avatar_url, date_of_birth)
+- **User Profiles**: Phone field removed (removed: bio, avatar_url, date_of_birth, phone)
 - **Properties**: Removed `address` and `rent` fields for simplified demo
 - **Multi-User**: All data is isolated per user using `user_id` foreign keys
 
