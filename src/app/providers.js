@@ -8,8 +8,13 @@ const theme = extendTheme({
     useSystemColorMode: false,
   },
   fonts: {
-    heading: "'Inter', sans-serif",
-    body: "'Inter', sans-serif",
+    // Inter (commented out):
+    // heading: "'Inter', sans-serif",
+    // body: "'Inter', sans-serif",
+    
+    // Lexend (active):
+    heading: "'Lexend', sans-serif",
+    body: "'Lexend', sans-serif",
   },
   semanticTokens: {
     colors: {
@@ -148,7 +153,7 @@ const theme = extendTheme({
           },
         },
         icon: {
-          color: "text.muted",
+          color: "text.primary",
         },
       },
     },
@@ -174,6 +179,22 @@ const theme = extendTheme({
           _focus: {
             borderColor: "accent.default",
             boxShadow: "0 0 0 1px var(--chakra-colors-accent-default)",
+          },
+        },
+        stepperGroup: {
+          borderLeft: "1px solid",
+          borderColor: "border.subtle",
+        },
+        stepper: {
+          color: "text.primary",
+          borderColor: "border.subtle",
+          _active: {
+            color: "accent.default",
+            bg: "accent.subtle",
+          },
+          _hover: {
+            color: "accent.default",
+            bg: "accent.subtle",
           },
         },
       },
