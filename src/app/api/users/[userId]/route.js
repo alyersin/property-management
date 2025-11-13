@@ -13,7 +13,7 @@ import databaseService from "../../../../services/databaseService";
  * - userId: The ID of the user to retrieve
  * 
  * Returns:
- * - User object with id, email, name, role, etc. (password is excluded)
+ * - User object with id, email, name (password is excluded)
  */
 export async function GET(request, { params }) {
   try {
@@ -51,13 +51,13 @@ export async function GET(request, { params }) {
  * Update User API Route
  * 
  * Updates a specific user's information.
- * Used for editing user profiles, changing roles, or updating user settings.
+ * Used for editing user profiles or updating user settings.
  * 
  * URL Parameter:
  * - userId: The ID of the user to update
  * 
  * Request Body:
- * - Object containing fields to update (e.g., { name: "New Name", role: "admin" })
+ * - Object containing fields to update (e.g., { name: "New Name" })
  * - Note: Password updates should be handled separately with proper hashing
  * 
  * Returns:

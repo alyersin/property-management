@@ -14,7 +14,7 @@ import databaseService from '../../../../services/databaseService';
 const getDemoUsers = () => {
   // Required environment variables for demo user configuration
   const requiredVars = [
-    'DEMO_USER_EMAIL', 'DEMO_USER_PASSWORD', 'DEMO_USER_NAME', 'DEMO_USER_ROLE'
+    'DEMO_USER_EMAIL', 'DEMO_USER_PASSWORD', 'DEMO_USER_NAME'
   ];
 
   // Check if all required variables are present
@@ -30,10 +30,7 @@ const getDemoUsers = () => {
       id: 1,
       email: process.env.DEMO_USER_EMAIL,
       password: process.env.DEMO_USER_PASSWORD, // Plain text for demo
-      name: process.env.DEMO_USER_NAME,
-      role: process.env.DEMO_USER_ROLE,
-      createdAt: "2024-02-01T00:00:00Z",
-      lastLogin: "2024-12-15T09:15:00Z"
+      name: process.env.DEMO_USER_NAME
     }
   ];
 };
@@ -122,9 +119,7 @@ export async function POST(request) {
       user: {
         id: userWithoutPassword.id,
         email: userWithoutPassword.email,
-        name: userWithoutPassword.name,
-        role: userWithoutPassword.role,
-        loginTime: new Date().toISOString() // Current timestamp for tracking
+        name: userWithoutPassword.name
       }
     });
 

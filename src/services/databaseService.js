@@ -68,12 +68,12 @@ class DatabaseService {
   }
 
   async createUser(userData) {
-      const { email, password, name, role = 'user' } = userData;
+      const { email, password, name } = userData;
       const result = await this.query(`
-        INSERT INTO users (email, password, name, role)
-        VALUES ($1, $2, $3, $4)
-        RETURNING id, email, name, role, created_at
-      `, [email, password, name, role]);
+        INSERT INTO users (email, password, name)
+        VALUES ($1, $2, $3)
+        RETURNING id, email, name
+      `, [email, password, name]);
       return result.rows[0];
   }
 
@@ -92,7 +92,7 @@ class DatabaseService {
       const values = [id, ...Object.values(updatesCopy)];
 
       const result = await this.query(
-        `UPDATE users SET ${setClause}, updated_at = CURRENT_TIMESTAMP WHERE id = $1 RETURNING *`,
+        `UPDATE users SET ${setClause} WHERE id = $1 RETURNING *`,
         values
       );
       const updatedUser = result.rows[0];
@@ -124,7 +124,7 @@ class DatabaseService {
       const setClause = Object.keys(updates).map((key, index) => `${key} = $${index + 2}`).join(', ');
       const values = [userId, ...Object.values(updates)];
       const result = await this.query(`
-        UPDATE user_profiles SET ${setClause}, updated_at = CURRENT_TIMESTAMP
+        UPDATE user_profiles SET ${setClause}
         WHERE user_id = $1 RETURNING *
       `, values);
       return result.rows[0];
@@ -132,7 +132,17 @@ class DatabaseService {
 
   // Property operations with user_id filtering
   async getProperties(userId) {
-    return createGetAll(this.query.bind(this), 'properties', 'created_at DESC')(userId);
+    const result = await this.query(`
+      SELECT 
+        p.*,
+        COUNT(pt.tenant_id)::int as tenant_count
+      FROM properties p
+      LEFT JOIN property_tenants pt ON p.id = pt.property_id
+      WHERE p.user_id = $1
+      GROUP BY p.id
+      ORDER BY p.id DESC
+    `, [userId]);
+    return result.rows;
   }
 
   async getPropertyById(id, userId) {
@@ -143,16 +153,31 @@ class DatabaseService {
       if (!userId) {
         throw new Error('userId is required for addProperty');
       }
+      // Ensure bedrooms and bathrooms are integers (parseFloat then parseInt to handle "1.0" -> 1)
+      const bedrooms = parseInt(parseFloat(property.bedrooms), 10);
+      const bathrooms = parseInt(parseFloat(property.bathrooms), 10);
+      
       const result = await this.query(`
-      INSERT INTO properties (user_id, city, bedrooms, bathrooms, status, notes)
-      VALUES ($1, $2, $3, $4, $5, $6)
+      INSERT INTO properties (user_id, city, bedrooms, bathrooms, status)
+      VALUES ($1, $2, $3, $4, $5)
         RETURNING *
-    `, [userId, property.city, property.bedrooms, property.bathrooms, property.status, property.notes]);
+    `, [userId, property.city, bedrooms, bathrooms, property.status]);
       return result.rows[0];
     }
 
   async updateProperty(id, updates, userId) {
-    return createUpdate(this.query.bind(this), 'properties')(id, updates, userId);
+    // Ensure bedrooms and bathrooms are integers if they're being updated
+    // Also remove tenant_count as it's a computed field, not a real column
+    const processedUpdates = { ...updates };
+    delete processedUpdates.tenant_count; // Remove computed field
+    
+    if ('bedrooms' in processedUpdates) {
+      processedUpdates.bedrooms = parseInt(parseFloat(processedUpdates.bedrooms), 10);
+    }
+    if ('bathrooms' in processedUpdates) {
+      processedUpdates.bathrooms = parseInt(parseFloat(processedUpdates.bathrooms), 10);
+    }
+    return createUpdate(this.query.bind(this), 'properties')(id, processedUpdates, userId);
   }
 
   async deleteProperty(id, userId) {
@@ -161,7 +186,17 @@ class DatabaseService {
 
   // Tenant operations with user_id filtering
   async getTenants(userId) {
-    return createGetAll(this.query.bind(this), 'tenants', 'created_at DESC')(userId);
+    const result = await this.query(`
+      SELECT 
+        t.*,
+        COUNT(pt.property_id)::int as property_count
+      FROM tenants t
+      LEFT JOIN property_tenants pt ON t.id = pt.tenant_id
+      WHERE t.user_id = $1
+      GROUP BY t.id
+      ORDER BY t.id DESC
+    `, [userId]);
+    return result.rows;
   }
 
   async getTenantById(id, userId) {
@@ -173,15 +208,19 @@ class DatabaseService {
         throw new Error('userId is required for addTenant');
       }
       const result = await this.query(`
-      INSERT INTO tenants (user_id, name, email, phone, status, notes)
-      VALUES ($1, $2, $3, $4, $5, $6)
+      INSERT INTO tenants (user_id, name, email, status)
+      VALUES ($1, $2, $3, $4)
         RETURNING *
-    `, [userId, tenant.name, tenant.email, tenant.phone || null, tenant.status || 'Active', tenant.notes || null]);
+    `, [userId, tenant.name, tenant.email, tenant.status || 'Active']);
       return result.rows[0];
     }
 
   async updateTenant(id, updates, userId) {
-    return createUpdate(this.query.bind(this), 'tenants')(id, updates, userId);
+    // Remove property_count as it's a computed field, not a real column
+    const processedUpdates = { ...updates };
+    delete processedUpdates.property_count; // Remove computed field
+    
+    return createUpdate(this.query.bind(this), 'tenants')(id, processedUpdates, userId);
   }
 
   async deleteTenant(id, userId) {
@@ -191,24 +230,24 @@ class DatabaseService {
   // Property-Tenant relationship operations (Many-to-Many)
   async getPropertyTenants(propertyId, userId) {
       const result = await this.query(`
-        SELECT t.*, pt.lease_start, pt.lease_end
+        SELECT t.*, pt.start_date, pt.end_date
         FROM property_tenants pt
         JOIN tenants t ON pt.tenant_id = t.id
         JOIN properties p ON pt.property_id = p.id
         WHERE pt.property_id = $1 AND p.user_id = $2
-        ORDER BY pt.created_at DESC
+        ORDER BY pt.property_id DESC
       `, [propertyId, userId]);
       return result.rows;
   }
 
   async getTenantProperties(tenantId, userId) {
       const result = await this.query(`
-        SELECT p.*, pt.lease_start, pt.lease_end
+        SELECT p.*, pt.start_date, pt.end_date
         FROM property_tenants pt
         JOIN properties p ON pt.property_id = p.id
         JOIN tenants t ON pt.tenant_id = t.id
         WHERE pt.tenant_id = $1 AND t.user_id = $2
-        ORDER BY pt.created_at DESC
+        ORDER BY pt.property_id DESC
       `, [tenantId, userId]);
       return result.rows;
   }
@@ -229,13 +268,13 @@ class DatabaseService {
       }
 
       const result = await this.query(`
-        INSERT INTO property_tenants (property_id, tenant_id, lease_start, lease_end)
+        INSERT INTO property_tenants (property_id, tenant_id, start_date, end_date)
         VALUES ($1, $2, $3, $4)
         ON CONFLICT (property_id, tenant_id) DO UPDATE
-        SET lease_start = EXCLUDED.lease_start,
-            lease_end = EXCLUDED.lease_end
+        SET start_date = EXCLUDED.start_date,
+            end_date = EXCLUDED.end_date
         RETURNING *
-      `, [propertyId, tenantId, leaseData.lease_start || null, leaseData.lease_end || null]);
+      `, [propertyId, tenantId, leaseData.start_date || null, leaseData.end_date || null]);
       return result.rows[0];
   }
 
@@ -260,7 +299,7 @@ class DatabaseService {
         RETURNING *
       `, [propertyId, tenantId]);
       return result.rows[0];
-  }
+      }
 
   // Dashboard operations
   async getDashboardStats(userId = null) {
@@ -292,20 +331,20 @@ class DatabaseService {
         throw new Error('userId is required for getRecentActivities');
       }
       
-      // Get recent properties and tenants
+      // Get recent properties and tenants (ordered by ID, most recent first)
       const propertiesResult = await this.query(`
-        SELECT id, city as message, created_at
+        SELECT id, city as message
         FROM properties
         WHERE user_id = $1
-        ORDER BY created_at DESC
+        ORDER BY id DESC
         LIMIT 3
       `, [userId]);
       
       const tenantsResult = await this.query(`
-        SELECT id, name as message, created_at
+        SELECT id, name as message
         FROM tenants
         WHERE user_id = $1
-        ORDER BY created_at DESC
+        ORDER BY id DESC
         LIMIT 2
       `, [userId]);
       
@@ -313,40 +352,25 @@ class DatabaseService {
         ...propertiesResult.rows.map(row => ({
           id: `property-${row.id}`,
           type: 'property',
-          message: `Property added: ${row.message}`,
-          time: this.getTimeAgo(row.created_at),
-          created_at: row.created_at
+          message: `Property added: ${row.message}`
         })),
         ...tenantsResult.rows.map(row => ({
           id: `tenant-${row.id}`,
           type: 'tenant',
-          message: `Tenant added: ${row.message}`,
-          time: this.getTimeAgo(row.created_at),
-          created_at: row.created_at
+          message: `Tenant added: ${row.message}`
         }))
       ];
       
-      // Sort by creation date (most recent first) and limit to 5
+      // Sort by ID (most recent first) and limit to 5
       return activities
-        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-        .slice(0, 5)
-        .map(({ created_at, ...rest }) => rest); // Remove created_at from final result
+        .sort((a, b) => {
+          const idA = parseInt(a.id.split('-')[1]);
+          const idB = parseInt(b.id.split('-')[1]);
+          return idB - idA;
+        })
+        .slice(0, 5);
   }
 
-  getTimeAgo(dateString) {
-    const now = new Date();
-    const date = new Date(dateString);
-    const diffInHours = Math.floor((now - date) / (1000 * 60 * 60));
-    
-    if (diffInHours < 1) return 'Just now';
-    if (diffInHours < 24) return `${diffInHours} hour${diffInHours > 1 ? 's' : ''} ago`;
-    
-    const diffInDays = Math.floor(diffInHours / 24);
-    if (diffInDays < 7) return `${diffInDays} day${diffInDays > 1 ? 's' : ''} ago`;
-    
-    const diffInWeeks = Math.floor(diffInDays / 7);
-    return `${diffInWeeks} week${diffInWeeks > 1 ? 's' : ''} ago`;
-  }
 }
 
 // Create singleton instance

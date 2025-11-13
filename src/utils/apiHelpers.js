@@ -29,7 +29,14 @@ export const handleApiError = (error, operation, resourceName) => {
  */
 export const createCrudRoutes = (service, resourceName) => {
   // Handle naming: properties and tenants use singular for add/update/delete methods
-  const resourceSingular = resourceName.slice(0, -1);
+  // Special case: properties -> property (not propertie)
+  let resourceSingular;
+  if (resourceName === 'properties') {
+    resourceSingular = 'property';
+  } else {
+    resourceSingular = resourceName.slice(0, -1);
+  }
+  
   const resourceCapitalized = resourceName.charAt(0).toUpperCase() + resourceName.slice(1);
   const resourceSingularCapitalized = resourceSingular.charAt(0).toUpperCase() + resourceSingular.slice(1);
   

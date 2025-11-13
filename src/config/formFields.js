@@ -14,8 +14,7 @@ export const PROPERTY_FIELDS = [
       { value: 'Occupied', label: 'Occupied' },
       { value: 'Renovating', label: 'Renovating' }
     ]
-  },
-  { name: 'notes', label: 'Notes', type: 'textarea', placeholder: 'Enter any additional notes' }
+  }
 ];
 
 export const TENANT_FIELDS = [
@@ -34,12 +33,6 @@ export const TENANT_FIELDS = [
     placeholder: 'Enter tenant email'
   },
   {
-    name: 'phone',
-    label: 'Phone',
-    type: 'tel',
-    placeholder: 'Enter tenant phone number'
-  },
-  {
     name: 'status',
     label: 'Status',
     type: 'select',
@@ -48,12 +41,6 @@ export const TENANT_FIELDS = [
       { value: 'Active', label: 'Active' },
       { value: 'Inactive', label: 'Inactive' }
     ]
-  },
-  {
-    name: 'notes',
-    label: 'Notes',
-    type: 'textarea',
-    placeholder: 'Enter any additional notes'
   }
 ];
 

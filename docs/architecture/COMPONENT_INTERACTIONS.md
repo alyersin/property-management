@@ -239,9 +239,7 @@ export async function POST(request) {
       user: {
         id: userWithoutPassword.id,
         email: userWithoutPassword.email,
-        name: userWithoutPassword.name,
-        role: userWithoutPassword.role,
-        loginTime: new Date().toISOString()
+        name: userWithoutPassword.name
       }
     });
 

@@ -937,7 +937,7 @@ async getPropertyAmenities(propertyId, userId = null) {
 // BEFORE: getProperties() included amenities
 SELECT p.*, 
   STRING_AGG(DISTINCT a.name, ', ') as amenities,
-  STRING_AGG(DISTINCT CONCAT(t.name, ' (', pt.lease_start, ' - ', pt.lease_end, ')'), '; ') as current_tenants
+  STRING_AGG(DISTINCT CONCAT(t.name, ' (', pt.start_date, ' - ', pt.end_date, ')'), '; ') as current_tenants
 FROM properties p
 LEFT JOIN property_amenities pa ON p.id = pa.property_id
 LEFT JOIN amenities a ON pa.amenity_id = a.id
@@ -945,7 +945,7 @@ LEFT JOIN amenities a ON pa.amenity_id = a.id
 
 // AFTER: Removed amenities JOIN and aggregation
 SELECT p.*, 
-  STRING_AGG(DISTINCT CONCAT(t.name, ' (', pt.lease_start, ' - ', pt.lease_end, ')'), '; ') as current_tenants
+  STRING_AGG(DISTINCT CONCAT(t.name, ' (', pt.start_date, ' - ', pt.end_date, ')'), '; ') as current_tenants
 FROM properties p
 ...
 ```

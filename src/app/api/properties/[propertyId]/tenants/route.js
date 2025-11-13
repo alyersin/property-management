@@ -13,7 +13,7 @@ import databaseService from '../../../../../services/databaseService';
  * 
  * Request/Response Format:
  * - GET: Returns array of tenant objects with lease information
- * - POST: Requires { userId, tenantId, lease_start?, lease_end? } in body
+ * - POST: Requires { userId, tenantId, start_date?, end_date? } in body
  * - DELETE: Requires { userId, tenantId } in body
  */
 export async function GET(request, { params }) {
@@ -46,7 +46,7 @@ export async function POST(request, { params }) {
   try {
     const { propertyId } = await params;
     const body = await request.json();
-    const { userId, tenantId, lease_start, lease_end } = body;
+    const { userId, tenantId, start_date, end_date } = body;
 
     if (!userId || !tenantId) {
       return NextResponse.json(
@@ -58,7 +58,7 @@ export async function POST(request, { params }) {
     const result = await databaseService.addPropertyTenant(
       parseInt(propertyId, 10),
       parseInt(tenantId, 10),
-      { lease_start, lease_end },
+      { start_date, end_date },
       parseInt(userId, 10)
     );
     return NextResponse.json(result, { status: 201 });

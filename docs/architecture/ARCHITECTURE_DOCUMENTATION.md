@@ -303,7 +303,7 @@ export async function POST(request) {
   }
   
   // Create new user (server-side only)
-  const newUser = { id: Date.now(), email, name, role: 'user' };
+  const newUser = { id: Date.now(), email, name };
   return NextResponse.json({ success: true, user: newUser });
 }
 ```
@@ -348,7 +348,7 @@ Dashboard   ← User data    ← getDemoUsers() inline (credentials)
 const getDemoUsers = () => {
   // Validate that all required environment variables are set
   const requiredVars = [
-    'DEMO_USER_EMAIL', 'DEMO_USER_PASSWORD', 'DEMO_USER_NAME', 'DEMO_USER_ROLE'
+    'DEMO_USER_EMAIL', 'DEMO_USER_PASSWORD', 'DEMO_USER_NAME'
   ];
 
   const missingVars = requiredVars.filter(varName => !process.env[varName]);
@@ -361,8 +361,7 @@ const getDemoUsers = () => {
       id: 1,
       email: process.env.DEMO_USER_EMAIL,        // No fallbacks
       password: process.env.DEMO_USER_PASSWORD,  // No fallbacks
-      name: process.env.DEMO_USER_NAME,
-      role: process.env.DEMO_USER_ROLE,
+      name: process.env.DEMO_USER_NAME
     }
   ];
 };
@@ -559,50 +558,38 @@ CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     email VARCHAR(255) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
-    name VARCHAR(255) NOT NULL,
-    role VARCHAR(50) DEFAULT 'user',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    last_login TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    name VARCHAR(255) NOT NULL
 );
 
 -- User Profiles table (One-to-One with users)
 -- Simplified schema: phone field removed for simplified form presentation
 CREATE TABLE user_profiles (
     id SERIAL PRIMARY KEY,
-    user_id INTEGER UNIQUE REFERENCES users(id) ON DELETE CASCADE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    user_id INTEGER UNIQUE REFERENCES users(id) ON DELETE CASCADE
 );
 ```
 
 #### **One-to-Many (1:N) Relationships:**
 ```sql
 -- Properties table (simplified schema)
--- Fields removed: address, rent (simplified for demo)
+-- Fields removed: address, rent, notes (simplified for demo)
 CREATE TABLE properties (
     id SERIAL PRIMARY KEY,
     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     city VARCHAR(100) NOT NULL,
     bedrooms INTEGER NOT NULL,
     bathrooms INTEGER NOT NULL,
-    status VARCHAR(50) DEFAULT 'Available',
-    notes TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    status VARCHAR(50) DEFAULT 'Available'
 );
 
 -- Tenants table
+-- Fields removed: phone, notes (simplified for demo)
 CREATE TABLE tenants (
     id SERIAL PRIMARY KEY,
     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     name VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL,
-    phone VARCHAR(50),
     status VARCHAR(50) DEFAULT 'Active',
-    notes TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(user_id, email)
 );
 
@@ -615,9 +602,8 @@ CREATE TABLE tenants (
 CREATE TABLE property_tenants (
     property_id INTEGER NOT NULL REFERENCES properties(id) ON DELETE CASCADE,
     tenant_id INTEGER NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
-    lease_start DATE,
-    lease_end DATE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    start_date DATE,
+    end_date DATE,
     PRIMARY KEY (property_id, tenant_id)
 );
 ```
@@ -633,7 +619,7 @@ async updateUserProfile(userId, updates) { /* ... */ }
 
 // One-to-Many methods (properties, tenants)
 async getProperties(userId) {
-  return createGetAll(this.query.bind(this), 'properties', 'created_at DESC')(userId);
+  return createGetAll(this.query.bind(this), 'properties', 'id DESC')(userId);
 }
 async updateProperty(id, updates, userId) {
   return createUpdate(this.query.bind(this), 'properties')(id, updates, userId);
@@ -644,7 +630,7 @@ async deleteProperty(id, userId) {
 
 // Tenant CRUD operations
 async getTenants(userId) {
-  return createGetAll(this.query.bind(this), 'tenants', 'created_at DESC')(userId);
+  return createGetAll(this.query.bind(this), 'tenants', 'id DESC')(userId);
 }
 async addTenant(tenant, userId) { /* ... */ }
 async updateTenant(id, updates, userId) {

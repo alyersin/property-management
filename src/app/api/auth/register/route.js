@@ -61,12 +61,10 @@ export async function POST(request) {
     const hashedPassword = await bcrypt.hash(password, 12);
 
     // Create new user in database with hashed password
-    // Role defaults to 'user' (could be 'admin' for privileged accounts)
     const newUser = await databaseService.createUser({
       email,
       password: hashedPassword, // Store hashed version, never plain text
-      name,
-      role: 'user'
+      name
     });
 
     // Remove password from response before sending to client
@@ -79,9 +77,7 @@ export async function POST(request) {
       user: {
         id: userWithoutPassword.id,
         email: userWithoutPassword.email,
-        name: userWithoutPassword.name,
-        role: userWithoutPassword.role,
-        loginTime: new Date().toISOString() // Current timestamp
+        name: userWithoutPassword.name
       }
     });
 

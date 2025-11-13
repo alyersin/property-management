@@ -14,7 +14,7 @@ export const requireUserId = (userId, operation) => {
 /**
  * Generic GET operation for user-scoped resources
  */
-export const createGetAll = (queryFn, tableName, orderBy = 'created_at DESC') => {
+export const createGetAll = (queryFn, tableName, orderBy = 'id DESC') => {
   return async (userId) => {
     requireUserId(userId, `get${tableName}`);
     const result = await queryFn(`
@@ -57,7 +57,7 @@ export const createUpdate = (queryFn, tableName) => {
     const values = [id, userId, ...Object.values(updates)];
 
     const result = await queryFn(`
-      UPDATE ${tableName} SET ${setClause}, updated_at = CURRENT_TIMESTAMP
+      UPDATE ${tableName} SET ${setClause}
       WHERE id = $1 AND user_id = $2 RETURNING *
     `, values);
     

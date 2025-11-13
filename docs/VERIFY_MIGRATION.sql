@@ -31,7 +31,7 @@ FROM information_schema.columns
 WHERE table_name = 'tenants'
 ORDER BY ordinal_position;
 
--- Expected columns: id, user_id, name, email, phone, status, notes, created_at, updated_at
+-- Expected columns: id, user_id, name, email, phone, status, notes
 
 -- ============================================
 -- Verify property_tenants junction table
@@ -44,7 +44,7 @@ FROM information_schema.columns
 WHERE table_name = 'property_tenants'
 ORDER BY ordinal_position;
 
--- Expected columns: property_id, tenant_id, lease_start, lease_end, created_at
+-- Expected columns: property_id, tenant_id, start_date, end_date
 
 -- ============================================
 -- Check all indexes
@@ -79,7 +79,7 @@ UNION ALL
 SELECT
     'Tenants table' AS check_type,
     CASE
-        WHEN COUNT(*) = 9 THEN '✅ PASS - tenants schema correct'
+        WHEN COUNT(*) = 7 THEN '✅ PASS - tenants schema correct'
         ELSE '❌ FAIL - Review tenants schema'
     END AS result
 FROM information_schema.columns
@@ -88,7 +88,7 @@ UNION ALL
 SELECT
     'Property-Tenants junction' AS check_type,
     CASE
-        WHEN COUNT(*) = 5 THEN '✅ PASS - property_tenants schema correct'
+        WHEN COUNT(*) = 4 THEN '✅ PASS - property_tenants schema correct'
         ELSE '❌ FAIL - Review property_tenants schema'
     END AS result
 FROM information_schema.columns

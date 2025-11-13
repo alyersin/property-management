@@ -45,9 +45,7 @@ The Home Admin database uses PostgreSQL and implements **all three SQL relations
 ```sql
 CREATE TABLE user_profiles (
     id SERIAL PRIMARY KEY,
-    user_id INTEGER UNIQUE REFERENCES users(id) ON DELETE CASCADE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    user_id INTEGER UNIQUE REFERENCES users(id) ON DELETE CASCADE
 );
 ```
 
@@ -78,10 +76,7 @@ CREATE TABLE properties (
     city VARCHAR(100) NOT NULL,
     bedrooms INTEGER NOT NULL,
     bathrooms INTEGER NOT NULL,
-    status VARCHAR(50) DEFAULT 'Available',
-    notes TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    status VARCHAR(50) DEFAULT 'Available'
 );
 ```
 
@@ -110,11 +105,7 @@ CREATE TABLE tenants (
     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     name VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL,
-    phone VARCHAR(50),
     status VARCHAR(50) DEFAULT 'Active',
-    notes TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(user_id, email)
 );
 ```
@@ -151,9 +142,8 @@ CREATE TABLE tenants (
 CREATE TABLE property_tenants (
     property_id INTEGER NOT NULL REFERENCES properties(id) ON DELETE CASCADE,
     tenant_id INTEGER NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
-    lease_start DATE,
-    lease_end DATE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    start_date DATE,
+    end_date DATE,
     PRIMARY KEY (property_id, tenant_id)
 );
 ```
@@ -272,7 +262,7 @@ SELECT * FROM tenants WHERE user_id = 1;
 
 ### Get all tenants for a property (Many-to-Many)
 ```sql
-SELECT t.*, pt.lease_start, pt.lease_end
+SELECT t.*, pt.start_date, pt.end_date
 FROM property_tenants pt
 JOIN tenants t ON pt.tenant_id = t.id
 WHERE pt.property_id = 1 AND t.user_id = 1;
@@ -280,7 +270,7 @@ WHERE pt.property_id = 1 AND t.user_id = 1;
 
 ### Get all properties for a tenant (Many-to-Many)
 ```sql
-SELECT p.*, pt.lease_start, pt.lease_end
+SELECT p.*, pt.start_date, pt.end_date
 FROM property_tenants pt
 JOIN properties p ON pt.property_id = p.id
 WHERE pt.tenant_id = 1 AND p.user_id = 1;

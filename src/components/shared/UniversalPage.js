@@ -8,6 +8,8 @@ import PageLayout from "./PageLayout";
 import DataTable from "./DataTable";
 import FormModal from "./FormModal";
 import DynamicForm from "./DynamicForm";
+import PropertyTenantManagement from "./PropertyTenantManagement";
+import TenantPropertyManagement from "./TenantPropertyManagement";
 import { useAppData } from "../../hooks/useAppData";
 import { getFieldsByType } from "../../config/formFields";
 import ProtectedRoute from "../auth/ProtectedRoute";
@@ -22,10 +24,14 @@ const UniversalPage = ({
   hidePageLayout = false
 }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const { isOpen: isTenantModalOpen, onOpen: onTenantModalOpen, onClose: onTenantModalClose } = useDisclosure();
+  const { isOpen: isPropertyModalOpen, onOpen: onPropertyModalOpen, onClose: onPropertyModalClose } = useDisclosure();
   const [editingItem, setEditingItem] = useState(null);
+  const [selectedProperty, setSelectedProperty] = useState(null);
+  const [selectedTenant, setSelectedTenant] = useState(null);
   const { user } = useAuth();
   
-  const { data, loading, error, create, update, remove } = useAppData(dataType, user?.id);
+  const { data, loading, error, create, update, remove, refetch } = useAppData(dataType, user?.id);
   const fields = getFieldsByType(dataType);
 
   // Ensure data is always an array - no filtering applied
@@ -71,6 +77,27 @@ const UniversalPage = ({
     setEditingItem(null);
   };
 
+  const handleManageTenants = (property) => {
+    setSelectedProperty(property);
+    onTenantModalOpen();
+  };
+
+  const handleTenantModalClose = () => {
+    onTenantModalClose();
+    setSelectedProperty(null);
+    refetch(); // Refresh data after tenant changes
+  };
+
+  const handleViewProperties = (tenant) => {
+    setSelectedTenant(tenant);
+    onPropertyModalOpen();
+  };
+
+  const handlePropertyModalClose = () => {
+    onPropertyModalClose();
+    setSelectedTenant(null);
+  };
+
   // Map data types to their singular forms
   const singularForm = {
     properties: 'property',
@@ -82,6 +109,25 @@ const UniversalPage = ({
     tenants: 'tenants'
   }[dataType] || dataType.replace(/([A-Z])/g, ' $1').toLowerCase().trim();
 
+  // Add actions based on data type
+  const tableActions = dataType === 'properties' 
+    ? [
+        ...actions,
+        {
+          label: 'Manage Tenants',
+          onClick: handleManageTenants
+        }
+      ]
+    : dataType === 'tenants'
+    ? [
+        ...actions,
+        {
+          label: 'View Properties',
+          onClick: handleViewProperties
+        }
+      ]
+    : actions;
+
   const content = (
     <>
       <DataTable
@@ -89,6 +135,7 @@ const UniversalPage = ({
         columns={columns}
         onEdit={handleEdit}
         onDelete={handleDelete}
+        actions={tableActions}
         isLoading={loading}
         emptyMessage={emptyMessage}
       />
@@ -110,6 +157,25 @@ const UniversalPage = ({
           isLoading={loading}
         />
       </FormModal>
+
+      {dataType === 'properties' && selectedProperty && (
+        <PropertyTenantManagement
+          propertyId={selectedProperty.id}
+          propertyCity={selectedProperty.city}
+          isOpen={isTenantModalOpen}
+          onClose={handleTenantModalClose}
+          onUpdate={refetch}
+        />
+      )}
+
+      {dataType === 'tenants' && selectedTenant && (
+        <TenantPropertyManagement
+          tenantId={selectedTenant.id}
+          tenantName={selectedTenant.name}
+          isOpen={isPropertyModalOpen}
+          onClose={handlePropertyModalClose}
+        />
+      )}
     </>
   );
 

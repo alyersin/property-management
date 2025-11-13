@@ -139,9 +139,6 @@ const DashboardStats = ({ stats, recentActivities = [] }) => {
                       <Text fontSize="sm" fontWeight="bold" color="text.primary">
                         {activity.message}
                       </Text>
-                      <Text fontSize="xs" color="text.muted">
-                        {activity.time}
-                      </Text>
                     </Box>
                   </Flex>
                 </Box>

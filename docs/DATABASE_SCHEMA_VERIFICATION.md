@@ -15,8 +15,9 @@ Fresh deployments only require `src/database/schema.sql`. Running it against a n
 | Check | Command | Expectation |
 |-------|---------|-------------|
 | Tables created | `\dt` | The five tables listed above |
-| `tenants` columns | see SQL below | `id, user_id, name, email, phone, status, notes, created_at, updated_at` |
-| `property_tenants` columns | see SQL below | `property_id, tenant_id, lease_start, lease_end, created_at` |
+| `tenants` columns | see SQL below | `id, user_id, name, email, status` |
+| `properties` columns | see SQL below | `id, user_id, city, bedrooms, bathrooms, status` |
+| `property_tenants` columns | see SQL below | `property_id, tenant_id, start_date, end_date` |
 | Indexes | see SQL below | `idx_properties_user`, `idx_tenants_user`, `idx_property_tenants_property`, `idx_property_tenants_tenant` |
 
 ## Useful SQL

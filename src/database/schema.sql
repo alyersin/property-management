@@ -6,47 +6,35 @@ CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     email VARCHAR(255) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
-    name VARCHAR(255) NOT NULL,
-    role VARCHAR(50) DEFAULT 'user',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    last_login TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    name VARCHAR(255) NOT NULL
 );
 
 -- User Profiles table (One-to-One with users)
 -- Note: phone field removed for simplified form presentation
 CREATE TABLE user_profiles (
     id SERIAL PRIMARY KEY,
-    user_id INTEGER UNIQUE REFERENCES users(id) ON DELETE CASCADE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    user_id INTEGER UNIQUE REFERENCES users(id) ON DELETE CASCADE
 );
 
 -- Properties table
--- Note: state, zip, and sqft fields removed for simplified form presentation
+-- Note: state, zip, sqft, and notes fields removed for simplified form presentation
 CREATE TABLE properties (
     id SERIAL PRIMARY KEY,
     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     city VARCHAR(100) NOT NULL,
     bedrooms INTEGER NOT NULL,
     bathrooms INTEGER NOT NULL,
-    status VARCHAR(50) DEFAULT 'Available',
-    notes TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    status VARCHAR(50) DEFAULT 'Available'
 );
 
 -- Tenants table
+-- Note: phone and notes fields removed for simplified form presentation
 CREATE TABLE tenants (
     id SERIAL PRIMARY KEY,
     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     name VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL,
-    phone VARCHAR(50),
     status VARCHAR(50) DEFAULT 'Active',
-    notes TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(user_id, email)
 );
 
@@ -54,9 +42,8 @@ CREATE TABLE tenants (
 CREATE TABLE property_tenants (
     property_id INTEGER NOT NULL REFERENCES properties(id) ON DELETE CASCADE,
     tenant_id INTEGER NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
-    lease_start DATE,
-    lease_end DATE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    start_date DATE,
+    end_date DATE,
     PRIMARY KEY (property_id, tenant_id)
 );
 
