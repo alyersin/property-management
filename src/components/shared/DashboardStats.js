@@ -18,7 +18,6 @@ import StatCard from "./StatCard";
 const EMPTY_STATS = {
   totalProperties: 0,
   occupiedProperties: 0,
-  monthlyExpenses: 0,
   availableProperties: 0,
   occupancyRate: 0,
 };
@@ -28,8 +27,8 @@ const DashboardStats = ({ stats, recentActivities = [] }) => {
 
   const getActivityIcon = (type) => {
     const icons = {
-      expense: "💸",
       property: "🏠",
+      tenant: "👥",
     };
     return icons[type] || "📊";
   };
@@ -46,7 +45,7 @@ const DashboardStats = ({ stats, recentActivities = [] }) => {
   return (
     <VStack spacing={8} align="stretch">
       {/* Key Metrics */}
-      <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} spacing={6}>
+      <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
         <StatCard
           label="Total Properties"
           value={safeStats.totalProperties}
@@ -60,13 +59,6 @@ const DashboardStats = ({ stats, recentActivities = [] }) => {
           helpText={`of ${safeStats.totalProperties}`}
           color="accent.default"
           arrowType="increase"
-        />
-        <StatCard
-          label="Monthly Expenses"
-          value={`$${safeStats.monthlyExpenses.toLocaleString()}`}
-          helpText="This month"
-          color="danger.default"
-          arrowType="decrease"
         />
         <StatCard
           label="Available Properties"
@@ -150,15 +142,6 @@ const DashboardStats = ({ stats, recentActivities = [] }) => {
                       <Text fontSize="xs" color="text.muted">
                         {activity.time}
                       </Text>
-                      {activity.amount && (
-                        <Text
-                          fontSize="xs"
-                          color="success.default"
-                          fontWeight="bold"
-                        >
-                          +${activity.amount.toLocaleString()}
-                        </Text>
-                      )}
                     </Box>
                   </Flex>
                 </Box>

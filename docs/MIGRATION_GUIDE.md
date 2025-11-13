@@ -1,13 +1,29 @@
-# Migration Guide: Adding Multi-User Data Isolation
+# Database Schema Guide: Multi-User Data Isolation
 
-> **Update – November 2025**  
-> Tenant management, transactions, and expenses tables were removed in favour of the unified `expenses` table. The legacy guidance below is preserved for historical reference; new environments should apply `src/database/schema.sql`.
+> **Update – December 2024**  
+> Tenant management has been restored. The database now includes `tenants` and `property_tenants` tables.
 
-This guide explains the database changes made to implement proper multi-user data isolation in the Home Admin application.
+## Important Note
+
+**This guide explains the database schema design. For fresh installations, you don't need to run migrations.**
+
+If you're using Docker and always start fresh (delete volumes), the `schema.sql` file runs automatically. See `docker-compose.yml` for details.
+
+**To reset database:**
+```bash
+docker-compose down -v  # -v removes volumes
+docker-compose up -d    # Fresh start with latest schema.sql
+```
+
+---
+
+This guide explains the database schema design and how multi-user data isolation works in the Home Admin application.
 
 ## Overview
 
-The application has been upgraded from a single-user demo to a production-ready multi-user system where each user can only see and manage their own properties, tenants, expenses, and transactions.
+The application has been upgraded from a single-user demo to a production-ready multi-user system where each user can only see and manage their own properties and tenants.
+
+> **Note:** The expenses feature has been removed as of December 2024. See [EXPENSES_REMOVAL.md](./removed-elements/EXPENSES_REMOVAL.md) for details.
 
 ## Key Changes
 
@@ -15,10 +31,10 @@ The application has been upgraded from a single-user demo to a production-ready 
 
 All business data tables now include a `user_id` foreign key to link records to their owners:
 
-- **properties**: Added `user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE`
-- **tenants**: Added `user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE`
-- **transactions**: Added `user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE`
-- **expenses**: Added `user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE`
+- **properties**: `user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE`
+- **tenants**: `user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE`
+
+Additionally, the **property_tenants** junction table enables many-to-many relationships between properties and tenants.
 
 ### 2. Database Driver Change
 
@@ -29,9 +45,11 @@ All business data tables now include a `user_id` foreign key to link records to 
 
 New indexes added for performance:
 - `idx_properties_user` on `properties(user_id)`
+- `idx_properties_status` on `properties(status)`
 - `idx_tenants_user` on `tenants(user_id)`
-- `idx_transactions_user` on `transactions(user_id)`
-- `idx_expenses_user` on `expenses(user_id)`
+- `idx_tenants_status` on `tenants(status)`
+- `idx_property_tenants_property` on `property_tenants(property_id)`
+- `idx_property_tenants_tenant` on `property_tenants(tenant_id)`
 
 ### 4. Data Integrity
 
@@ -63,30 +81,20 @@ docker exec -it home-admin-postgres psql -U postgres -d home_admin
 # 2. Add user_id columns (without NOT NULL constraint first)
 ALTER TABLE properties ADD COLUMN user_id INTEGER;
 ALTER TABLE tenants ADD COLUMN user_id INTEGER;
-ALTER TABLE transactions ADD COLUMN user_id INTEGER;
-ALTER TABLE expenses ADD COLUMN user_id INTEGER;
 
 # 3. Set default user_id for existing data (use user ID 1 as default admin)
 UPDATE properties SET user_id = 1 WHERE user_id IS NULL;
 UPDATE tenants SET user_id = 1 WHERE user_id IS NULL;
-UPDATE transactions SET user_id = 1 WHERE user_id IS NULL;
-UPDATE expenses SET user_id = 1 WHERE user_id IS NULL;
 
 # 4. Add foreign key constraints
 ALTER TABLE properties ADD CONSTRAINT fk_properties_user 
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
 ALTER TABLE tenants ADD CONSTRAINT fk_tenants_user 
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
-ALTER TABLE transactions ADD CONSTRAINT fk_transactions_user 
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
-ALTER TABLE expenses ADD CONSTRAINT fk_expenses_user 
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
 
 # 5. Make user_id NOT NULL (now safe since all rows have values)
 ALTER TABLE properties ALTER COLUMN user_id SET NOT NULL;
 ALTER TABLE tenants ALTER COLUMN user_id SET NOT NULL;
-ALTER TABLE transactions ALTER COLUMN user_id SET NOT NULL;
-ALTER TABLE expenses ALTER COLUMN user_id SET NOT NULL;
 
 # 6. Drop old unique constraint on tenants.email
 ALTER TABLE tenants DROP CONSTRAINT tenants_email_key;
@@ -98,8 +106,6 @@ ALTER TABLE tenants ADD CONSTRAINT tenants_user_email_unique
 # 8. Create indexes for performance
 CREATE INDEX idx_properties_user ON properties(user_id);
 CREATE INDEX idx_tenants_user ON tenants(user_id);
-CREATE INDEX idx_transactions_user ON transactions(user_id);
-CREATE INDEX idx_expenses_user ON expenses(user_id);
 
 # 9. Exit
 \q
@@ -109,9 +115,9 @@ CREATE INDEX idx_expenses_user ON expenses(user_id);
 
 The updated schema distributes sample data across the three demo users:
 
-- **Admin User (user_id: 1)**: 2 properties, 2 tenants, 5 transactions, 4 expenses
-- **Property Manager (user_id: 2)**: 1 property, 1 tenant, 1 transaction, 1 expense
-- **Demo User (user_id: 3)**: 1 property, 1 tenant, 1 transaction, 1 expense
+- **Admin User (user_id: 1)**: 2 properties, 2 tenants
+- **Property Manager (user_id: 2)**: 1 property, 1 tenant
+- **Demo User (user_id: 3)**: 1 property, 1 tenant
 
 ## Security Improvements
 
@@ -162,7 +168,7 @@ SESSION_SECRET=your-super-secret-session-key-here
 2. **Create Additional Users**:
    - Email: `demo@homeadmin.ro`
    - Password: `demo123`
-   - Should see: 1 property, 1 tenant, 1 transaction
+   - Should see: 1 property, 1 tenant
 
 ## Rollback Plan
 
@@ -173,15 +179,13 @@ If you need to rollback to the old schema:
 docker exec home-admin-postgres pg_dump -U postgres home_admin > backup_before_rollback.sql
 
 # Remove constraints and columns
+# Note: This rollback script is for historical reference only.
+# The expenses and transactions tables have been removed from the application.
 ALTER TABLE properties DROP CONSTRAINT IF EXISTS fk_properties_user CASCADE;
 ALTER TABLE tenants DROP CONSTRAINT IF EXISTS fk_tenants_user CASCADE;
-ALTER TABLE transactions DROP CONSTRAINT IF EXISTS fk_transactions_user CASCADE;
-ALTER TABLE expenses DROP CONSTRAINT IF EXISTS fk_expenses_user CASCADE;
 
 ALTER TABLE properties DROP COLUMN IF EXISTS user_id CASCADE;
 ALTER TABLE tenants DROP COLUMN IF EXISTS user_id CASCADE;
-ALTER TABLE transactions DROP COLUMN IF EXISTS user_id CASCADE;
-ALTER TABLE expenses DROP COLUMN IF EXISTS user_id CASCADE;
 
 # Restore old unique constraint on tenants
 ALTER TABLE tenants ADD CONSTRAINT tenants_email_key UNIQUE (email);

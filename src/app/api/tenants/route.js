@@ -2,22 +2,22 @@ import databaseService from '../../../services/databaseService';
 import { createCrudRoutes } from '../../../utils/apiHelpers';
 
 /**
- * Expenses API Routes
+ * Tenants API Routes
  * 
  * This file uses a generic CRUD route factory to create standard REST endpoints.
  * The createCrudRoutes helper generates GET and POST handlers automatically.
  * 
  * Available Routes:
- * - GET /api/expenses?userId=123 - Get all expenses for a user
- * - POST /api/expenses - Create a new expense
+ * - GET /api/tenants?userId=123 - Get all tenants for a user
+ * - POST /api/tenants - Create a new tenant
  * 
- * Note: PUT and DELETE are handled in /api/expenses/[expenseId]/route.js
+ * Note: PUT and DELETE are handled in /api/tenants/[tenantId]/route.js
  * 
  * Request/Response Format:
- * - GET: Returns array of expense objects
- * - POST: Requires { userId, ...expenseData } in body, returns created expense
+ * - GET: Returns array of tenant objects
+ * - POST: Requires { userId, ...tenantData } in body, returns created tenant
  */
-const routes = createCrudRoutes(databaseService, 'expenses');
+const routes = createCrudRoutes(databaseService, 'tenants');
 
 // Export GET and POST handlers from the generated routes
 export const GET = routes.GET;

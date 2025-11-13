@@ -24,27 +24,27 @@ export const PROPERTY_COLUMNS = [
   }
 ];
 
-export const EXPENSE_COLUMNS = [
+export const TENANT_COLUMNS = [
   {
-    key: 'description',
-    label: 'Description'
+    key: 'name',
+    label: 'Name',
+    render: (value, item) => (
+      <div>
+        <div style={{ fontWeight: 'bold' }}>{value}</div>
+        {item.email && (
+          <div style={{ fontSize: '0.875rem', color: '#666' }}>{item.email}</div>
+        )}
+      </div>
+    )
   },
   {
-    key: 'amount',
-    label: 'Amount',
-    render: (value, item) => {
-      const numericValue = Number(value);
-      return (
-        <div style={{ fontWeight: 'bold', color: '#ef4444' }}>
-          -${Math.abs(numericValue).toLocaleString()}
-        </div>
-      );
-    }
+    key: 'phone',
+    label: 'Phone',
+    render: (value) => value || '—'
   },
   {
-    key: 'date',
-    label: 'Date',
-    render: (value) => new Date(value).toLocaleDateString()
+    key: 'status',
+    label: 'Status'
   },
   {
     key: 'notes',
@@ -58,8 +58,8 @@ export const getColumnsByType = (dataType) => {
   switch (dataType) {
     case 'properties':
       return PROPERTY_COLUMNS;
-    case 'expenses':
-      return EXPENSE_COLUMNS;
+    case 'tenants':
+      return TENANT_COLUMNS;
     default:
       return [];
   }

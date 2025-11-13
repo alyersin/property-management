@@ -44,10 +44,8 @@ The Home Admin application is a **Next.js 15** property management system built 
 │  │                 │    │                 │    │              │ │
 │  │ • Dashboard     │◄───┤ • UniversalPage │◄───┤ • useAppData │ │
 │  │ • Properties    │    │ • DynamicForm   │    │ • useForm    │ │
-│  │ • Expenses      │    │ • DataTable     │    │              │ │
-│  │ • Settings      │    │ • DashboardStats│    │              │ │
-│  │ • Login/Register│    │ • PageLayout    │    │              │ │
-│  │ • Settings      │    │ • SearchFilter  │    │              │ │
+│  │ • Tenants       │    │ • DataTable     │    │              │ │
+│  │ • Settings      │    │ • PageLayout    │    │              │ │
 │  │ • Login/Register│    │ • FormModal     │    │              │ │
 │  └─────────────────┘    └─────────────────┘    └──────────────┘ │
 │           │                       │                       │      │
@@ -70,7 +68,7 @@ The Home Admin application is a **Next.js 15** property management system built 
 │  │                 │    │                 │    │              │ │
 │  │ • /api/auth/    │    │ • apiHelpers.js │    │ • PostgreSQL │ │
 │  │ • /api/properties│   │ • CRUD Factory  │    │ • Schema     │ │
-│  │ • /api/expenses │    │                 │    │ • Docker     │ │
+│  │ • /api/tenants  │    │                 │    │ • Docker     │ │
 │  │ • /api/dashboard│    │                 │    │              │ │
 │  └─────────────────┘    └─────────────────┘    └──────────────┘ │
 └─────────────────────────────────────────────────────────────────┘
@@ -84,7 +82,7 @@ The Home Admin application is a **Next.js 15** property management system built 
 │  │                 │    │                 │    │              │ │
 │  │ • PostgreSQL    │    │ • Connection    │    │ • Users      │ │
 │  │ • Docker        │    │   Pool          │    │ • Properties │ │
-│  │ • Multi-user    │    │ • Transactions  │    │ • Expenses   │ │
+│  │ • Multi-user    │    │                 │    │ • Tenants    │ │
 │  └─────────────────┘    └─────────────────┘    └──────────────┘ │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -161,7 +159,7 @@ src/
 ### **1. Page Layer**
 ```
 app/
-├── dashboard/page.js          # Main app with tabs (Dashboard, Properties, Expenses)
+├── dashboard/page.js          # Main app with tabs (Dashboard, Properties, Tenants)
 ├── settings/page.js           # Custom settings form
 ├── login/page.js              # Styled login form
 └── register/page.js           # Styled register form
@@ -200,12 +198,10 @@ app/api/
 config/
 ├── formFields.js             # Field definitions for forms
 │   ├── PROPERTY_FIELDS       # Property form fields
-│   ├── TENANT_FIELDS         # Tenant form fields
-│   ├── TRANSACTION_FIELDS    # Transaction form fields
-│   └── EXPENSE_FIELDS        # Expense form fields
+│   └── TENANT_FIELDS         # Tenant form fields
 └── tableColumns.js           # Column definitions for tables
     ├── PROPERTY_COLUMNS      # Property table columns
-    └── EXPENSE_COLUMNS       # Expense table columns
+    └── TENANT_COLUMNS        # Tenant table columns
 ```
 
 ---
@@ -251,9 +247,9 @@ src/app/api/
 ├── properties/
 │   ├── route.js               # GET/POST /api/properties (uses CRUD factory)
 │   └── [propertyId]/route.js # PUT/DELETE /api/properties/[id] (uses CRUD factory)
-├── expenses/
-│   ├── route.js               # GET/POST /api/expenses (uses CRUD factory)
-│   └── [expenseId]/route.js  # PUT/DELETE /api/expenses/[id] (uses CRUD factory)
+├── tenants/
+│   ├── route.js               # GET/POST /api/tenants (uses CRUD factory)
+│   └── [tenantId]/route.js   # PUT/DELETE /api/tenants/[id] (uses CRUD factory)
 └── user-profiles/
     └── [userId]/route.js      # GET/POST/PUT /api/user-profiles/[userId]
 ```
@@ -406,9 +402,7 @@ class DataService {
     this.data = {
       users: [], // SECURITY: No user data in client-side code
       properties: [...],
-      tenants: [...],
-      transactions: [...],
-      expenses: [...]
+      tenants: [...]
     };
   }
 
@@ -471,19 +465,7 @@ export default function Properties() {
   );
 }
 
-// app/expenses/page.js - Still uses search
-export default function Expenses() {
-  return (
-    <UniversalPage
-      dataType="expenses"
-      title="Expenses"
-      currentPage="/expenses"
-      searchFields={['description', 'notes']}  // Search enabled
-      columns={getColumnsByType('expenses')}
-      emptyMessage="No expenses recorded"
-    />
-  );
-}
+// Expenses feature has been removed - see EXPENSES_REMOVAL.md
 ```
 
 ---
@@ -610,16 +592,33 @@ CREATE TABLE properties (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Expenses table (utility tracking)
-CREATE TABLE expenses (
+-- Tenants table
+CREATE TABLE tenants (
     id SERIAL PRIMARY KEY,
     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    description VARCHAR(255) NOT NULL,
-    amount DECIMAL(10,2) NOT NULL,
-    date DATE NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    phone VARCHAR(50),
+    status VARCHAR(50) DEFAULT 'Active',
     notes TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id, email)
+);
+
+-- Expenses table has been removed - see EXPENSES_REMOVAL.md
+```
+
+#### **Many-to-Many (N:M) Relationships:**
+```sql
+-- Property-Tenants junction table (Many-to-Many relationship)
+CREATE TABLE property_tenants (
+    property_id INTEGER NOT NULL REFERENCES properties(id) ON DELETE CASCADE,
+    tenant_id INTEGER NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+    lease_start DATE,
+    lease_end DATE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (property_id, tenant_id)
 );
 ```
 
@@ -632,7 +631,7 @@ async getUserProfile(userId) { /* ... */ }
 async createUserProfile(userId, profileData) { /* ... */ }
 async updateUserProfile(userId, updates) { /* ... */ }
 
-// One-to-Many methods (properties & expenses)
+// One-to-Many methods (properties, tenants)
 async getProperties(userId) {
   return createGetAll(this.query.bind(this), 'properties', 'created_at DESC')(userId);
 }
@@ -643,10 +642,23 @@ async deleteProperty(id, userId) {
   return createDelete(this.query.bind(this), 'properties')(id, userId);
 }
 
-// Similar pattern for expenses
-async getExpenses(userId) {
-  return createGetAll(this.query.bind(this), 'expenses', 'date DESC')(userId);
+// Tenant CRUD operations
+async getTenants(userId) {
+  return createGetAll(this.query.bind(this), 'tenants', 'created_at DESC')(userId);
 }
+async addTenant(tenant, userId) { /* ... */ }
+async updateTenant(id, updates, userId) {
+  return createUpdate(this.query.bind(this), 'tenants')(id, updates, userId);
+}
+async deleteTenant(id, userId) {
+  return createDelete(this.query.bind(this), 'tenants')(id, userId);
+}
+
+// Many-to-Many methods (property-tenant relationships)
+async getPropertyTenants(propertyId, userId) { /* ... */ }
+async getTenantProperties(tenantId, userId) { /* ... */ }
+async addPropertyTenant(propertyId, tenantId, leaseData, userId) { /* ... */ }
+async removePropertyTenant(propertyId, tenantId, userId) { /* ... */ }
 ```
 
 **Benefits:**
@@ -738,9 +750,9 @@ volumes:
 
 ### **Database Relationships**
 - **One-to-One**: 1 relationship (users ↔ user_profiles)
-- **One-to-Many**: 2 relationships (users → properties, users → expenses)
-- **Many-to-Many**: None (simplified for demo)
-- **Total Tables**: 4 tables (users, user_profiles, properties, expenses)
+- **One-to-Many**: 2 relationships (users → properties, users → tenants)
+- **Many-to-Many**: 1 relationship (properties ↔ tenants)
+- **Total Tables**: 5 tables (users, user_profiles, properties, tenants, property_tenants)
 - **Data Isolation**: Multi-user support with `user_id` filtering
 
 ### **Refactoring Benefits**

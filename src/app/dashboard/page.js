@@ -62,13 +62,13 @@ function TabContent({ onTitleChange }) {
         />
       );
 
-    case 2: // Expenses
+    case 2: // Tenants
       return (
         <UniversalPage
-          dataType="expenses"
-          title="Expenses"
-          columns={getColumnsByType('expenses')}
-          emptyMessage="No expenses recorded"
+          dataType="tenants"
+          title="Tenant Management"
+          columns={getColumnsByType('tenants')}
+          emptyMessage="No tenants found"
           hidePageLayout={true}
         />
       );

@@ -33,7 +33,8 @@ const RegisterPage = () => {
     }
     
     try {
-      const result = await register(email, email, password);
+      // Use email as name since form doesn't collect name separately
+      const result = await register(email, email, password, confirmPassword);
       if (result.success) {
         router.push(ROUTES.dashboard);
       } else {

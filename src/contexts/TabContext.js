@@ -20,7 +20,7 @@ export const TabProvider = ({ children }) => {
   };
 
   const getTabTitle = (index) => {
-    const titles = ["Dashboard", "Property Management", "Expenses"];
+    const titles = ["Dashboard", "Property Management", "Tenant Management"];
     return titles[index] || "Dashboard";
   };
 

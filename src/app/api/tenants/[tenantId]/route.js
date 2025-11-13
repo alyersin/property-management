@@ -2,25 +2,25 @@ import databaseService from '../../../../services/databaseService';
 import { createCrudRoutes } from '../../../../utils/apiHelpers';
 
 /**
- * Expense by ID API Routes
+ * Tenant by ID API Routes
  * 
- * This file handles operations on a specific expense identified by expenseId.
+ * This file handles operations on a specific tenant identified by tenantId.
  * Uses a generic CRUD route factory to create standard REST endpoints.
  * 
  * Available Routes:
- * - PUT /api/expenses/[expenseId] - Update a specific expense
- * - DELETE /api/expenses/[expenseId] - Delete a specific expense
+ * - PUT /api/tenants/[tenantId] - Update a specific tenant
+ * - DELETE /api/tenants/[tenantId] - Delete a specific tenant
  * 
- * Note: GET and POST are handled in /api/expenses/route.js
+ * Note: GET and POST are handled in /api/tenants/route.js
  * 
  * Request/Response Format:
- * - PUT: Requires { userId, ...expenseUpdates } in body, returns updated expense
+ * - PUT: Requires { userId, ...tenantUpdates } in body, returns updated tenant
  * - DELETE: Requires { userId } in body, returns { success: true }
  * 
  * URL Parameter:
- * - expenseId: The ID of the expense to update or delete
+ * - tenantId: The ID of the tenant to update or delete
  */
-const routes = createCrudRoutes(databaseService, 'expenses');
+const routes = createCrudRoutes(databaseService, 'tenants');
 
 // Export PUT and DELETE handlers from the generated routes
 export const PUT = routes.PUT;

@@ -159,30 +159,108 @@ class DatabaseService {
     return createDelete(this.query.bind(this), 'properties')(id, userId);
   }
 
-  // Expense operations with user_id filtering
-  async getExpenses(userId) {
-    return createGetAll(this.query.bind(this), 'expenses', 'date DESC')(userId);
+  // Tenant operations with user_id filtering
+  async getTenants(userId) {
+    return createGetAll(this.query.bind(this), 'tenants', 'created_at DESC')(userId);
   }
 
-  async addExpenses(expense, userId) {
+  async getTenantById(id, userId) {
+    return createGetById(this.query.bind(this), 'tenants')(id, userId);
+  }
+
+  async addTenant(tenant, userId) {
       if (!userId) {
-        throw new Error('userId is required for addExpenses');
+        throw new Error('userId is required for addTenant');
       }
       const result = await this.query(`
-        INSERT INTO expenses (user_id, description, amount, date, notes)
-        VALUES ($1, $2, $3, $4, $5)
+      INSERT INTO tenants (user_id, name, email, phone, status, notes)
+      VALUES ($1, $2, $3, $4, $5, $6)
         RETURNING *
-      `, [userId, expense.description, expense.amount, expense.date, expense.notes]);
+    `, [userId, tenant.name, tenant.email, tenant.phone || null, tenant.status || 'Active', tenant.notes || null]);
       return result.rows[0];
     }
 
-  async updateExpenses(id, updates, userId) {
-    return createUpdate(this.query.bind(this), 'expenses')(id, updates, userId);
+  async updateTenant(id, updates, userId) {
+    return createUpdate(this.query.bind(this), 'tenants')(id, updates, userId);
   }
 
-  async deleteExpenses(id, userId) {
-    return createDelete(this.query.bind(this), 'expenses')(id, userId);
+  async deleteTenant(id, userId) {
+    return createDelete(this.query.bind(this), 'tenants')(id, userId);
+  }
+
+  // Property-Tenant relationship operations (Many-to-Many)
+  async getPropertyTenants(propertyId, userId) {
+      const result = await this.query(`
+        SELECT t.*, pt.lease_start, pt.lease_end
+        FROM property_tenants pt
+        JOIN tenants t ON pt.tenant_id = t.id
+        JOIN properties p ON pt.property_id = p.id
+        WHERE pt.property_id = $1 AND p.user_id = $2
+        ORDER BY pt.created_at DESC
+      `, [propertyId, userId]);
+      return result.rows;
+  }
+
+  async getTenantProperties(tenantId, userId) {
+      const result = await this.query(`
+        SELECT p.*, pt.lease_start, pt.lease_end
+        FROM property_tenants pt
+        JOIN properties p ON pt.property_id = p.id
+        JOIN tenants t ON pt.tenant_id = t.id
+        WHERE pt.tenant_id = $1 AND t.user_id = $2
+        ORDER BY pt.created_at DESC
+      `, [tenantId, userId]);
+      return result.rows;
+  }
+
+  async addPropertyTenant(propertyId, tenantId, leaseData, userId) {
+      // Verify both property and tenant belong to the user
+      const propertyCheck = await this.query(
+        'SELECT id FROM properties WHERE id = $1 AND user_id = $2',
+        [propertyId, userId]
+      );
+      const tenantCheck = await this.query(
+        'SELECT id FROM tenants WHERE id = $1 AND user_id = $2',
+        [tenantId, userId]
+      );
+
+      if (propertyCheck.rows.length === 0 || tenantCheck.rows.length === 0) {
+        throw new Error('Property or tenant not found or does not belong to user');
       }
+
+      const result = await this.query(`
+        INSERT INTO property_tenants (property_id, tenant_id, lease_start, lease_end)
+        VALUES ($1, $2, $3, $4)
+        ON CONFLICT (property_id, tenant_id) DO UPDATE
+        SET lease_start = EXCLUDED.lease_start,
+            lease_end = EXCLUDED.lease_end
+        RETURNING *
+      `, [propertyId, tenantId, leaseData.lease_start || null, leaseData.lease_end || null]);
+      return result.rows[0];
+  }
+
+  async removePropertyTenant(propertyId, tenantId, userId) {
+      // Verify both property and tenant belong to the user
+      const propertyCheck = await this.query(
+        'SELECT id FROM properties WHERE id = $1 AND user_id = $2',
+        [propertyId, userId]
+      );
+      const tenantCheck = await this.query(
+        'SELECT id FROM tenants WHERE id = $1 AND user_id = $2',
+        [tenantId, userId]
+      );
+
+      if (propertyCheck.rows.length === 0 || tenantCheck.rows.length === 0) {
+        throw new Error('Property or tenant not found or does not belong to user');
+      }
+
+      const result = await this.query(`
+        DELETE FROM property_tenants
+        WHERE property_id = $1 AND tenant_id = $2
+        RETURNING *
+      `, [propertyId, tenantId]);
+      return result.rows[0];
+  }
 
   // Dashboard operations
   async getDashboardStats(userId = null) {
@@ -195,18 +273,10 @@ class DatabaseService {
          FROM properties WHERE user_id = $1`,
         [userId]
       );
-
-      const currentMonth = new Date().toISOString().slice(0, 7);
-      const expensesResult = await this.query(`
-        SELECT COALESCE(SUM(amount), 0) as expenses
-        FROM expenses 
-        WHERE date >= $1 AND date < $2 AND user_id = $3
-      `, [`${currentMonth}-01`, `${currentMonth}-32`, userId]);
       
       const stats = {
         totalProperties: parseInt(propertiesResult.rows[0].total),
         occupiedProperties: parseInt(propertiesResult.rows[0].occupied),
-        monthlyExpenses: parseFloat(expensesResult.rows[0].expenses || 0),
         occupancyRate: propertiesResult.rows[0].total > 0 
           ? Math.round((parseInt(propertiesResult.rows[0].occupied) / parseInt(propertiesResult.rows[0].total)) * 100)
         : 0,
@@ -222,21 +292,45 @@ class DatabaseService {
         throw new Error('userId is required for getRecentActivities');
       }
       
-      const result = await this.query(`
-        SELECT id, description as message, created_at, amount
-        FROM expenses
+      // Get recent properties and tenants
+      const propertiesResult = await this.query(`
+        SELECT id, city as message, created_at
+        FROM properties
         WHERE user_id = $1
         ORDER BY created_at DESC
-        LIMIT 5
+        LIMIT 3
       `, [userId]);
       
-      return result.rows.map(row => ({
-        id: `expense-${row.id}`,
-        type: 'expense',
-        message: row.message,
-        time: this.getTimeAgo(row.created_at),
-        amount: row.amount
-      }));
+      const tenantsResult = await this.query(`
+        SELECT id, name as message, created_at
+        FROM tenants
+        WHERE user_id = $1
+        ORDER BY created_at DESC
+        LIMIT 2
+      `, [userId]);
+      
+      const activities = [
+        ...propertiesResult.rows.map(row => ({
+          id: `property-${row.id}`,
+          type: 'property',
+          message: `Property added: ${row.message}`,
+          time: this.getTimeAgo(row.created_at),
+          created_at: row.created_at
+        })),
+        ...tenantsResult.rows.map(row => ({
+          id: `tenant-${row.id}`,
+          type: 'tenant',
+          message: `Tenant added: ${row.message}`,
+          time: this.getTimeAgo(row.created_at),
+          created_at: row.created_at
+        }))
+      ];
+      
+      // Sort by creation date (most recent first) and limit to 5
+      return activities
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+        .slice(0, 5)
+        .map(({ created_at, ...rest }) => rest); // Remove created_at from final result
   }
 
   getTimeAgo(dateString) {

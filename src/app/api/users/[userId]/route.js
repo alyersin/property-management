@@ -19,7 +19,7 @@ export async function GET(request, { params }) {
   try {
     // Extract userId from URL parameters
     // Example: /api/users/123
-    const { userId } = params;
+    const { userId } = await params;
     
     // Validation: Ensure userId is provided
     if (!userId) {
@@ -66,7 +66,7 @@ export async function GET(request, { params }) {
 export async function PUT(request, { params }) {
   try {
     // Extract userId from URL parameters
-    const { userId } = params;
+    const { userId } = await params;
     
     // Validation: Ensure userId is provided
     if (!userId) {

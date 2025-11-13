@@ -1,23 +1,23 @@
-# Database Schema Verification - November 2025
+# Database Schema Verification - December 2024
 
 ## Summary
 
-Fresh deployments only require `src/database/schema.sql`. Running it against a new PostgreSQL instance creates exactly four tables:
+Fresh deployments only require `src/database/schema.sql`. Running it against a new PostgreSQL instance creates exactly five tables:
 
 - `users`
 - `user_profiles`
 - `properties`
-- `expenses`
-
-No tenant-related tables remain (`tenants`, `property_tenants`, `transactions` are absent).
+- `tenants`
+- `property_tenants` (junction table for many-to-many relationship)
 
 ## Verification Checklist
 
 | Check | Command | Expectation |
 |-------|---------|-------------|
-| Tables created | `\dt` | The four tables listed above |
-| `expenses` columns | see SQL below | `id, user_id, description, amount, date, notes, created_at, updated_at` |
-| Indexes | see SQL below | `idx_expenses_user`, `idx_expenses_date` |
+| Tables created | `\dt` | The five tables listed above |
+| `tenants` columns | see SQL below | `id, user_id, name, email, phone, status, notes, created_at, updated_at` |
+| `property_tenants` columns | see SQL below | `property_id, tenant_id, lease_start, lease_end, created_at` |
+| Indexes | see SQL below | `idx_properties_user`, `idx_tenants_user`, `idx_property_tenants_property`, `idx_property_tenants_tenant` |
 
 ## Useful SQL
 
@@ -25,21 +25,38 @@ No tenant-related tables remain (`tenants`, `property_tenants`, `transactions` a
 -- list tables
 \dt
 
--- inspect expenses columns
+-- inspect tenants columns
 SELECT column_name, data_type
 FROM information_schema.columns
-WHERE table_name = 'expenses'
+WHERE table_name = 'tenants'
 ORDER BY ordinal_position;
 
--- inspect expenses indexes
+-- inspect property_tenants columns
+SELECT column_name, data_type
+FROM information_schema.columns
+WHERE table_name = 'property_tenants'
+ORDER BY ordinal_position;
+
+-- inspect all indexes
 SELECT indexname, indexdef
 FROM pg_indexes
-WHERE tablename = 'expenses'
-ORDER BY indexname;
+WHERE tablename IN ('tenants', 'property_tenants', 'properties')
+ORDER BY tablename, indexname;
 ```
+
+## Relationship Types
+
+The database includes all three SQL relationship types:
+
+1. **One-to-One (1:1)**: `users` ↔ `user_profiles`
+2. **One-to-Many (1:N)**: 
+   - `users` → `properties`
+   - `users` → `tenants`
+3. **Many-to-Many (N:M)**: `properties` ↔ `tenants` (via `property_tenants` junction table)
 
 ## Notes
 
 - Running only `schema.sql` keeps the application and documentation in sync.
-- Legacy migration scripts were removed for a clean slate. Restore them from Git history only if you need to patch an existing database. 
+- The `property_tenants` table enables the many-to-many relationship between properties and tenants.
+- Each user's data is isolated through `user_id` foreign keys on all business tables. 
 

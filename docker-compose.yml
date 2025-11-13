@@ -1,4 +1,9 @@
-
+# Docker Compose Configuration for Home Admin
+# 
+# Database Setup:
+# - schema.sql runs automatically on first container creation (when data directory is empty)
+# - To reset database: docker-compose down -v && docker-compose up -d
+# - The -v flag removes volumes, ensuring a fresh start with latest schema
 
 services:
   postgres:
@@ -11,6 +16,7 @@ services:
       - "5540:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      # schema.sql runs automatically on first container creation only
       - ./src/database/schema.sql:/docker-entrypoint-initdb.d/schema.sql
     restart: unless-stopped
 
@@ -22,6 +28,7 @@ services:
       - "3080:3000"
     environment:
       - NODE_ENV=production
+      - USE_DATABASE=true
       - DATABASE_URL=postgresql://postgres:password@postgres:5432/home_admin
     depends_on:
       - postgres

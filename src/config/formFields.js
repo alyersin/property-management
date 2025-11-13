@@ -18,27 +18,36 @@ export const PROPERTY_FIELDS = [
   { name: 'notes', label: 'Notes', type: 'textarea', placeholder: 'Enter any additional notes' }
 ];
 
-export const EXPENSE_FIELDS = [
+export const TENANT_FIELDS = [
   {
-    name: 'description',
-    label: 'Description',
+    name: 'name',
+    label: 'Name',
     type: 'text',
     required: true,
-    placeholder: 'Enter expense description'
+    placeholder: 'Enter tenant name'
   },
   {
-    name: 'amount',
-    label: 'Amount',
-    type: 'number',
+    name: 'email',
+    label: 'Email',
+    type: 'email',
     required: true,
-    step: 0.01,
-    placeholder: 'Enter amount'
+    placeholder: 'Enter tenant email'
   },
   {
-    name: 'date',
-    label: 'Date',
-    type: 'date',
-    required: true
+    name: 'phone',
+    label: 'Phone',
+    type: 'tel',
+    placeholder: 'Enter tenant phone number'
+  },
+  {
+    name: 'status',
+    label: 'Status',
+    type: 'select',
+    required: true,
+    options: [
+      { value: 'Active', label: 'Active' },
+      { value: 'Inactive', label: 'Inactive' }
+    ]
   },
   {
     name: 'notes',
@@ -53,8 +62,8 @@ export const getFieldsByType = (dataType) => {
   switch (dataType) {
     case 'properties':
       return PROPERTY_FIELDS;
-    case 'expenses':
-      return EXPENSE_FIELDS;
+    case 'tenants':
+      return TENANT_FIELDS;
     default:
       return [];
   }

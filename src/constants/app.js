@@ -83,5 +83,5 @@ export const DEMO_CREDENTIALS = {
 export const TAB_ITEMS = [
   { id: "dashboard", label: "🏠 Dashboard" },
   { id: "properties", label: "🏘️ Properties" },
-  { id: "expenses", label: "💡 Expenses" },
+  { id: "tenants", label: "👥 Tenants" },
 ];

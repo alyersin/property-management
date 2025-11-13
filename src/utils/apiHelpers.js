@@ -28,22 +28,16 @@ export const handleApiError = (error, operation, resourceName) => {
  * Creates a generic CRUD route handler
  */
 export const createCrudRoutes = (service, resourceName) => {
-  // Handle inconsistent naming: properties uses singular for add/update/delete, expenses uses plural
+  // Handle naming: properties and tenants use singular for add/update/delete methods
   const resourceSingular = resourceName.slice(0, -1);
   const resourceCapitalized = resourceName.charAt(0).toUpperCase() + resourceName.slice(1);
   const resourceSingularCapitalized = resourceSingular.charAt(0).toUpperCase() + resourceSingular.slice(1);
   
   const getMethod = `get${resourceCapitalized}`;
-  // Properties: addProperty, Expenses: addExpenses
-  const addMethod = resourceName === 'properties' 
-    ? `add${resourceSingularCapitalized}` 
-    : `add${resourceCapitalized}`;
-  const updateMethod = resourceName === 'properties'
-    ? `update${resourceSingularCapitalized}`
-    : `update${resourceCapitalized}`;
-  const deleteMethod = resourceName === 'properties'
-    ? `delete${resourceSingularCapitalized}`
-    : `delete${resourceCapitalized}`;
+  // Properties and Tenants: addProperty/addTenant (singular form)
+  const addMethod = `add${resourceSingularCapitalized}`;
+  const updateMethod = `update${resourceSingularCapitalized}`;
+  const deleteMethod = `delete${resourceSingularCapitalized}`;
 
   return {
     async GET(request) {
@@ -76,8 +70,9 @@ export const createCrudRoutes = (service, resourceName) => {
 
     async PUT(request, { params }) {
       try {
-        // Handle both propertyId and expenseId
-        const idParam = params.propertyId || params.expenseId;
+        // Handle propertyId and tenantId
+        const resolvedParams = await params;
+        const idParam = resolvedParams.propertyId || resolvedParams.tenantId;
         const id = parseInt(idParam, 10);
         const body = await request.json();
         const { userId, ...updates } = body;
@@ -111,8 +106,9 @@ export const createCrudRoutes = (service, resourceName) => {
 
     async DELETE(request, { params }) {
       try {
-        // Handle both propertyId and expenseId
-        const idParam = params.propertyId || params.expenseId;
+        // Handle propertyId and tenantId
+        const resolvedParams = await params;
+        const idParam = resolvedParams.propertyId || resolvedParams.tenantId;
         const id = parseInt(idParam, 10);
         const body = await request.json();
         const { userId } = body;

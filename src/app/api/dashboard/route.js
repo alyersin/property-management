@@ -13,7 +13,7 @@ import databaseService from '../../../services/databaseService';
  * - userId (required): The ID of the user whose dashboard data to fetch
  * 
  * Returns:
- * - stats: Dashboard statistics (e.g., total properties, expenses, etc.)
+ * - stats: Dashboard statistics (e.g., total properties, occupancy rate, etc.)
  * - activities: Recent activity log for the user
  */
 export async function GET(request) {
@@ -33,10 +33,10 @@ export async function GET(request) {
     // Convert userId string to integer for database query
     const parsedUserId = parseInt(userId, 10);
     
-    // Fetch dashboard statistics (e.g., total properties, expenses, revenue)
+    // Fetch dashboard statistics (e.g., total properties, occupancy rate, available properties)
     const stats = await databaseService.getDashboardStats(parsedUserId);
     
-    // Fetch recent activities (e.g., recent property additions, expense entries)
+    // Fetch recent activities (e.g., recent property and tenant additions)
     const activities = await databaseService.getRecentActivities(parsedUserId);
 
     // Return both stats and activities in response

@@ -1,7 +1,7 @@
 # 📚 Home Admin Documentation
 
-> **Update – November 2025**  
-> Documentation has been refreshed to reflect the removal of tenant management and the new utility-focused `expenses` schema. Legacy guides remain for historical purposes and are annotated where applicable.
+> **Update – December 2024**  
+> Documentation has been updated to reflect the restoration of tenant management features. The database now includes all three SQL relationship types (One-to-One, One-to-Many, and Many-to-Many).
 
 This directory contains all documentation for the Home Admin property management system, organized by category.
 
@@ -31,6 +31,13 @@ Development-related documentation, error fixes, and configuration guides.
 - **[RUNTIME_ERROR_FIX.md](./development/RUNTIME_ERROR_FIX.md)** - Runtime error troubleshooting and fixes
 - **[CONFIG_README.md](./development/CONFIG_README.md)** - Configuration file documentation
 
+### 🗄️ Database (`/`)
+Database schema and setup documentation.
+
+- **[DATABASE_RELATIONS.md](./DATABASE_RELATIONS.md)** - Complete database relationships documentation (One-to-One, One-to-Many, Many-to-Many)
+- **[DATABASE_SCHEMA_VERIFICATION.md](./DATABASE_SCHEMA_VERIFICATION.md)** - Database schema verification and relationship types
+- **[MIGRATION_GUIDE.md](./MIGRATION_GUIDE.md)** - Database schema design guide (for understanding, not migrations)
+
 ### 🗑️ Removed Elements (`/removed-elements`)
 Documentation of features and code that have been removed from the application.
 
@@ -43,8 +50,8 @@ Documentation of features and code that have been removed from the application.
 - **Generic CRUD Factory**: API routes use `createCrudRoutes()` helper, reducing code from ~50 lines to ~8 lines per route
 - **Database CRUD Helpers**: Extracted generic helpers (`createGetAll`, `createUpdate`, `createDelete`) in `dbHelpers.js`
 - **Form Field Components**: Extracted `DynamicForm` field rendering into reusable components (`TextField`, `NumberField`, `SelectField`, `TextareaField`)
-- **Tab-Based Navigation**: Consolidated Dashboard, Properties, Expenses into single `/dashboard` route with client-side tabs
-- **Component Consolidation**: Merged `MainTabs`, `DashboardContent`, `PropertiesContent`, `ExpensesContent` into `dashboard/page.js`
+- **Tab-Based Navigation**: Consolidated Dashboard, Properties, Tenants into single `/dashboard` route with client-side tabs
+- **Component Consolidation**: Merged `MainTabs`, `DashboardContent`, `PropertiesContent` into `dashboard/page.js`
 - **Code Cleanup**: Removed unused utilities, constants, hooks, empty folders, and route constants
 - **Schema Simplification**: Removed fields from `user_profiles` (bio, avatar_url, date_of_birth) and `properties` (address, rent)
 - **CI/CD Optimization**: Updated deployment workflow to use `git pull` strategy for less disruptive deployments
@@ -62,7 +69,7 @@ Documentation of features and code that have been removed from the application.
 - Database service reduced from 308 to ~250 lines
 - DynamicForm reduced from 221 to 95 lines
 - Removed 4 component files (consolidated into dashboard page)
-- Removed 2 empty route folders (`/properties`, `/expenses`)
+- Removed empty route folders (`/properties`)
 - Removed 4 utility/config files (logger, helpers, formFields/index, env.js)
 - Zero code duplication with universal components and generic helpers
 - Single route architecture (`/dashboard`) with instant tab switching
@@ -89,12 +96,15 @@ Documentation of features and code that have been removed from the application.
 **Last Updated:** December 2024
 
 **Recent Changes:**
+- **Tenant Management Restored**: Full tenant CRUD operations and property-tenant many-to-many relationships
+- Database includes all three SQL relationship types (One-to-One, One-to-Many, Many-to-Many)
+- **Database Setup Simplified**: No migration files needed - `schema.sql` runs automatically on fresh Docker containers
 - Database-only architecture (PostgreSQL exclusively)
 - Generic CRUD factory pattern for API routes
 - Extracted form field components
 - Code refactoring and optimization
-- Schema simplification (removed unused fields)
 - CI/CD workflow improvements
+- Removed outdated migration documentation (MIGRATION_INSTRUCTIONS.md, MIGRATION_COMPLETE.md)
 - Removed logger utility (replaced with console calls)
 - Removed helper utilities (inlined into components)
 - Removed barrel exports and config files

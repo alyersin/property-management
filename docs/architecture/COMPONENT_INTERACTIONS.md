@@ -1,7 +1,7 @@
 # 🔗 Component Interactions & Data Flow
 
-> **Update – November 2025**  
-> Tenants were removed and financial tracking now lives exclusively in the Expenses page. Historical diagrams remain for reference; current feature scope is documented in `docs/removed-elements/REMOVED_ELEMENTS_DOCUMENTATION.md`.
+> **Update – December 2024**  
+> Tenant management has been restored. The application now includes full tenant CRUD operations and property-tenant relationship management. All features are documented in the current architecture.
 
 ## 📊 Component Interaction Diagram
 
@@ -9,11 +9,10 @@
 ┌─────────────────────────────────────────────────────────────────┐
 │                        PAGE LAYER                              │
 ├─────────────────────────────────────────────────────────────────┤
-│  ┌─────────────┐  ┌─────────────┐                             │ │
-│  │ Properties │  │  Expenses   │                             │ │
-│  │    Page    │  │    Page     │                             │ │
-│  │   (17 lines)│  │  (17 lines)│                             │ │
-│  └─────────────┘  └─────────────┘                             │ │
+│  ┌─────────────┐  ┌─────────────┐                            │ │
+│  │ Properties │  │  Tenants    │                            │ │
+│  │    Page    │  │    Page     │                            │ │
+│  └─────────────┘  └─────────────┘                            │ │
 │         │                 │                                   │ │
 │         └─────────────────┼───────────────────────────────────┘ │
 │                           │                                     │
@@ -36,7 +35,7 @@
 │  │  │  │             │  │             │  │             │    │ │ │
 │  │  │  │ • Property  │  │ • Dynamic   │  │ • Required  │    │ │ │
 │  │  │  │ • Tenant    │  │   Fields    │  │ • Types     │    │ │ │
-│  │  │  │ • Expense   │  │ • Render    │  │ • Rules     │    │ │ │
+│  │  │  │             │  │             │  │             │    │ │ │
 │  │  │  └─────────────┘  └─────────────┘  └─────────────┘    │ │ │
 │  │  └─────────────────────────────────────────────────────────┘ │ │
 │  └─────────────────────────────────────────────────────────────────┘ │
@@ -153,8 +152,6 @@ class DataService {
       users: [],              // SECURITY: No user data in client-side code
       properties: [...],      // Inline property data
       tenants: [...],         // Inline tenant data
-      transactions: [...],   // Inline transaction data
-      expenses: [...]         // Inline expense data
     };
   }
 
@@ -263,7 +260,7 @@ export async function POST(request) {
 ### **Page Components**
 ```
 app/
-├── dashboard/page.js          # 94 lines - Main app with tabs (Dashboard, Properties, Expenses)
+├── dashboard/page.js          # Main app with tabs (Dashboard, Properties, Tenants)
 ├── settings/page.js           # 120 lines - Custom settings form
 ├── login/page.js              # 151 lines - Styled login form
 └── register/page.js           # 156 lines - Styled register form
@@ -314,16 +311,12 @@ components/shared/
 ### **Configuration System (Data-Driven)**
 ```
 config/
-├── formFields.js            # 151 lines - Form field definitions
-│   ├── PROPERTY_FIELDS      # 13 field definitions
-│   ├── TENANT_FIELDS        # 11 field definitions
-│   ├── TRANSACTION_FIELDS   # 5 field definitions
-│   └── EXPENSE_FIELDS       # 8 field definitions
-├── tableColumns.js          # 189 lines - Table column definitions
-│   ├── PROPERTY_COLUMNS     # 5 column definitions
-│   ├── TENANT_COLUMNS       # 6 column definitions
-│   ├── TRANSACTION_COLUMNS  # 6 column definitions
-│   └── EXPENSE_COLUMNS      # 6 column definitions
+├── formFields.js            # Form field definitions
+│   ├── PROPERTY_FIELDS      # Property form field definitions
+│   └── TENANT_FIELDS        # Tenant form field definitions
+├── tableColumns.js          # Table column definitions
+│   ├── PROPERTY_COLUMNS     # Property table column definitions
+│   └── TENANT_COLUMNS       # Tenant table column definitions
 └── getDemoUsers()           # Inline function in login route
     └── Server-side credential access from environment variables
 ```

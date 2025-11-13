@@ -74,12 +74,12 @@ const UniversalPage = ({
   // Map data types to their singular forms
   const singularForm = {
     properties: 'property',
-    expenses: 'expense'
+    tenants: 'tenant'
   }[dataType] || dataType.slice(0, -1);
 
   const displayName = {
     properties: 'properties',
-    expenses: 'expenses'
+    tenants: 'tenants'
   }[dataType] || dataType.replace(/([A-Z])/g, ' $1').toLowerCase().trim();
 
   const content = (

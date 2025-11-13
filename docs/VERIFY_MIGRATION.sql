@@ -1,16 +1,26 @@
 -- VERIFY SCHEMA: fresh installation checklist
 -- Run these queries in psql or DBeaver after applying src/database/schema.sql
+-- This verifies the current schema includes all required tables and relationships
 
 -- ============================================
--- Confirm legacy tables are gone
+-- Verify all required tables exist
 -- ============================================
 SELECT
-    COUNT(*) = 0 AS tenants_tables_absent
+    table_name,
+    CASE 
+        WHEN table_name IN ('users', 'user_profiles', 'properties', 'tenants', 'property_tenants')
+        THEN '✅ Required table'
+        ELSE '⚠️ Unexpected table'
+    END AS status
 FROM information_schema.tables
-WHERE table_name IN ('tenants', 'property_tenants', 'transactions');
+WHERE table_schema = 'public'
+  AND table_type = 'BASE TABLE'
+ORDER BY table_name;
+
+-- Expected tables: users, user_profiles, properties, tenants, property_tenants
 
 -- ============================================
--- Inspect expenses columns
+-- Verify tenants table structure
 -- ============================================
 SELECT
     column_name,
@@ -18,45 +28,69 @@ SELECT
     is_nullable,
     column_default
 FROM information_schema.columns
-WHERE table_name = 'expenses'
+WHERE table_name = 'tenants'
 ORDER BY ordinal_position;
 
--- Expected columns:
--- id, user_id, description, amount, date, notes, created_at, updated_at
+-- Expected columns: id, user_id, name, email, phone, status, notes, created_at, updated_at
 
 -- ============================================
--- Check expenses indexes
+-- Verify property_tenants junction table
 -- ============================================
 SELECT
+    column_name,
+    data_type,
+    is_nullable
+FROM information_schema.columns
+WHERE table_name = 'property_tenants'
+ORDER BY ordinal_position;
+
+-- Expected columns: property_id, tenant_id, lease_start, lease_end, created_at
+
+-- ============================================
+-- Check all indexes
+-- ============================================
+SELECT
+    tablename,
     indexname,
     indexdef
 FROM pg_indexes
-WHERE tablename = 'expenses'
-ORDER BY indexname;
+WHERE schemaname = 'public'
+  AND tablename IN ('properties', 'tenants', 'property_tenants')
+ORDER BY tablename, indexname;
 
 -- Expected indexes:
--- idx_expenses_user, idx_expenses_date
+-- properties: idx_properties_user, idx_properties_status
+-- tenants: idx_tenants_user, idx_tenants_status
+-- property_tenants: idx_property_tenants_property, idx_property_tenants_tenant
 
 -- ============================================
 -- Quick PASS/FAIL summary
 -- ============================================
 SELECT
-    'expenses columns' AS check_type,
+    'Required tables' AS check_type,
     CASE
-        WHEN COUNT(*) FILTER (WHERE column_name = 'notes') = 1
-         AND COUNT(*) = 8
-        THEN '✅ PASS - expenses schema matches expected columns'
-        ELSE '❌ FAIL - Review expenses schema'
-    END AS result
-FROM information_schema.columns
-WHERE table_name = 'expenses'
-UNION ALL
-SELECT
-    'legacy tables removed' AS check_type,
-    CASE
-        WHEN COUNT(*) = 0 THEN '✅ PASS - tenants/transactions tables absent'
-        ELSE '❌ FAIL - drop legacy tables'
+        WHEN COUNT(*) FILTER (WHERE table_name IN ('users', 'user_profiles', 'properties', 'tenants', 'property_tenants')) = 5
+        THEN '✅ PASS - All required tables present'
+        ELSE '❌ FAIL - Missing required tables'
     END AS result
 FROM information_schema.tables
-WHERE table_name IN ('tenants', 'property_tenants', 'transactions');
+WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
+UNION ALL
+SELECT
+    'Tenants table' AS check_type,
+    CASE
+        WHEN COUNT(*) = 9 THEN '✅ PASS - tenants schema correct'
+        ELSE '❌ FAIL - Review tenants schema'
+    END AS result
+FROM information_schema.columns
+WHERE table_name = 'tenants'
+UNION ALL
+SELECT
+    'Property-Tenants junction' AS check_type,
+    CASE
+        WHEN COUNT(*) = 5 THEN '✅ PASS - property_tenants schema correct'
+        ELSE '❌ FAIL - Review property_tenants schema'
+    END AS result
+FROM information_schema.columns
+WHERE table_name = 'property_tenants';
 

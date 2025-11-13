@@ -1,5 +1,5 @@
 -- PostgreSQL Database Schema for Home Admin Application
--- This schema supports multi-user data isolation where each user owns their properties and expenses.
+-- This schema supports multi-user data isolation where each user owns their properties and tenants.
 
 -- Users table
 CREATE TABLE users (
@@ -36,24 +36,38 @@ CREATE TABLE properties (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Expenses table (utility tracking)
-CREATE TABLE expenses (
+-- Tenants table
+CREATE TABLE tenants (
     id SERIAL PRIMARY KEY,
     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    description VARCHAR(255) NOT NULL,
-    amount DECIMAL(10,2) NOT NULL,
-    date DATE NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    phone VARCHAR(50),
+    status VARCHAR(50) DEFAULT 'Active',
     notes TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id, email)
+);
+
+-- Property-Tenants junction table (Many-to-Many relationship)
+CREATE TABLE property_tenants (
+    property_id INTEGER NOT NULL REFERENCES properties(id) ON DELETE CASCADE,
+    tenant_id INTEGER NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+    lease_start DATE,
+    lease_end DATE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (property_id, tenant_id)
 );
 
 -- Indexes for better performance
 CREATE INDEX idx_properties_user ON properties(user_id);
 CREATE INDEX idx_properties_status ON properties(status);
 CREATE INDEX idx_user_profiles_user ON user_profiles(user_id);
-CREATE INDEX idx_expenses_user ON expenses(user_id);
-CREATE INDEX idx_expenses_date ON expenses(date);
+CREATE INDEX idx_tenants_user ON tenants(user_id);
+CREATE INDEX idx_tenants_status ON tenants(status);
+CREATE INDEX idx_property_tenants_property ON property_tenants(property_id);
+CREATE INDEX idx_property_tenants_tenant ON property_tenants(tenant_id);
 
 
 -- No authentication users inserted - users are created via registration page
@@ -64,4 +78,4 @@ CREATE INDEX idx_expenses_date ON expenses(date);
 
 -- No sample properties - users will add their own properties
 
--- No sample expenses - users will add their own entries
+-- No sample tenants - users will add their own tenants
