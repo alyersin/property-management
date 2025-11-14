@@ -27,30 +27,33 @@ jobs:
           mkdir -p ~/.ssh
           ssh-keyscan -p "${{ secrets.SERVER_PORT || '22' }}" "${{ secrets.SERVER_HOST }}" >> ~/.ssh/known_hosts
 
-      - name: Deploy application
+      - name: Sync files to server
         env:
-          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
-          REPO: ${{ github.repository }}
           SERVER_USER: ${{ secrets.SERVER_USER }}
           SERVER_HOST: ${{ secrets.SERVER_HOST }}
           SERVER_PORT: ${{ secrets.SERVER_PORT }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+        run: |
+          rsync -avz --delete \
+            -e "ssh -p ${SERVER_PORT:-22} -o StrictHostKeyChecking=no" \
+            --exclude '.git' \
+            --exclude '.github' \
+            --exclude 'node_modules' \
+            --exclude '.next' \
+            ./ "${SERVER_USER}@${SERVER_HOST}:${DEPLOY_PATH}/"
+
+      - name: Deploy application
+        env:
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_PORT: ${{ secrets.SERVER_PORT }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
         run: |
           ssh -p "${SERVER_PORT:-22}" "${SERVER_USER}@${SERVER_HOST}" <<EOF
           set -e
-          DEPLOY_DIR="${DEPLOY_PATH:-/home/hurmuzache/web-apps/home-admin}"
-          REPO_URL="git@github.com:${REPO}.git"
-
-          mkdir -p "\${DEPLOY_DIR}"
-          if [ ! -d "\${DEPLOY_DIR}/.git" ]; then
-            git clone --depth=1 "\${REPO_URL}" "\${DEPLOY_DIR}"
-          fi
-
-          cd "\${DEPLOY_DIR}"
-          git fetch --depth=1 origin main
-          git reset --hard origin/main
+          cd "${DEPLOY_PATH:-/home/hurmuzache/web-apps/home-admin}"
 
           docker compose pull
           docker compose build app
           docker compose up -d --remove-orphans
           EOF
-
