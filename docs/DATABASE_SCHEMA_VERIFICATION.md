@@ -11,7 +11,7 @@ Fresh deployments only require `src/database/schema.sql`. Running it against a n
 - `property_tenants` (junction table for many-to-many relationship)
 
 ## Verification Checklist
-
+s
 | Check | Command | Expectation |
 |-------|---------|-------------|
 | Tables created | `\dt` | The five tables listed above |
