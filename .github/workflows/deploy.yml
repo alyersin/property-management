@@ -37,7 +37,7 @@ jobs:
         run: |
           ssh -p "${SERVER_PORT:-22}" "${SERVER_USER}@${SERVER_HOST}" <<EOF
           set -e
-          DEPLOY_DIR="\${DEPLOY_PATH:-/opt/home-admin}"
+          DEPLOY_DIR="${DEPLOY_PATH:-/home/hurmuzache/web-apps/home-admin}"
           REPO_URL="git@github.com:${REPO}.git"
 
           mkdir -p "\${DEPLOY_DIR}"
