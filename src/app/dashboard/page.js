@@ -5,7 +5,7 @@ import ProtectedRoute from "../../components/auth/ProtectedRoute";
 import PageLayout from "../../components/shared/PageLayout";
 import { TabProvider, useTab } from "../../contexts/TabContext";
 import { useAuth } from "../../contexts/AuthContext";
-import DashboardStats from "../../components/shared/DashboardStats";
+import DashboardStats from "../../components/dashboard/DashboardStats";
 import UniversalPage from "../../components/shared/UniversalPage";
 import { useDashboardData } from "../../hooks/useAppData";
 import { getColumnsByType } from "../../config/tableColumns";

@@ -1,5 +1,5 @@
 import databaseService from '../../../services/databaseService';
-import { createCrudRoutes } from '../../../utils/apiHelpers';
+import { createCrudRoutes } from '../_helpers/apiHelpers';
 
 /**
  * Properties API Routes

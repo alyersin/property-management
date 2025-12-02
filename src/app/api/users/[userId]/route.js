@@ -21,6 +21,7 @@ export async function GET(request, { params }) {
     // Example: /api/users/123
     const { userId } = await params;
     
+    
     // Validation: Ensure userId is provided
     if (!userId) {
       return NextResponse.json({ error: "User ID is required" }, { status: 400 });

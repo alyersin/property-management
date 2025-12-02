@@ -13,7 +13,7 @@ import {
   Text,
   Flex,
 } from "@chakra-ui/react";
-import StatCard from "./StatCard";
+import StatCard from "../shared/StatCard";
 
 const EMPTY_STATS = {
   totalProperties: 0,
@@ -152,3 +152,4 @@ const DashboardStats = ({ stats, recentActivities = [] }) => {
 };
 
 export default DashboardStats;
+
