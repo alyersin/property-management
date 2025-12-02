@@ -56,6 +56,9 @@ jobs:
           # Stop and remove existing containers (preserves volumes)
           docker compose down --remove-orphans || true
 
+          # Force remove any remaining containers with conflicting names
+          docker rm -f home-admin-postgres home-admin-app 2>/dev/null || true
+
           # Pull latest images
           docker compose pull
 
