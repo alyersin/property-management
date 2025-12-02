@@ -57,7 +57,13 @@ jobs:
           docker compose down --remove-orphans || true
 
           # Force remove any remaining containers with conflicting names
-          docker rm -f home-admin-postgres home-admin-app 2>/dev/null || true
+          docker rm -f home-admin-postgres home-admin-app home-admin-app-1 2>/dev/null || true
+
+          # Find and stop any container using port 3080
+          docker ps -a --filter "publish=3080" --format "{{.ID}}" | xargs -r docker rm -f || true
+          
+          # Alternative: Find process using port 3080 and kill it (if not a Docker container)
+          lsof -ti:3080 | xargs -r kill -9 || true
 
           # Pull latest images
           docker compose pull
