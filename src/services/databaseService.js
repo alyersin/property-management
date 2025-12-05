@@ -267,6 +267,7 @@ class DatabaseService {
         throw new Error('Property or tenant not found or does not belong to user');
       }
 
+      // Insert the relationship
       const result = await this.query(`
         INSERT INTO property_tenants (property_id, tenant_id, start_date, end_date)
         VALUES ($1, $2, $3, $4)
@@ -275,6 +276,19 @@ class DatabaseService {
             end_date = EXCLUDED.end_date
         RETURNING *
       `, [propertyId, tenantId, leaseData.start_date || null, leaseData.end_date || null]);
+
+      // Update property status to "Occupied"
+      await this.query(
+        'UPDATE properties SET status = $1 WHERE id = $2 AND user_id = $3',
+        ['Occupied', propertyId, userId]
+      );
+
+      // Update tenant status to "Active"
+      await this.query(
+        'UPDATE tenants SET status = $1 WHERE id = $2 AND user_id = $3',
+        ['Active', tenantId, userId]
+      );
+
       return result.rows[0];
   }
 
@@ -293,11 +307,41 @@ class DatabaseService {
         throw new Error('Property or tenant not found or does not belong to user');
       }
 
+      // Remove the relationship
       const result = await this.query(`
         DELETE FROM property_tenants
         WHERE property_id = $1 AND tenant_id = $2
         RETURNING *
       `, [propertyId, tenantId]);
+
+      // Check if property has any remaining tenants
+      const remainingTenants = await this.query(
+        'SELECT COUNT(*) as count FROM property_tenants WHERE property_id = $1',
+        [propertyId]
+      );
+      
+      // Update property status to "Available" if no tenants remain
+      if (parseInt(remainingTenants.rows[0].count) === 0) {
+        await this.query(
+          'UPDATE properties SET status = $1 WHERE id = $2 AND user_id = $3',
+          ['Available', propertyId, userId]
+        );
+      }
+
+      // Check if tenant has any remaining properties
+      const remainingProperties = await this.query(
+        'SELECT COUNT(*) as count FROM property_tenants WHERE tenant_id = $1',
+        [tenantId]
+      );
+      
+      // Update tenant status to "Inactive" if no properties remain
+      if (parseInt(remainingProperties.rows[0].count) === 0) {
+        await this.query(
+          'UPDATE tenants SET status = $1 WHERE id = $2 AND user_id = $3',
+          ['Inactive', tenantId, userId]
+        );
+      }
+
       return result.rows[0];
       }
 
